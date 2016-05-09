@@ -6,6 +6,11 @@
     image-rendering: -webkit-optimize-contrast;
     image-rendering: -moz-crisp-edges;
     image-rendering: pixelated; /*  This is *actually* what we want.  */
+    -webkit-touch-callout:  none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
 }
 
 /*  General layout:  */
