@@ -159,6 +159,11 @@ html[data-jo-ctls-visible] *[id^=jo-ctls] {
 
 /*  No layout  */
 
+html:not([data-jo-layout]) body {
+    background-image: url(images/splash.gif);
+    background-position: center center;
+    background-size: contain;
+}
 html:not([data-jo-layout]) *[id^="jo-scrn"], html[data-jo-ctls-visible]:not([data-jo-layout]) *[id^="jo-ctls"] {
     display: none;
 }

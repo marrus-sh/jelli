@@ -81,9 +81,16 @@ Jo.handleEvent = function(e) {
     switch (e.type) {
 
         case "keydown":
+            if (!document.documentElement.dataset.dataJoLayout) {
+                Jo.setup();
+                break;
+            }
+            document.documentElement.removeAttribute("data-jo-ctls-visible");
             k = e.code || e.key || e.keyIdentifier || e.keyCode;
-            if (Jo.ctrl.key[k]) Jo.ctrl.active[Jo.ctrl.key[k]] = true;
-            else if (k === "Tab" || k === 0x09) {
+            if (Jo.ctrl.key[k]) {
+                Jo.ctrl.active[Jo.ctrl.key[k]] = true;
+            }
+            else if (k === "Tab" || k === "U+0009" || k === 0x09) {
                 if (!(document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement)) {
                     if (document.body.requestFullscreen) document.body.requestFullscreen();
                     else if (document.body.mozRequestFullScreen) document.body.mozRequestFullScreen();
@@ -109,12 +116,17 @@ Jo.handleEvent = function(e) {
             break;
 
         case "touchstart":
+            if (!document.documentElement.dataset.dataJoLayout) {
+                Jo.setup();
+                break;
+            }
+            document.documentElement.setAttribute("data-jo-ctls-visible", "");
             if (e.target.id.substr(0, 8) === "jo-ctrl-") Jo.ctrl.active[e.target.id.substr(8)] = true;
-            break
+            break;
 
         case "touchend":
             if (e.target.id.substr(0, 8) === "jo-ctrl-") Jo.ctrl.active[e.target.id.substr(8)] = false;
-            break
+            break;
 
     }
 
@@ -122,7 +134,13 @@ Jo.handleEvent = function(e) {
 
 Jo.init = function() {
 
-    Jo.setup();
+    //  Adding event listeners:
+
+    window.addEventListener("keydown", Jo, false);
+    window.addEventListener("keyup", Jo, false);
+    window.addEventListener("resize", Jo, false);
+    window.addEventListener("touchstart", Jo, false);
+    window.addEventListener("touchend", Jo, false);
 
 }
 
@@ -140,7 +158,7 @@ Jo.screen.layout = function() {
     var tmp_w;
     var ctl_d;
 
-    if (typeof document.documentElement.dataset.joCtlsVisible !== "undefined") ctl_d = Jo.screen.button * 3;
+    if (document.documentElement.hasAttribute("data-jo-ctls-visible")) ctl_d = Jo.screen.button * 3;
     else ctl_d = 0;
 
     //  Wide layout:
@@ -252,14 +270,6 @@ Jo.render = function() {
 }
 
 Jo.setup = function() {
-
-    //  Adding event listeners:
-
-    window.addEventListener("keydown", Jo, false);
-    window.addEventListener("keyup", Jo, false);
-    window.addEventListener("resize", Jo, false);
-    window.addEventListener("touchstart", Jo, false);
-    window.addEventListener("touchend", Jo, false);
 
     //  Calling logic and render functions:
 
