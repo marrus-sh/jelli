@@ -182,13 +182,9 @@ html[data-jo-layout="1"] body {
 }
 html[data-jo-layout="1"] #jo-scrn-tp {
     align-items: flex-end;
-    border-bottom: none;
-    padding-bottom: 8px;
 }
 html[data-jo-layout="1"] #jo-scrn-bt {
     align-items: flex-start;
-    border-top: none;
-    padding-top: 8px;
 }
 html[data-jo-layout="1"] *[id^="jo-ctls"] {
     height: 100%;
@@ -214,13 +210,9 @@ html[data-jo-layout="2"] *[id^="jo-scrn"] {
 }
 html[data-jo-layout="2"] #jo-scrn-tp {
     align-items: flex-end;
-    border-bottom: none;
-    padding-bottom: 8px;
 }
 html[data-jo-layout="2"] #jo-scrn-bt {
     align-items: flex-start;
-    border-top: none;
-    padding-top: 8px;
 }
 
 /*  Layout 3:  */
@@ -239,13 +231,9 @@ html[data-jo-layout="3"] *[id^="jo-scrn"] {
 }
 html[data-jo-layout="3"] #jo-scrn-tp {
     align-items: flex-end;
-    border-right: none;
-    padding-right: 8px;
 }
 html[data-jo-layout="3"] #jo-scrn-bt {
     align-items: flex-start;
-    border-left: none;
-    padding-left: 8px;
 }
 
 /*  Layout 4:  */
@@ -263,13 +251,9 @@ html[data-jo-layout="4"] *[id^="jo-scrn"] {
 }
 html[data-jo-layout="4"] #jo-scrn-tp {
     align-items: flex-end;
-    border-right: none;
-    padding-right: 8px;
 }
 html[data-jo-layout="4"] #jo-scrn-bt {
     align-items: flex-start;
-    border-left: none;
-    padding-left: 8px;
 }
 html[data-jo-layout="4"] #jo-ctls-lf {
     order: -1;
