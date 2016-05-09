@@ -108,6 +108,14 @@ Jo.handleEvent = function(e) {
             Jo.screen.resized = true;
             break;
 
+        case "touchstart":
+            if (e.target.id.substr(0, 8) === "jo-ctrl-") Jo.ctrl.active[e.target.id.substr(8)] = true;
+            break
+
+        case "touchend":
+            if (e.target.id.substr(0, 8) === "jo-ctrl-") Jo.ctrl.active[e.target.id.substr(8)] = false;
+            break
+
     }
 
 }
@@ -250,6 +258,8 @@ Jo.setup = function() {
     window.addEventListener("keydown", Jo, false);
     window.addEventListener("keyup", Jo, false);
     window.addEventListener("resize", Jo, false);
+    window.addEventListener("touchstart", Jo, false);
+    window.addEventListener("touchend", Jo, false);
 
     //  Calling logic and render functions:
 
