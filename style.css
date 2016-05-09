@@ -68,6 +68,7 @@ body {
 
 *[id^="jo-ctls"] {
     display: none;
+    -webkit-flex-flow: column;
     flex-flow: column;
     justify-content: center;
     align-items: center;
@@ -80,6 +81,7 @@ html[data-jo-ctls-visible] *[id^=jo-ctls] {
 }
 *[id^="jo-ctlr"] {
     display: flex;
+    -webkit-flex-flow: row;
     flex-flow: row;
     justify-content: center;
     align-items: center;
@@ -168,6 +170,7 @@ html:not([data-jo-layout]) *[id^="jo-scrn"], html[data-jo-ctls-visible]:not([dat
 
 html[data-jo-layout="1"] body {
     display: flex;
+    -webkit-flex-flow: column wrap;
     flex-flow: column wrap;
     justify-content: space-around;
     align-items: stretch;
@@ -196,6 +199,7 @@ html[data-jo-layout="1"] #jo-ctls-rt {
 
 html[data-jo-layout="2"] body {
     display: flex;
+    -webkit-flex-flow: row wrap;
     flex-flow: row wrap;
     justify-content: space-around;
     align-items: stretch;
@@ -218,11 +222,13 @@ html[data-jo-layout="2"] #jo-scrn-bt {
 
 html[data-jo-layout="3"] body {
     display: flex;
+    -webkit-flex-flow: row wrap;
     flex-flow: row wrap;
     justify-content: space-around;
     align-items: stretch;
 }
 html[data-jo-layout="3"] *[id^="jo-scrn"] {
+    -webkit-flex-flow: column;
     flex-flow: column;
     width: 50%;
 }
@@ -241,11 +247,13 @@ html[data-jo-layout="3"] #jo-scrn-bt {
 
 html[data-jo-layout="4"] body {
     display: flex;
+    -webkit-flex-flow: row;
     flex-flow: row;
     justify-content: space-around;
     align-items: stretch;
 }
-html[data-jo-layout="3"] *[id^="jo-scrn"] {
+html[data-jo-layout="4"] *[id^="jo-scrn"] {
+    -webkit-flex-flow: column;
     flex-flow: column;
 }
 html[data-jo-layout="4"] #jo-scrn-tp {
