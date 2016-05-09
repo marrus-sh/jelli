@@ -1,0 +1,206 @@
+@charset "UTF-8";
+
+/*  Global attributes:  */
+
+*:root {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: pixelated; /*  This is *actually* what we want.  */
+}
+
+/*  General layout:  */
+
+html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: black;
+}
+body {
+    margin: auto;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/*  Screens:  */
+
+*[id^="jo-scrn"] {
+    display: block;
+    margin: 0;
+    padding: 0;
+    align-self: center;
+}
+*[id^="jo-cnvs"] {
+    display: block;
+    margin: auto;
+    padding: 0;
+}
+
+/*  Controls:  */
+
+*[id^="jo-ctls"] {
+    display: none;
+    position: relative;
+    min-width: 96px;
+    min-height: 96px;
+}
+html[data-jo-ctls-visible] *[id^=jo-ctls] {
+    display: block;
+}
+*[id^="jo-ctrl"] {
+    background-image: url(images/ctrl.png);
+    background-size: 600% 600%;
+    background-position: 100% 20%;
+    background-repeat: no-repeat;
+    width: 32px;
+    height: 32px;
+}
+*[id^="jo-ctrl"][data-jo-ctrl-active] {
+    background-position: 100% 60%;
+}
+#jo-ctrl-strt {
+    background-position: 0% 0%;
+}
+#jo-ctrl-strt[data-jo-ctrl-active] {
+    background-position: 0% 40%;
+}
+#jo-ctrl-selc {
+    background-position: 20% 0%;
+}
+#jo-ctrl-selc[data-jo-ctrl-active] {
+    background-position: 20% 40%;
+}
+#jo-ctrl-menu {
+    background-position: 40% 0%;
+}
+#jo-ctrl-menu[data-jo-ctrl-active] {
+    background-position: 40% 40%;
+}
+#jo-ctrl-look {
+    background-position: 60% 0%;
+}
+#jo-ctrl-look[data-jo-ctrl-active] {
+    background-position: 60% 40%;
+}
+#jo-ctrl-exit {
+    background-position: 80% 0%;
+}
+#jo-ctrl-exit[data-jo-ctrl-active] {
+    background-position: 80% 40%;
+}
+#jo-ctrl-actn {
+    background-position: 100% 0%;
+}
+#jo-ctrl-actn[data-jo-ctrl-active] {
+    background-position: 100% 40%;
+}
+#jo-ctrl-uprw {
+    background-position: 0% 20%;
+}
+#jo-ctrl-uprw[data-jo-ctrl-active] {
+    background-position: 0% 60%;
+}
+#jo-ctrl-dnrw {
+    background-position: 20% 20%;
+}
+#jo-ctrl-dnrw[data-jo-ctrl-active] {
+    background-position: 20% 60%;
+}
+#jo-ctrl-lfrw {
+    background-position: 40% 20%;
+}
+#jo-ctrl-lfrw[data-jo-ctrl-active] {
+    background-position: 40% 60%;
+}
+#jo-ctrl-rtrw {
+    background-position: 60% 20%;
+}
+#jo-ctrl-rtrw[data-jo-ctrl-active] {
+    background-position: 60% 60%;
+}
+
+/*  Layout 1:  */
+
+html[data-jo-layout="1"] body {
+    display: flex;
+    flex-flow: column wrap;
+    justify-content: space-around;
+    align-items: center;
+}
+html[data-jo-layout="1"] *[id^="jo-ctls"] {
+    height: 100%;
+}
+html[data-jo-layout="1"] #jo-ctls-lf {
+    order: -1;
+}
+html[data-jo-layout="1"] #jo-ctls-rt {
+    order: 1;
+}
+
+/*  Layout 2:  */
+
+html[data-jo-layout="2"] body {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-around;
+    align-items: center;
+}
+html[data-jo-layout="2"] *[id^="jo-scrn"] {
+    width: 100%;
+}
+
+/*  Layout 3:  */
+
+html[data-jo-layout="3"] body {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-around;
+    align-items: center;
+}
+html[data-jo-layout="3"] *[id^="jo-scrn"] {
+    width: 50%;
+}
+
+/*  Layout 4:  */
+
+html[data-jo-layout="4"] body {
+    display: flex;
+    flex-flow: row;
+    justify-content: space-around;
+    align-items: center;
+}
+html[data-jo-layout="4"] #jo-ctls-lf {
+    order: -1;
+}
+html[data-jo-layout="4"] #jo-ctls-rt {
+    order: 1;
+}
+
+/*  Debug:  */
+
+html {
+    background: white;
+}
+body {
+    background: black;
+}
+#jo-scrn-tp {
+    background: green;
+}
+#jo-scrn-bt {
+    background: red;
+}
+#jo-cnvs-tp {
+    background: darkred;
+}
+#jo-cnvs-bt {
+    background: darkgreen;
+}
+#jo-ctls-lf {
+    background: blue;
+}
+#jo-ctls-rt {
+    background: yellow;
+}
