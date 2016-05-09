@@ -1,22 +1,109 @@
 /* jslint asi:true, browser:true */
 
 var Jo = {
+    ctrl: {
+        active: {
+            actn: false,
+            dnrw: false,
+            exit: false,
+            lfrw: false,
+            look: false,
+            menu: false,
+            rtrw: false,
+            selc: false,
+            strt: false,
+            uprw: false
+        },
+        key: {
+            0x25: "lfrw",
+            0x26: "uprw",
+            0x27: "rtrw",
+            0x28: "dnrw",
+            0x41: "menu",
+            0x51: "strt",
+            0x53: "look",
+            0x57: "selc",
+            0x58: "actn",
+            0x5A: "exit",
+            A: "menu",
+            a: "menu",
+            ArrowDown: "dnrw",
+            ArrowLeft: "lfrw",
+            ArrowRight: "rtrw",
+            ArrowUp: "uprw",
+            Down: "dnrw",
+            KeyA: "menu",
+            KeyQ: "strt",
+            KeyS: "look",
+            KeyW: "selc",
+            KeyX: "actn",
+            KeyZ: "exit",
+            Left: "lfrw",
+            Q: "strt",
+            q: "strt",
+            Right: "rtrw",
+            S: "look",
+            s: "look",
+            Up: "uprw",
+            W: "selc",
+            w: "selc",
+            X: "actn",
+            x: "actn",
+            Z: "exit",
+            z: "exit",
+        }
+    },
+    handleEvent: undefined,
     init: undefined,
-    layout: undefined,
     logic: undefined,
     render: undefined,
     setup: undefined,
-    window: {
-        button: {
-            d: 32
-        },
+    screen: {
+        button: 32,
+        border: 16,
+        width: 256,
+        height: 192,
+        layout: undefined,
         resized: true,
-        screen: {
-            b: 16,
-            w: 256,
-            h: 192
-        }
     }
+}
+
+Jo.handleEvent = function(e) {
+
+    var k;
+
+    switch (e.type) {
+
+        case "keydown":
+            k = e.code || e.key || e.keyIdentifier || e.keyCode;
+            if (Jo.ctrl.key[k]) Jo.ctrl.active[Jo.ctrl.key[k]] = true;
+            else if (k === "Tab" || k === 0x09) {
+                if (!(document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement)) {
+                    if (document.body.requestFullscreen) document.body.requestFullscreen();
+                    else if (document.body.mozRequestFullScreen) document.body.mozRequestFullScreen();
+                    else if (document.body.webkitRequestFullscreen) document.body.webkitRequestFullscreen();
+                    else if (document.body.msRequestFullscreen) document.body.msRequestFullscreen();
+                }
+                else {
+                    if (document.exitFullscreen) document.exitFullscreen();
+                    else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+                    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                    else if (document.msExitFullscreen) document.msExitFullscreen();
+                }
+            }
+            break;
+
+        case "keyup":
+            k = e.code || e.key || e.keyIdentifier || e.keyCode;
+            if (Jo.ctrl.key[k]) Jo.ctrl.active[Jo.ctrl.key[k]] = false;
+            break;
+
+        case "resize":
+            Jo.screen.resized = true;
+            break;
+
+    }
+
 }
 
 Jo.init = function() {
@@ -25,21 +112,21 @@ Jo.init = function() {
 
 }
 
-Jo.layout = function() {
+Jo.screen.layout = function() {
 
     //  Variable setup:
 
-    var bdy_h = window.innerHeight - 4 * Jo.window.screen.b;
-    var bdy_w = window.innerWidth - 4 * Jo.window.screen.b;
-    var uni_h = Jo.window.screen.h;
-    var uni_w = Jo.window.screen.w;
+    var bdy_h = window.innerHeight - 4 * Jo.screen.border;
+    var bdy_w = window.innerWidth - 4 * Jo.screen.border;
+    var uni_h = Jo.screen.height;
+    var uni_w = Jo.screen.width;
     var scr_h;
     var scr_w;
     var tmp_h;
     var tmp_w;
     var ctl_d;
 
-    if (typeof document.documentElement.dataset.joCtlsVisible !== "undefined") ctl_d = Jo.window.button.d * 3;
+    if (typeof document.documentElement.dataset.joCtlsVisible !== "undefined") ctl_d = Jo.screen.button * 3;
     else ctl_d = 0;
 
     //  Wide layout:
@@ -48,7 +135,7 @@ Jo.layout = function() {
 
         //  Initial width and height setup:
 
-        bdy_h = window.innerHeight - 2 * Jo.window.screen.b;
+        bdy_h = window.innerHeight - 2 * Jo.screen.border;
         if (bdy_h < uni_h) scr_h = bdy_h;
         else scr_h = uni_h * Math.floor(bdy_h / uni_h);
         scr_w = Math.floor(uni_w * scr_h / uni_h);
@@ -88,7 +175,7 @@ Jo.layout = function() {
 
         //  Initial width and height setup:
 
-        bdy_w = window.innerWidth - 2 * Jo.window.screen.b;
+        bdy_w = window.innerWidth - 2 * Jo.screen.border;
         if (bdy_w < uni_w) scr_w = bdy_w;
         else scr_w = uni_w * Math.floor(bdy_w / uni_w);
         scr_h = Math.floor(uni_h * scr_w / uni_w);
@@ -137,7 +224,14 @@ Jo.logic = function() {
 
 Jo.render = function() {
 
-    if (Jo.window.resized) Jo.layout();
+    var k;
+
+    if (Jo.screen.resized) Jo.screen.layout();
+
+    for (k in Jo.ctrl.active) {
+        if (Jo.ctrl.active[k]) document.getElementById("jo-ctrl-" + k).setAttribute("data-jo-ctrl-active", "");
+        else document.getElementById("jo-ctrl-" + k).removeAttribute("data-jo-ctrl-active");
+    }
 
     window.requestAnimationFrame(Jo.render);
 
@@ -145,7 +239,13 @@ Jo.render = function() {
 
 Jo.setup = function() {
 
-    window.addEventListener("resize", function(){Jo.window.resized = true}, false);
+    //  Adding event listeners:
+
+    window.addEventListener("keydown", Jo, false);
+    window.addEventListener("keyup", Jo, false);
+    window.addEventListener("resize", Jo, false);
+
+    //  Calling logic and render functions:
 
     Jo.logic();
     Jo.render();
