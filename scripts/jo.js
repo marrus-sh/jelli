@@ -7,7 +7,15 @@ var Jo = {
     render: undefined,
     setup: undefined,
     window: {
-        resized: true
+        button: {
+            d: 32
+        },
+        resized: true,
+        screen: {
+            b: 16,
+            w: 256,
+            h: 192
+        }
     }
 }
 
@@ -21,51 +29,54 @@ Jo.layout = function() {
 
     //  Variable setup:
 
-    var bdy_h = window.innerHeight;
-    var bdy_w = window.innerWidth;
+    var bdy_h = window.innerHeight - 4 * Jo.window.screen.b;
+    var bdy_w = window.innerWidth - 4 * Jo.window.screen.b;
+    var uni_h = Jo.window.screen.h;
+    var uni_w = Jo.window.screen.w;
     var scr_h;
     var scr_w;
     var tmp_h;
     var tmp_w;
     var ctl_d;
 
-    if (typeof document.documentElement.dataset.joCtlsVisible !== undefined) ctl_d = 192;
+    if (typeof document.documentElement.dataset.joCtlsVisible !== "undefined") ctl_d = Jo.window.button.d * 3;
     else ctl_d = 0;
 
     //  Wide layout:
 
-    if (bdy_w > 8 * bdy_h / 3) {
+    if (bdy_w > 2 * uni_w * bdy_h / uni_h) {
 
         //  Initial width and height setup:
 
-        if (bdy_h < 192) scr_h = bdy_h;
-        else scr_h = 192 * Math.floor(bdy_h / 192);
-        scr_w = Math.floor(4 * scr_h / 3);
+        bdy_h = window.innerHeight - 2 * Jo.window.screen.b;
+        if (bdy_h < uni_h) scr_h = bdy_h;
+        else scr_h = uni_h * Math.floor(bdy_h / uni_h);
+        scr_w = Math.floor(uni_w * scr_h / uni_h);
         if (bdy_w / 2 < scr_w) {
-            if (bdy_w < 512) scr_w = Math.floor(bdy_w / 2);
-            else scr_w = 256 * Math.floor(bdy_w / 512);
-            scr_h = Math.floor(3 * scr_w / 4);
+            if (bdy_w < 2 * uni_w) scr_w = Math.floor(bdy_w / 2);
+            else scr_w = uni_w * Math.floor(bdy_w / (2 * uni_w));
+            scr_h = Math.floor(uni_h * scr_w / uni_w);
         }
 
         //  Choosing layout and finalizing sizes:
 
-        if (bdy_h === scr_h || bdy_w - (scr_w * 2) > 192) {
+        if (bdy_h === scr_h || bdy_w - (scr_w * 2) > ctl_d) {
             document.documentElement.dataset.joLayout = "4";
-            tmp_w = bdy_w - 192;
+            tmp_w = bdy_w - ctl_d;
             if (tmp_w / 2 < scr_w) {
-                if (tmp_w < 512) scr_w = Math.floor(tmp_w / 2);
-                else scr_w = 256 * Math.floor(tmp_w / 512);
-                scr_h = Math.floor(3 * scr_w / 4);
+                if (tmp_w < 2 * uni_w) scr_w = Math.floor(tmp_w / 2);
+                else scr_w = uni_w * Math.floor(tmp_w / (2 * uni_w));
+                scr_h = Math.floor(uni_h * scr_w / uni_w);
             }
         }
 
         else {
             document.documentElement.dataset.joLayout = "3";
-            tmp_h = bdy_h - 96;
+            tmp_h = bdy_h - ctl_d;
             if (tmp_h < scr_h) {
-                if (tmp_h < 192) scr_h = tmp_h;
-                else scr_h = 192 * Math.floor(tmp_h / 192);
-                scr_w = Math.floor(4 * scr_h / 3);
+                if (tmp_h < uni_h) scr_h = tmp_h;
+                else scr_h = uni_h * Math.floor(tmp_h / uni_h);
+                scr_w = Math.floor(uni_w * scr_h / uni_h);
             }
         }
 
@@ -77,34 +88,35 @@ Jo.layout = function() {
 
         //  Initial width and height setup:
 
-        if (bdy_w < 256) scr_w = bdy_w;
-        else scr_w = 256 * Math.floor(bdy_w / 256);
-        scr_h = Math.floor(3 * scr_w / 4);
+        bdy_w = window.innerWidth - 2 * Jo.window.screen.b;
+        if (bdy_w < uni_w) scr_w = bdy_w;
+        else scr_w = uni_w * Math.floor(bdy_w / uni_w);
+        scr_h = Math.floor(uni_h * scr_w / uni_w);
         if (bdy_h / 2 < scr_h) {
-            if (bdy_h < 384) scr_h = Math.floor(bdy_h / 2);
-            else scr_h = 192 * Math.floor(bdy_h / 384);
-            scr_w = Math.floor(4 * scr_h / 3);
+            if (bdy_h < 2 * uni_h) scr_h = Math.floor(bdy_h / 2);
+            else scr_h = uni_h * Math.floor(bdy_h / (2 * uni_h));
+            scr_w = Math.floor(uni_w * scr_h / uni_h);
         }
 
         //  Choosing layout and finalizing sizes:
 
-        if (bdy_w === scr_w || bdy_h - (scr_h * 2) > 192) {
+        if (bdy_w === scr_w || bdy_h - (scr_h * 2) > ctl_d) {
             document.documentElement.dataset.joLayout = "2";
-            tmp_h = bdy_h - 192;
+            tmp_h = bdy_h - ctl_d;
             if (tmp_h / 2 < scr_h) {
-                if (tmp_h < 384) scr_h = Math.floor(tmp_h / 2);
-                else scr_h = 192 * Math.floor(tmp_h / 384);
-                scr_w = Math.floor(4 * scr_h / 3);
+                if (tmp_h < 2 * uni_h) scr_h = Math.floor(tmp_h / 2);
+                else scr_h = uni_h * Math.floor(tmp_h / (2 * uni_h));
+                scr_w = Math.floor(uni_w * scr_h / uni_h);
             }
         }
 
         else {
             document.documentElement.dataset.joLayout = "1";
-            tmp_w = bdy_w - 192;
+            tmp_w = bdy_w - uni_h;
             if (tmp_w < scr_w) {
-                if (tmp_w < 256) scr_w = tmp_w;
-                else scr_w = 256 * Math.floor(tmp_w / 256);
-                scr_h = Math.floor(3 * scr_w / 4);
+                if (tmp_w < uni_w) scr_w = tmp_w;
+                else scr_w = uni_w * Math.floor(tmp_w / uni_w);
+                scr_h = Math.floor(uni_h * scr_w / uni_w);
             }
         }
 
@@ -112,10 +124,10 @@ Jo.layout = function() {
 
     //  Applying layout:
 
-    document.getElementById("jo-cnvs-tp").width = scr_w;
-    document.getElementById("jo-cnvs-tp").height = scr_h;
-    document.getElementById("jo-cnvs-bt").width = scr_w;
-    document.getElementById("jo-cnvs-bt").height = scr_h;
+    document.getElementById("jo-cnvs-tp").style.width = scr_w + "px";
+    document.getElementById("jo-cnvs-tp").style.height = scr_h + "px";
+    document.getElementById("jo-cnvs-bt").style.width = scr_w + "px";
+    document.getElementById("jo-cnvs-bt").style.height = scr_h + "px";
 
 }
 

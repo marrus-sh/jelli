@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html data-jo-ctls-visible data-jo-debug>
+<html data-jo-ctls-visible>
     <head>
         <title>[Jo]</title>
         <meta charset="utf-8">
@@ -8,20 +8,34 @@
         <script type="text/javascript" src="scripts/jo.js"></script>
     </head>
     <body>
-        <div id="jo-scrn-tp"><canvas id="jo-cnvs-tp">Top Screen</canvas></div><div id="jo-scrn-bt"><canvas id="jo-cnvs-bt">Bottom Screen</canvas></div><div id="jo-ctls-lf">
+        <div id="jo-scrn-tp"><canvas id="jo-cnvs-tp" height="192" width="256">Top Screen</canvas></div><div id="jo-scrn-bt"><canvas id="jo-cnvs-bt" height="192" width="256">Bottom Screen</canvas></div>
+        <div id="jo-ctls-lf">
             <!--  Left Controls  -->
-            <div id="jo-ctrl-strt" title="Start"></div>
-            <div id="jo-ctrl-selc" title="Select"></div>
-            <div id="jo-ctrl-menu" title="Menu"></div>
-            <div id="jo-ctrl-look" title="Look"></div>
-            <div id="jo-ctrl-exit" title="Exit"></div>
-            <div id="jo-ctrl-actn" title="Action"></div>
-        </div><div id="jo-ctls-rt">
+            <div id="jo-ctlr-l1">
+                <div id="jo-ctrl-strt" title="Start"></div>
+                <div id="jo-ctrl-selc" title="Select"></div>
+            </div>
+            <div id="jo-ctlr-l2">
+                <div id="jo-ctrl-menu" title="Menu"></div>
+                <div id="jo-ctrl-look" title="Look"></div>
+            </div>
+            <div id="jo-ctlr-l3">
+                <div id="jo-ctrl-exit" title="Exit"></div>
+                <div id="jo-ctrl-actn" title="Action"></div>
+            </div>
+        </div>
+        <div id="jo-ctls-rt">
             <!--  Right Controls  -->
-            <div id="jo-ctrl-uprw" title="Up Arrow"></div>
-            <div id="jo-ctrl-dnrw" title="Down Arrow"></div>
-            <div id="jo-ctrl-lfrw" title="Left Arrow"></div>
-            <div id="jo-ctrl-rtrw" title="Right Arrow"></div>
+            <div id="jo-ctlr-r1">
+                <div id="jo-ctrl-uprw" title="Up Arrow"></div>
+            </div>
+            <div id="jo-ctlr-r2">
+                <div id="jo-ctrl-lfrw" title="Left Arrow"></div>
+                <div id="jo-ctrl-rtrw" title="Right Arrow"></div>
+            </div>
+            <div id="jo-ctlr-r3">
+                <div id="jo-ctrl-dnrw" title="Down Arrow"></div>
+            </div>
         </div>
     </body>
 </html>

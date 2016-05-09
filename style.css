@@ -22,15 +22,42 @@ body {
     padding: 0;
     width: 100%;
     height: 100%;
+    background: #4f4f4f;
 }
 
 /*  Screens:  */
 
 *[id^="jo-scrn"] {
-    display: block;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     margin: 0;
     padding: 0;
-    align-self: center;
+    flex: auto;
+}
+#jo-scrn-tp {
+    border: solid 8px;
+    border-radius: 8px;
+    border-image: url(images/scrn-border.png) 8 8 repeat;
+    background: #777777;
+}
+#jo-scrn-bt {
+    border: solid 8px;
+    border-radius: 8px;
+    border-image: url(images/scrn-border.png) 8 8 repeat;
+    background: #777777;
+}
+#jo-cnvs-tp {
+    border: solid 8px;
+    border-radius: 8px;
+    border-image: url(images/cnvs-border.png) 8 8 repeat;
+    background: #000000;
+}
+#jo-cnvs-bt {
+    border: solid 8px;
+    border-radius: 8px;
+    border-image: url(images/cnvs-border.png) 8 8 repeat;
+    background: #000000;
 }
 *[id^="jo-cnvs"] {
     display: block;
@@ -42,12 +69,22 @@ body {
 
 *[id^="jo-ctls"] {
     display: none;
-    position: relative;
+    flex-flow: column;
+    justify-content: center;
+    align-items: center;
     min-width: 96px;
     min-height: 96px;
+    flex: auto;
 }
 html[data-jo-ctls-visible] *[id^=jo-ctls] {
-    display: block;
+    display: flex;
+}
+*[id^="jo-ctlr"] {
+    display: flex;
+    flex-flow: row;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
 }
 *[id^="jo-ctrl"] {
     background-image: url(images/ctrl.png);
@@ -109,6 +146,7 @@ html[data-jo-ctls-visible] *[id^=jo-ctls] {
     background-position: 20% 60%;
 }
 #jo-ctrl-lfrw {
+    margin-right: 32px;
     background-position: 40% 20%;
 }
 #jo-ctrl-lfrw[data-jo-ctrl-active] {
@@ -121,13 +159,27 @@ html[data-jo-ctls-visible] *[id^=jo-ctls] {
     background-position: 60% 60%;
 }
 
+/*  No layout  */
+
+html:not([data-jo-layout]) *[id^="jo-scrn"], html[data-jo-ctls-visible]:not([data-jo-layout]) *[id^="jo-ctls"] {
+    display: none;
+}
+
 /*  Layout 1:  */
 
 html[data-jo-layout="1"] body {
     display: flex;
     flex-flow: column wrap;
     justify-content: space-around;
-    align-items: center;
+    align-items: stretch;
+}
+html[data-jo-layout="1"] #jo-scrn-tp {
+    border-bottom: none;
+    padding-bottom: 8px;
+}
+html[data-jo-layout="1"] #jo-scrn-bt {
+    border-top: none;
+    padding-top: 8px;
 }
 html[data-jo-layout="1"] *[id^="jo-ctls"] {
     height: 100%;
@@ -145,10 +197,18 @@ html[data-jo-layout="2"] body {
     display: flex;
     flex-flow: row wrap;
     justify-content: space-around;
-    align-items: center;
+    align-items: stretch;
 }
 html[data-jo-layout="2"] *[id^="jo-scrn"] {
     width: 100%;
+}
+html[data-jo-layout="2"] #jo-scrn-tp {
+    border-bottom: none;
+    padding-bottom: 8px;
+}
+html[data-jo-layout="2"] #jo-scrn-bt {
+    border-top: none;
+    padding-top: 8px;
 }
 
 /*  Layout 3:  */
@@ -157,10 +217,18 @@ html[data-jo-layout="3"] body {
     display: flex;
     flex-flow: row wrap;
     justify-content: space-around;
-    align-items: center;
+    align-items: stretch;
 }
 html[data-jo-layout="3"] *[id^="jo-scrn"] {
     width: 50%;
+}
+html[data-jo-layout="3"] #jo-scrn-tp {
+    border-right: none;
+    padding-right: 8px;
+}
+html[data-jo-layout="3"] #jo-scrn-bt {
+    border-left: none;
+    padding-left: 8px;
 }
 
 /*  Layout 4:  */
@@ -169,7 +237,15 @@ html[data-jo-layout="4"] body {
     display: flex;
     flex-flow: row;
     justify-content: space-around;
-    align-items: center;
+    align-items: stretch;
+}
+html[data-jo-layout="4"] #jo-scrn-tp {
+    border-right: none;
+    padding-right: 8px;
+}
+html[data-jo-layout="4"] #jo-scrn-bt {
+    border-left: none;
+    padding-left: 8px;
 }
 html[data-jo-layout="4"] #jo-ctls-lf {
     order: -1;
@@ -180,27 +256,27 @@ html[data-jo-layout="4"] #jo-ctls-rt {
 
 /*  Debug:  */
 
-html {
+html[data-jo-debug] {
     background: white;
 }
-body {
+html[data-jo-debug] body {
     background: black;
 }
-#jo-scrn-tp {
+html[data-jo-debug] #jo-scrn-tp {
     background: green;
 }
-#jo-scrn-bt {
+html[data-jo-debug] #jo-scrn-bt {
     background: red;
 }
-#jo-cnvs-tp {
+html[data-jo-debug] #jo-cnvs-tp {
     background: darkred;
 }
-#jo-cnvs-bt {
+html[data-jo-debug] #jo-cnvs-bt {
     background: darkgreen;
 }
-#jo-ctls-lf {
+html[data-jo-debug] #jo-ctls-lf {
     background: blue;
 }
-#jo-ctls-rt {
+html[data-jo-debug] #jo-ctls-rt {
     background: yellow;
 }
