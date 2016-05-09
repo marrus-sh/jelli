@@ -37,20 +37,12 @@ body {
     justify-content: center;
     align-items: center;
     margin: 0;
-    padding: 0;
+    border: solid 8px;
+    border-radius: 8px;
+    border-image: url(images/scrn-border.png) 8 8 repeat;
+    padding: 8px;
+    background: #777777;
     flex: auto;
-}
-#jo-scrn-tp {
-    border: solid 8px;
-    border-radius: 8px;
-    border-image: url(images/scrn-border.png) 8 8 repeat;
-    background: #777777;
-}
-#jo-scrn-bt {
-    border: solid 8px;
-    border-radius: 8px;
-    border-image: url(images/scrn-border.png) 8 8 repeat;
-    background: #777777;
 }
 *[id^="jo-cnvs"] {
     display: block;

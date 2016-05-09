@@ -66,7 +66,7 @@ var Jo = {
     setup: undefined,
     screen: {
         button: 32,
-        border: 16,
+        border: 24,
         width: 256,
         height: 192,
         layout: undefined,
