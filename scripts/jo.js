@@ -81,11 +81,11 @@ Jo.handleEvent = function(e) {
     switch (e.type) {
 
         case "keydown":
-            if (!document.documentElement.dataset.dataJoLayout) {
+            document.documentElement.removeAttribute("data-jo-ctls-visible");
+            if (!document.documentElement.dataset.joLayout) {
                 Jo.setup();
                 break;
             }
-            document.documentElement.removeAttribute("data-jo-ctls-visible");
             k = e.code || e.key || e.keyIdentifier || e.keyCode;
             if (Jo.ctrl.key[k]) {
                 Jo.ctrl.active[Jo.ctrl.key[k]] = true;
@@ -116,11 +116,11 @@ Jo.handleEvent = function(e) {
             break;
 
         case "touchstart":
-            if (!document.documentElement.dataset.dataJoLayout) {
+            document.documentElement.setAttribute("data-jo-ctls-visible", "");
+            if (!document.documentElement.dataset.joLayout) {
                 Jo.setup();
                 break;
             }
-            document.documentElement.setAttribute("data-jo-ctls-visible", "");
             if (e.target.id.substr(0, 8) === "jo-ctrl-") Jo.ctrl.active[e.target.id.substr(8)] = true;
             break;
 
