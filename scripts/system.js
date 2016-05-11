@@ -15,6 +15,7 @@ var System = (function () {
     //  Item list constructor:
 
     function ItemList(items, process) {
+        if (arguments.length < 2)  throw new Error("(system.js) ItemList constructor called with too few arguments.");
         var i;
         Object.defineProperty(this, "length", {
             value: items.length
@@ -43,11 +44,12 @@ var System = (function () {
 
         //  Handling arguments and error checking:
 
+        if (arguments.length < 1)  throw new Error("(system.js) Screen constructor called with too few arguments.");
         if (typeof canvas === "string" || canvas instanceof String) {
-            if (!document.getElementById(canvas)) throw new Error("(system.js) Cannot construct Screen – no element with the given id (" + canvas +") found.");
+            if (!document.getElementById(canvas)) throw new Error("(system.js) Cannot construct Screen – no element found with the given id (" + canvas + ").");
             canvas = document.getElementById(canvas);
         }
-        else if (!(canvas instanceof Element)) throw new Error("(system.js) The first argument of the Screen constructor must be an element or string");
+        else if (!(canvas instanceof Element)) throw new Error("(system.js) The first argument of the Screen constructor must be an element or string.");
         if (typeof context === "undefined" || context === null) context = "2d";
         else if (!(typeof context === "string" || context instanceof String)) throw new Error("(system.js) The second argument of the System constructor must be a string.");
 
@@ -89,7 +91,7 @@ var System = (function () {
 
     //  System constructor:
 
-    function System(/*  Call with any number of context strings  */) {
+    function System(/*  One or more context strings  */) {
 
         //  Variable setup:
 

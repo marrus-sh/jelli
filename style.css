@@ -84,68 +84,68 @@ html[data-jo-ctls-visible] *[id^=jo-ctls] {
     width: 32px;
     height: 32px;
 }
-*[id^="jo-ctrl"][data-jo-ctrl-active] {
+*[id^="jo-ctrl"][data-control-active] {
     background-position: 100% 60%;
 }
 #jo-ctrl-strt {
     background-position: 0% 0%;
 }
-#jo-ctrl-strt[data-jo-ctrl-active] {
+#jo-ctrl-strt[data-control-active] {
     background-position: 0% 40%;
 }
 #jo-ctrl-selc {
     background-position: 20% 0%;
 }
-#jo-ctrl-selc[data-jo-ctrl-active] {
+#jo-ctrl-selc[data-control-active] {
     background-position: 20% 40%;
 }
 #jo-ctrl-menu {
     background-position: 40% 0%;
 }
-#jo-ctrl-menu[data-jo-ctrl-active] {
+#jo-ctrl-menu[data-control-active] {
     background-position: 40% 40%;
 }
 #jo-ctrl-look {
     background-position: 60% 0%;
 }
-#jo-ctrl-look[data-jo-ctrl-active] {
+#jo-ctrl-look[data-control-active] {
     background-position: 60% 40%;
 }
 #jo-ctrl-exit {
     background-position: 80% 0%;
 }
-#jo-ctrl-exit[data-jo-ctrl-active] {
+#jo-ctrl-exit[data-control-active] {
     background-position: 80% 40%;
 }
 #jo-ctrl-actn {
     background-position: 100% 0%;
 }
-#jo-ctrl-actn[data-jo-ctrl-active] {
+#jo-ctrl-actn[data-control-active] {
     background-position: 100% 40%;
 }
 #jo-ctrl-uprw {
     background-position: 0% 20%;
 }
-#jo-ctrl-uprw[data-jo-ctrl-active] {
+#jo-ctrl-uprw[data-control-active] {
     background-position: 0% 60%;
 }
 #jo-ctrl-dnrw {
     background-position: 20% 20%;
 }
-#jo-ctrl-dnrw[data-jo-ctrl-active] {
+#jo-ctrl-dnrw[data-control-active] {
     background-position: 20% 60%;
 }
 #jo-ctrl-lfrw {
     margin-right: 32px;
     background-position: 40% 20%;
 }
-#jo-ctrl-lfrw[data-jo-ctrl-active] {
+#jo-ctrl-lfrw[data-control-active] {
     background-position: 40% 60%;
 }
 #jo-ctrl-rtrw {
     background-position: 60% 20%;
 }
-#jo-ctrl-rtrw[data-jo-ctrl-active] {
+#jo-ctrl-rtrw[data-control-active] {
     background-position: 60% 60%;
 }
 

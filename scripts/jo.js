@@ -1,65 +1,8 @@
 /* jslint asi:true, browser:true */
-/* globals System */
+/* globals System, Control */
 
 var Jo = {
-    ctrl: {
-        active: {
-            actn: false,
-            dnrw: false,
-            exit: false,
-            lfrw: false,
-            look: false,
-            menu: false,
-            rtrw: false,
-            selc: false,
-            strt: false,
-            uprw: false
-        },
-        key: {
-            0x25: "lfrw",
-            0x26: "uprw",
-            0x27: "rtrw",
-            0x28: "dnrw",
-            0x41: "menu",
-            0x51: "strt",
-            0x53: "look",
-            0x57: "selc",
-            0x58: "actn",
-            0x5A: "exit",
-            A: "menu",
-            a: "menu",
-            ArrowDown: "dnrw",
-            ArrowLeft: "lfrw",
-            ArrowRight: "rtrw",
-            ArrowUp: "uprw",
-            Down: "dnrw",
-            KeyA: "menu",
-            KeyQ: "strt",
-            KeyS: "look",
-            KeyW: "selc",
-            KeyX: "actn",
-            KeyZ: "exit",
-            Left: "lfrw",
-            Q: "strt",
-            q: "strt",
-            Right: "rtrw",
-            S: "look",
-            s: "look",
-            "U+0041": "menu",
-            "U+0051": "strt",
-            "U+0053": "look",
-            "U+0057": "selc",
-            "U+0058": "actn",
-            "U+005A": "exit",
-            Up: "uprw",
-            W: "selc",
-            w: "selc",
-            X: "actn",
-            x: "actn",
-            Z: "exit",
-            z: "exit",
-        }
-    },
+    control: undefined,
     handleEvent: undefined,
     init: undefined,
     logic: undefined,
@@ -83,16 +26,16 @@ Jo.handleEvent = function(e) {
     switch (e.type) {
 
         case "keydown":
-            document.documentElement.removeAttribute("data-jo-ctls-visible");
+            k = e.code || e.key || e.keyIdentifier || e.keyCode;
+            if (document.documentElement.hasAttribute("data-jo-ctls-visible")) {
+                document.documentElement.removeAttribute("data-jo-ctls-visible");
+                Jo.scrn.resized = true;
+            }
             if (!document.documentElement.dataset.joLayout) {
                 Jo.setup();
                 break;
             }
-            k = e.code || e.key || e.keyIdentifier || e.keyCode;
-            if (Jo.ctrl.key[k]) {
-                Jo.ctrl.active[Jo.ctrl.key[k]] = true;
-            }
-            else if (k === "Tab" || k === "U+0009" || k === 0x09) {
+            if (k === "Tab" || k === "U+0009" || k === 0x09) {
                 if (!(document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement)) {
                     if (document.body.requestFullscreen) document.body.requestFullscreen();
                     else if (document.body.mozRequestFullScreen) document.body.mozRequestFullScreen();
@@ -108,26 +51,20 @@ Jo.handleEvent = function(e) {
             }
             break;
 
-        case "keyup":
-            k = e.code || e.key || e.keyIdentifier || e.keyCode;
-            if (Jo.ctrl.key[k]) Jo.ctrl.active[Jo.ctrl.key[k]] = false;
-            break;
-
         case "resize":
             Jo.scrn.resized = true;
             break;
 
         case "touchstart":
-            document.documentElement.setAttribute("data-jo-ctls-visible", "");
+            if (!document.documentElement.hasAttribute("data-jo-ctls-visible")) {
+                document.documentElement.setAttribute("data-jo-ctls-visible", "");
+                Jo.scrn.resized = true;
+            }
             if (!document.documentElement.dataset.joLayout) {
                 Jo.setup();
                 break;
             }
             if (e.target.id.substr(0, 8) === "jo-ctrl-") Jo.ctrl.active[e.target.id.substr(8)] = true;
-            break;
-
-        case "touchend":
-            if (e.target.id.substr(0, 8) === "jo-ctrl-") Jo.ctrl.active[e.target.id.substr(8)] = false;
             break;
 
     }
@@ -137,6 +74,9 @@ Jo.handleEvent = function(e) {
 Jo.init = function() {
 
     if (typeof System === "undefined" || !System) throw new Error("(jo.js) System module not loaded");
+    if (typeof Control === "undefined" || !Control) throw new Error("(jo.js) Control module not loaded");
+
+    //  System setup:
 
     Jo.system = new System("2d", "2d");
 
@@ -147,13 +87,25 @@ Jo.init = function() {
     document.getElementById("jo-scrn-tp").appendChild(Jo.system.canvases[0]);
     document.getElementById("jo-scrn-bt").appendChild(Jo.system.canvases[1]);
 
+    //  Control setup:
+
+    Jo.control = new Control(true);
+    Jo.control.add("action").addKeys("action", 0x58, "U+0058", "KeyX", "X", "x").linkElement("action", "jo-ctrl-actn");
+    Jo.control.add("down").addKeys("down", 0x28, "ArrowDown", "Down").linkElement("down", "jo-ctrl-dnrw");
+    Jo.control.add("exit").addKeys("exit", 0x5A, "U+005A", "KeyZ", "Z", "z").linkElement("exit", "jo-ctrl-exit");
+    Jo.control.add("left").addKeys("left", 0x25, "ArrowLeft", "Left").linkElement("left", "jo-ctrl-lfrw");
+    Jo.control.add("look").addKeys("look", 0x53, "U+0053", "KeyS", "S", "s").linkElement("look", "jo-ctrl-look");
+    Jo.control.add("menu").addKeys("menu", 0x41, "U+0041", "KeyA", "A", "a").linkElement("menu", "jo-ctrl-menu");
+    Jo.control.add("right").addKeys("right", 0x27, "ArrowRight", "Right").linkElement("right", "jo-ctrl-rtrw");
+    Jo.control.add("select").addKeys("select", 0x57, "U+0057", "KeyW", "W", "w").linkElement("select", "jo-ctrl-selc");
+    Jo.control.add("start").addKeys("start", 0x51, "U+0051", "KeyQ", "Q", "q").linkElement("start", "jo-ctrl-strt");
+    Jo.control.add("up").addKeys("up", 0x26, "ArrowUp", "Up").linkElement("up", "jo-ctrl-uprw");
+
     //  Adding event listeners:
 
     window.addEventListener("keydown", Jo, false);
-    window.addEventListener("keyup", Jo, false);
     window.addEventListener("resize", Jo, false);
     window.addEventListener("touchstart", Jo, false);
-    window.addEventListener("touchend", Jo, false);
 
 }
 
@@ -272,11 +224,6 @@ Jo.render = function() {
     var k;
 
     if (Jo.scrn.resized) Jo.scrn.layout();
-
-    for (k in Jo.ctrl.active) {
-        if (Jo.ctrl.active[k]) document.getElementById("jo-ctrl-" + k).setAttribute("data-jo-ctrl-active", "");
-        else document.getElementById("jo-ctrl-" + k).removeAttribute("data-jo-ctrl-active");
-    }
 
     window.requestAnimationFrame(Jo.render);
 
