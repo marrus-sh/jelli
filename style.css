@@ -156,6 +156,7 @@ html:not([data-jo-layout]) body {
     background-position: center center;
     background-size: contain;
     background-repeat: no-repeat;
+    background-color: transparent;
 }
 html:not([data-jo-layout]) *[id^="jo-scrn"], html[data-jo-ctls-visible]:not([data-jo-layout]) *[id^="jo-ctls"] {
     display: none;

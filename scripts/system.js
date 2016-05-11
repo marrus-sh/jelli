@@ -122,7 +122,7 @@ var System = (function () {
 
     }
 
-    //  Setting up the constructor prototype:
+    //  System prototype:
 
     System.prototype = Object.create(Object.prototype, {
 
