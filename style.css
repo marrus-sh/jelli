@@ -39,26 +39,18 @@ body {
     margin: 0;
     border: solid 8px;
     border-radius: 8px;
-    border-image: url(images/scrn-border.png) 8 8 repeat;
+    border-image: url(images/gui/scrn-border.png) 8 8 repeat;
     padding: 8px;
     background: #777777;
     flex: auto;
 }
-*[id^="jo-cnvs"] {
+canvas {
     display: block;
+    border: solid 8px;
+    border-radius: 8px;
+    border-image: url(images/gui/cnvs-border.png) 8 8 repeat;
+    background: #000000;
     padding: 0;
-}
-#jo-cnvs-tp {
-    border: solid 8px;
-    border-radius: 8px;
-    border-image: url(images/cnvs-border.png) 8 8 repeat;
-    background: #000000;
-}
-#jo-cnvs-bt {
-    border: solid 8px;
-    border-radius: 8px;
-    border-image: url(images/cnvs-border.png) 8 8 repeat;
-    background: #000000;
 }
 
 /*  Controls:  */
@@ -85,7 +77,7 @@ html[data-jo-ctls-visible] *[id^=jo-ctls] {
     width: 100%;
 }
 *[id^="jo-ctrl"] {
-    background-image: url(images/ctrl.png);
+    background-image: url(images/gui/ctrl.png);
     background-size: 600% 600%;
     background-position: 100% 20%;
     background-repeat: no-repeat;
@@ -163,6 +155,7 @@ html:not([data-jo-layout]) body {
     background-image: url(images/splash.gif);
     background-position: center center;
     background-size: contain;
+    background-repeat: no-repeat;
 }
 html:not([data-jo-layout]) *[id^="jo-scrn"], html[data-jo-ctls-visible]:not([data-jo-layout]) *[id^="jo-ctls"] {
     display: none;
@@ -273,10 +266,10 @@ html[data-jo-debug] #jo-scrn-tp {
 html[data-jo-debug] #jo-scrn-bt {
     background: red;
 }
-html[data-jo-debug] #jo-cnvs-tp {
+html[data-jo-debug] #jo-scrn-tp canvas {
     background: darkred;
 }
-html[data-jo-debug] #jo-cnvs-bt {
+html[data-jo-debug] #jo-scrn-bt canvas {
     background: darkgreen;
 }
 html[data-jo-debug] #jo-ctls-lf {

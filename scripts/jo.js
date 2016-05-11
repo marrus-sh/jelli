@@ -1,4 +1,5 @@
 /* jslint asi:true, browser:true */
+/* globals System */
 
 var Jo = {
     ctrl: {
@@ -64,14 +65,15 @@ var Jo = {
     logic: undefined,
     render: undefined,
     setup: undefined,
-    screen: {
+    scrn: {
         button: 32,
         border: 24,
         width: 256,
         height: 192,
         layout: undefined,
         resized: true,
-    }
+    },
+    system: undefined
 }
 
 Jo.handleEvent = function(e) {
@@ -112,7 +114,7 @@ Jo.handleEvent = function(e) {
             break;
 
         case "resize":
-            Jo.screen.resized = true;
+            Jo.scrn.resized = true;
             break;
 
         case "touchstart":
@@ -134,6 +136,17 @@ Jo.handleEvent = function(e) {
 
 Jo.init = function() {
 
+    if (typeof System === "undefined" || !System) throw new Error("(jo.js) System module not loaded");
+
+    Jo.system = new System("2d", "2d");
+
+    Jo.system.canvases[0].height = Jo.scrn.height;
+    Jo.system.canvases[1].height = Jo.scrn.height;
+    Jo.system.canvases[0].width = Jo.scrn.width;
+    Jo.system.canvases[1].width = Jo.scrn.width;
+    document.getElementById("jo-scrn-tp").appendChild(Jo.system.canvases[0]);
+    document.getElementById("jo-scrn-bt").appendChild(Jo.system.canvases[1]);
+
     //  Adding event listeners:
 
     window.addEventListener("keydown", Jo, false);
@@ -144,21 +157,21 @@ Jo.init = function() {
 
 }
 
-Jo.screen.layout = function() {
+Jo.scrn.layout = function() {
 
     //  Variable setup:
 
-    var bdy_h = window.innerHeight - 4 * Jo.screen.border;
-    var bdy_w = window.innerWidth - 4 * Jo.screen.border;
-    var uni_h = Jo.screen.height;
-    var uni_w = Jo.screen.width;
+    var bdy_h = window.innerHeight - 4 * Jo.scrn.border;
+    var bdy_w = window.innerWidth - 4 * Jo.scrn.border;
+    var uni_h = Jo.scrn.height;
+    var uni_w = Jo.scrn.width;
     var scr_h;
     var scr_w;
     var tmp_h;
     var tmp_w;
     var ctl_d;
 
-    if (document.documentElement.hasAttribute("data-jo-ctls-visible")) ctl_d = Jo.screen.button * 3;
+    if (document.documentElement.hasAttribute("data-jo-ctls-visible")) ctl_d = Jo.scrn.button * 3;
     else ctl_d = 0;
 
     //  Wide layout:
@@ -167,7 +180,7 @@ Jo.screen.layout = function() {
 
         //  Initial width and height setup:
 
-        bdy_h = window.innerHeight - 2 * Jo.screen.border;
+        bdy_h = window.innerHeight - 2 * Jo.scrn.border;
         if (bdy_h < uni_h) scr_h = bdy_h;
         else scr_h = uni_h * Math.floor(bdy_h / uni_h);
         scr_w = Math.floor(uni_w * scr_h / uni_h);
@@ -207,7 +220,7 @@ Jo.screen.layout = function() {
 
         //  Initial width and height setup:
 
-        bdy_w = window.innerWidth - 2 * Jo.screen.border;
+        bdy_w = window.innerWidth - 2 * Jo.scrn.border;
         if (bdy_w < uni_w) scr_w = bdy_w;
         else scr_w = uni_w * Math.floor(bdy_w / uni_w);
         scr_h = Math.floor(uni_h * scr_w / uni_w);
@@ -243,10 +256,10 @@ Jo.screen.layout = function() {
 
     //  Applying layout:
 
-    document.getElementById("jo-cnvs-tp").style.width = scr_w + "px";
-    document.getElementById("jo-cnvs-tp").style.height = scr_h + "px";
-    document.getElementById("jo-cnvs-bt").style.width = scr_w + "px";
-    document.getElementById("jo-cnvs-bt").style.height = scr_h + "px";
+    Jo.system.canvases[0].style.width = scr_w + "px";
+    Jo.system.canvases[0].style.height = scr_h + "px";
+    Jo.system.canvases[1].style.width = scr_w + "px";
+    Jo.system.canvases[1].style.height = scr_h + "px";
 
 }
 
@@ -258,7 +271,7 @@ Jo.render = function() {
 
     var k;
 
-    if (Jo.screen.resized) Jo.screen.layout();
+    if (Jo.scrn.resized) Jo.scrn.layout();
 
     for (k in Jo.ctrl.active) {
         if (Jo.ctrl.active[k]) document.getElementById("jo-ctrl-" + k).setAttribute("data-jo-ctrl-active", "");
