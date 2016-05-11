@@ -103,6 +103,7 @@ Jo.init = function() {
 
     //  Adding event listeners:
 
+    document.body.addEventListener("touchmove", function (e) {e.preventDefault();}, false);
     window.addEventListener("keydown", Jo, false);
     window.addEventListener("resize", Jo, false);
     window.addEventListener("touchstart", Jo, false);
