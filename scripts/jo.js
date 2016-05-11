@@ -16,13 +16,13 @@ Requires: system.js, control.js
     "use strict";
 
     var control;
-    var scrn = {
-        button: 32,
-        border: 24,
-        width: 250,
-        height: 160,
-        resized: true,
+    var settings = {
+        button_size: 32,
+        screen_border: 8,
+        screen_width: 250,
+        screen_height: 160,
     }
+    var resized = true;
     var system;
 
     //  Event handling:
@@ -35,9 +35,9 @@ Requires: system.js, control.js
 
             case "keydown":
                 k = e.code || e.key || e.keyIdentifier || e.keyCode;
-                if (document.documentElement.hasAttribute("data-jo-ctls-visible")) {
-                    document.documentElement.removeAttribute("data-jo-ctls-visible");
-                    scrn.resized = true;
+                if (document.documentElement.hasAttribute("data-jo-touch")) {
+                    document.documentElement.removeAttribute("data-jo-touch");
+                    resized = true;
                 }
                 if (!document.documentElement.dataset.joLayout) {
                     setup();
@@ -60,13 +60,13 @@ Requires: system.js, control.js
                 break;
 
             case "resize":
-                scrn.resized = true;
+                resized = true;
                 break;
 
             case "touchstart":
-                if (!document.documentElement.hasAttribute("data-jo-ctls-visible")) {
-                    document.documentElement.setAttribute("data-jo-ctls-visible", "");
-                    scrn.resized = true;
+                if (!document.documentElement.hasAttribute("data-jo-touch")) {
+                    document.documentElement.setAttribute("data-jo-touch", "");
+                    resized = true;
                 }
                 if (!document.documentElement.dataset.joLayout) {
                     setup();
@@ -91,12 +91,12 @@ Requires: system.js, control.js
 
         system = new System("2d", "2d");
 
-        system.canvases[0].height = scrn.height;
-        system.canvases[1].height = scrn.height;
-        system.canvases[0].width = scrn.width;
-        system.canvases[1].width = scrn.width;
-        document.getElementById("jo-scrn-tp").appendChild(system.canvases[0]);
-        document.getElementById("jo-scrn-bt").appendChild(system.canvases[1]);
+        system.canvases[0].height = settings.screen_height;
+        system.canvases[0].width = settings.screen_width;
+        system.canvases[1].height = settings.screen_height;
+        system.canvases[1].width = settings.screen_width;
+        document.body.appendChild(system.canvases[0]);
+        document.body.appendChild(system.canvases[1]);
 
         //  Control setup:
 
@@ -127,105 +127,51 @@ Requires: system.js, control.js
 
         //  Variable setup:
 
-        var bdy_h = window.innerHeight - 4 * scrn.border;
-        var bdy_w = window.innerWidth - 4 * scrn.border;
-        var uni_h = scrn.height;
-        var uni_w = scrn.width;
-        var scr_h;
-        var scr_w;
-        var tmp_h;
-        var tmp_w;
-        var ctl_d;
+        var body_height = document.body.clientHeight - (2 * settings.screen_border);
+        var body_width = document.body.clientWidth - (2 * settings.screen_border);
+        var scaled_height;
+        var scaled_width;
+        var temporary_height;
+        var temporary_width;
+        var button_area;
 
-        if (document.documentElement.hasAttribute("data-jo-ctls-visible")) ctl_d = scrn.button * 3;
-        else ctl_d = 0;
+        if (document.documentElement.hasAttribute("data-jo-touch")) button_area = settings.button_size * 3;
+        else button_area = 0;
 
-        //  Wide layout:
+        //  Controls:
 
-        if (bdy_w > 2 * uni_w * bdy_h / uni_h) {
-
-            //  Initial width and height setup:
-
-            bdy_h = window.innerHeight - 2 * scrn.border;
-            if (bdy_h < uni_h) scr_h = bdy_h;
-            else scr_h = uni_h * Math.floor(bdy_h / uni_h);
-            scr_w = Math.floor(uni_w * scr_h / uni_h);
-            if (bdy_w / 2 < scr_w) {
-                if (bdy_w < 2 * uni_w) scr_w = Math.floor(bdy_w / 2);
-                else scr_w = uni_w * Math.floor(bdy_w / (2 * uni_w));
-                scr_h = Math.floor(uni_h * scr_w / uni_w);
-            }
-
-            //  Choosing layout and finalizing sizes:
-
-            if (bdy_h === scr_h || bdy_w - (scr_w * 2) > ctl_d) {
-                document.documentElement.dataset.joLayout = "4";
-                tmp_w = bdy_w - ctl_d;
-                if (tmp_w / 2 < scr_w) {
-                    if (tmp_w < 2 * uni_w) scr_w = Math.floor(tmp_w / 2);
-                    else scr_w = uni_w * Math.floor(tmp_w / (2 * uni_w));
-                    scr_h = Math.floor(uni_h * scr_w / uni_w);
-                }
-            }
-
-            else {
-                document.documentElement.dataset.joLayout = "3";
-                tmp_h = bdy_h - ctl_d;
-                if (tmp_h < scr_h) {
-                    if (tmp_h < uni_h) scr_h = tmp_h;
-                    else scr_h = uni_h * Math.floor(tmp_h / uni_h);
-                    scr_w = Math.floor(uni_w * scr_h / uni_h);
-                }
-            }
-
+        if (body_width / body_height > settings.screen_width / settings.screen_height) {
+            document.documentElement.dataset.joLayout = "horizontal";
+            body_width -= 2 * button_area;
+        }
+        else {
+            document.documentElement.dataset.joLayout = "vertical";
+            body_height -= button_area;
         }
 
-        //  Narrow layout:
+        //  Sizing:
 
+        if (body_width / body_height > settings.screen_width / settings.screen_height) {
+            if (body_height < settings.screen_height) scaled_height = body_height;
+            else scaled_height = settings.screen_height * Math.floor(body_height / settings.screen_height);
+            scaled_width = Math.floor(settings.screen_width * scaled_height / settings.screen_height);
+        }
         else {
-
-            //  Initial width and height setup:
-
-            bdy_w = window.innerWidth - 2 * scrn.border;
-            if (bdy_w < uni_w) scr_w = bdy_w;
-            else scr_w = uni_w * Math.floor(bdy_w / uni_w);
-            scr_h = Math.floor(uni_h * scr_w / uni_w);
-            if (bdy_h / 2 < scr_h) {
-                if (bdy_h < 2 * uni_h) scr_h = Math.floor(bdy_h / 2);
-                else scr_h = uni_h * Math.floor(bdy_h / (2 * uni_h));
-                scr_w = Math.floor(uni_w * scr_h / uni_h);
-            }
-
-            //  Choosing layout and finalizing sizes:
-
-            if (bdy_w === scr_w || bdy_h - (scr_h * 2) > ctl_d) {
-                document.documentElement.dataset.joLayout = "2";
-                tmp_h = bdy_h - ctl_d;
-                if (tmp_h / 2 < scr_h) {
-                    if (tmp_h < 2 * uni_h) scr_h = Math.floor(tmp_h / 2);
-                    else scr_h = uni_h * Math.floor(tmp_h / (2 * uni_h));
-                    scr_w = Math.floor(uni_w * scr_h / uni_h);
-                }
-            }
-
-            else {
-                document.documentElement.dataset.joLayout = "1";
-                tmp_w = bdy_w - uni_h;
-                if (tmp_w < scr_w) {
-                    if (tmp_w < uni_w) scr_w = tmp_w;
-                    else scr_w = uni_w * Math.floor(tmp_w / uni_w);
-                    scr_h = Math.floor(uni_h * scr_w / uni_w);
-                }
-            }
-
+            if (body_width < settings.screen_width) scaled_width = body_width;
+            else scaled_width = settings.screen_width * Math.floor(body_width / settings.screen_width);
+            scaled_height = Math.floor(settings.screen_height * scaled_width / settings.screen_width);
         }
 
         //  Applying layout:
 
-        system.canvases[0].style.width = scr_w + "px";
-        system.canvases[0].style.height = scr_h + "px";
-        system.canvases[1].style.width = scr_w + "px";
-        system.canvases[1].style.height = scr_h + "px";
+        system.canvases[0].style.width = scaled_width + "px";
+        system.canvases[0].style.height = scaled_height + "px";
+        system.canvases[0].style.top = "calc(50% - " + ((scaled_height / 2) + settings.screen_border) + "px)";
+        system.canvases[0].style.left = "calc(50% - " + ((scaled_width / 2) + settings.screen_border) + "px)";
+        system.canvases[1].style.width = scaled_width + "px";
+        system.canvases[1].style.height = scaled_height + "px";
+        system.canvases[1].style.top = "calc(50% - " + ((scaled_height / 2) + settings.screen_border) + "px)";
+        system.canvases[1].style.left = "calc(50% - " + ((scaled_width / 2) + settings.screen_border) + "px)";
 
     }
 
@@ -235,7 +181,7 @@ Requires: system.js, control.js
 
     function render() {
 
-        if (scrn.resized) layout();
+        if (resized) layout();
 
         window.requestAnimationFrame(render);
 

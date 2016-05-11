@@ -23,50 +23,58 @@ html {
     background: black;
 }
 body {
-    margin: auto;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    background: #4f4f4f;
-}
-
-/*  Screens:  */
-
-*[id^="jo-scrn"] {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
     margin: 0;
     border: solid 8px;
     border-radius: 8px;
     border-image: url(images/gui/scrn-border.png) 8 8 repeat;
     padding: 8px;
     background: #777777;
-    flex: auto;
 }
+
+/*  Screens:  */
+
 canvas {
     display: block;
+    position: absolute;
     border: solid 8px;
     border-radius: 8px;
     border-image: url(images/gui/cnvs-border.png) 8 8 repeat;
-    background: #000000;
     padding: 0;
+}
+canvas:first-of-type {
+    background: #000000;
 }
 
 /*  Controls:  */
 
 *[id^="jo-ctls"] {
     display: none;
+    position: absolute;
     -webkit-flex-flow: column;
     flex-flow: column;
     justify-content: center;
     align-items: center;
+    bottom: 0;
+    margin: 0;
+    padding: 0;
     min-width: 96px;
     min-height: 96px;
-    flex: auto;
+    background: #4f4f4f;
 }
 html[data-jo-ctls-visible] *[id^=jo-ctls] {
     display: flex;
+}
+#jo-ctls-lf {
+    left: 0;
+}
+#jo-ctls-rt {
+    right: 0;
 }
 *[id^="jo-ctlr"] {
     display: flex;
@@ -152,105 +160,28 @@ html[data-jo-ctls-visible] *[id^=jo-ctls] {
 /*  No layout  */
 
 html:not([data-jo-layout]) body {
+    border: 8px transparent solid;
+    border-image: none;
     background-image: url(images/splash.gif);
     background-position: center center;
     background-size: contain;
     background-repeat: no-repeat;
     background-color: transparent;
 }
-html:not([data-jo-layout]) *[id^="jo-scrn"], html[data-jo-ctls-visible]:not([data-jo-layout]) *[id^="jo-ctls"] {
+html:not([data-jo-layout]) *:not(body) {
     display: none;
 }
 
-/*  Layout 1:  */
+/*  Horizontal layout:  */
 
-html[data-jo-layout="1"] body {
-    display: flex;
-    -webkit-flex-flow: column wrap;
-    flex-flow: column wrap;
-    justify-content: space-around;
-    align-items: stretch;
-}
-html[data-jo-layout="1"] #jo-scrn-tp {
-    align-items: flex-end;
-}
-html[data-jo-layout="1"] #jo-scrn-bt {
-    align-items: flex-start;
-}
-html[data-jo-layout="1"] *[id^="jo-ctls"] {
+html[data-jo-layout="horizontal"] *[id^="jo-ctls"] {
     height: 100%;
 }
-html[data-jo-layout="1"] #jo-ctls-lf {
-    order: -1;
-}
-html[data-jo-layout="1"] #jo-ctls-rt {
-    order: 1;
-}
 
-/*  Layout 2:  */
+/*  Vertical layout:  */
 
-html[data-jo-layout="2"] body {
-    display: flex;
-    -webkit-flex-flow: row wrap;
-    flex-flow: row wrap;
-    justify-content: space-around;
-    align-items: stretch;
-}
-html[data-jo-layout="2"] *[id^="jo-scrn"] {
-    width: 100%;
-}
-html[data-jo-layout="2"] #jo-scrn-tp {
-    align-items: flex-end;
-}
-html[data-jo-layout="2"] #jo-scrn-bt {
-    align-items: flex-start;
-}
-
-/*  Layout 3:  */
-
-html[data-jo-layout="3"] body {
-    display: flex;
-    -webkit-flex-flow: row wrap;
-    flex-flow: row wrap;
-    justify-content: space-around;
-    align-items: stretch;
-}
-html[data-jo-layout="3"] *[id^="jo-scrn"] {
-    -webkit-flex-flow: column;
-    flex-flow: column;
+html[data-jo-layout="vertical"] *[id^="jo-ctls"] {
     width: 50%;
-}
-html[data-jo-layout="3"] #jo-scrn-tp {
-    align-items: flex-end;
-}
-html[data-jo-layout="3"] #jo-scrn-bt {
-    align-items: flex-start;
-}
-
-/*  Layout 4:  */
-
-html[data-jo-layout="4"] body {
-    display: flex;
-    -webkit-flex-flow: row;
-    flex-flow: row;
-    justify-content: space-around;
-    align-items: stretch;
-}
-html[data-jo-layout="4"] *[id^="jo-scrn"] {
-    -webkit-flex-flow: column;
-    flex-flow: column;
-}
-html[data-jo-layout="4"] #jo-scrn-tp {
-    align-items: flex-end;
-}
-html[data-jo-layout="4"] #jo-scrn-bt {
-    align-items: flex-start;
-}
-html[data-jo-layout="4"] #jo-ctls-lf {
-    order: -1;
-}
-html[data-jo-layout="4"] #jo-ctls-rt {
-    order: 1;
 }
 
 /*  Debug:  */
@@ -261,17 +192,8 @@ html[data-jo-debug] {
 html[data-jo-debug] body {
     background: black;
 }
-html[data-jo-debug] #jo-scrn-tp {
-    background: green;
-}
-html[data-jo-debug] #jo-scrn-bt {
-    background: red;
-}
-html[data-jo-debug] #jo-scrn-tp canvas {
-    background: darkred;
-}
-html[data-jo-debug] #jo-scrn-bt canvas {
-    background: darkgreen;
+html[data-jo-debug] canvas {
+    background: orangered;
 }
 html[data-jo-debug] #jo-ctls-lf {
     background: blue;
