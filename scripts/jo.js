@@ -41,7 +41,7 @@ Requires: system.js, control.js, sheet.js
     });
     var resized = true;
     var settings = {
-        button_size: 32,
+        button_area: 128,
         screen_border: 8,
         screen_width: 250,
         screen_height: 160,
@@ -222,7 +222,7 @@ Requires: system.js, control.js, sheet.js
         var temporary_height;
         var temporary_width;
 
-        if (document.documentElement.hasAttribute("data-jo-touch")) button_area = settings.button_size * 3;
+        if (document.documentElement.hasAttribute("data-jo-touch")) button_area = settings.button_area;
         else button_area = 0;
 
         //  Controls:
@@ -254,7 +254,8 @@ Requires: system.js, control.js, sheet.js
         for (i = 0; i < system.canvases.length; i++) {
             system.canvases[i].style.width = scaled_width + "px";
             system.canvases[i].style.height = scaled_height + "px";
-            system.canvases[i].style.top = "calc(50% - " + ((scaled_height / 2) + settings.screen_border) + "px)";
+            if (document.documentElement.dataset.joLayout === "vertical") system.canvases[i].style.top = "calc(50% - " + ((scaled_height / 2) + settings.screen_border + (button_area / 2)) + "px)";
+            else system.canvases[i].style.top = "calc(50% - " + ((scaled_height / 2) + settings.screen_border) + "px)";
             system.canvases[i].style.left = "calc(50% - " + ((scaled_width / 2) + settings.screen_border) + "px)";
         }
 

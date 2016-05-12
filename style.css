@@ -30,10 +30,7 @@ body {
     left: 0;
     right: 0;
     margin: 0;
-    border: solid 8px;
-    border-radius: 8px;
-    border-image: url(images/gui/scrn-border.png) 8 8 repeat;
-    padding: 8px;
+    border: none;
     background: #777777;
 }
 
@@ -62,10 +59,9 @@ canvas:first-of-type {
     align-items: center;
     bottom: 0;
     margin: 0;
-    padding: 0;
+    padding: 16px;
     min-width: 96px;
     min-height: 96px;
-    background: #4f4f4f;
 }
 html[data-jo-touch] *[id^=jo-ctls] {
     display: flex;
@@ -166,8 +162,6 @@ html[data-jo-touch] *[id^=jo-ctls] {
 /*  No layout  */
 
 html:not([data-jo-layout]) body {
-    border: 8px transparent solid;
-    border-image: none;
     background-image: url(images/splash.gif);
     background-position: center center;
     background-size: contain;
