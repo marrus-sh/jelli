@@ -59,9 +59,9 @@ canvas:first-of-type {
     align-items: center;
     bottom: 0;
     margin: 0;
-    padding: 16px;
-    min-width: 96px;
-    min-height: 96px;
+    padding: 1.5px;
+    min-width: 72px;
+    min-height: 72px;
 }
 html[data-jo-touch] *[id^=jo-ctls] {
     display: flex;
@@ -85,8 +85,8 @@ html[data-jo-touch] *[id^=jo-ctls] {
     background-size: 600% 600%;
     background-position: 100% 20%;
     background-repeat: no-repeat;
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
 }
 *[id^="jo-ctrl"][data-control-active] {
     background-position: 100% 60%;
@@ -140,7 +140,7 @@ html[data-jo-touch] *[id^=jo-ctls] {
     background-position: 20% 60%;
 }
 #jo-ctrl-lfrw {
-    margin-right: 32px;
+    margin-right: 24px;
     background-position: 40% 20%;
 }
 #jo-ctrl-lfrw[data-control-active] {
@@ -175,13 +175,16 @@ html:not([data-jo-layout]) *:not(body) {
 /*  Horizontal layout:  */
 
 html[data-jo-layout="horizontal"] *[id^="jo-ctls"] {
-    height: 100%;
+    top: 0;
 }
 
 /*  Vertical layout:  */
 
-html[data-jo-layout="vertical"] *[id^="jo-ctls"] {
-    width: 50%;
+html[data-jo-layout="vertical"] #jo-ctls-lf {
+    right: 50%;
+}
+html[data-jo-layout="vertical"] #jo-ctls-rt {
+    left: 50%;
 }
 
 /*  Debug:  */

@@ -41,7 +41,7 @@ Requires: system.js, control.js, sheet.js
     });
     var resized = true;
     var settings = {
-        button_area: 128,
+        button_area: 75,
         screen_border: 8,
         screen_width: 250,
         screen_height: 160,
