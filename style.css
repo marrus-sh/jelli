@@ -67,7 +67,7 @@ canvas:first-of-type {
     min-height: 96px;
     background: #4f4f4f;
 }
-html[data-jo-ctls-visible] *[id^=jo-ctls] {
+html[data-jo-touch] *[id^=jo-ctls] {
     display: flex;
 }
 #jo-ctls-lf {
@@ -155,6 +155,12 @@ html[data-jo-ctls-visible] *[id^=jo-ctls] {
 }
 #jo-ctrl-rtrw[data-control-active] {
     background-position: 60% 60%;
+}
+
+/*  Preload  */
+
+#jo-preload {
+    display: none;
 }
 
 /*  No layout  */

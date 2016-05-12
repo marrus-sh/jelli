@@ -1,4 +1,4 @@
-/* jslint asi:true, browser:true */
+/* jshint asi:true, browser:true */
 
 /*
 

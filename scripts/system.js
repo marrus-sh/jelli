@@ -1,4 +1,4 @@
-/* jslint asi:true, browser:true */
+/* jshint asi:true, browser:true */
 
 /*
 
@@ -113,11 +113,13 @@ var System = (function () {
                 return new Screen(canvas, item);
             })
         });
-        Object.defineProperty(this, "canvases", {
-            value: new ItemList(this.screens, function(item, i) {return item.canvas})
-        });
-        Object.defineProperty(this, "contexts", {
-            value: new ItemList(this.screens, function(item, i) {return item.context})
+        Object.defineProperties(this, {
+            canvases: {
+                value: new ItemList(this.screens, function(item, i) {return item.canvas})
+            },
+            contexts: {
+                value: new ItemList(this.screens, function(item, i) {return item.context})
+            }
         });
 
     }
@@ -135,6 +137,11 @@ var System = (function () {
         }
 
     });
+
+    //  Other constructors:
+
+    System.ItemList = ItemList;
+    System.Screen = Screen;
 
     return System;
 
