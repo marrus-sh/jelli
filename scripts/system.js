@@ -138,7 +138,7 @@ var System = (function () {
 
     });
 
-    //  Other constructors:
+    //  Making other constructors accessible:
 
     System.ItemList = ItemList;
     System.Screen = Screen;

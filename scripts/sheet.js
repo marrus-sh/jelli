@@ -14,13 +14,9 @@ var Sheet = (function () {
 
     "use strict";
 
-    //  ImageBitmap checking
+    //  Drawing a sprite:
 
-    if (typeof ImageBitmap !== "object") ImageBitmap = {};
-
-    //  Drawing a sprite
-
-    function drawSprite(sheet, start_index, x, y /*  Optional frame  */) {
+    function drawSprite(sheet, start_index, context, x, y /*  Optional frame  */) {
 
         //  Variable setup:
 
@@ -33,11 +29,12 @@ var Sheet = (function () {
         if (!(sheet instanceof Sheet)) throw new Error("(sprite.js) Cannot draw sprite – no sheet provided.");
         if (!(typeof start_index === "number" || start_index instanceof Number)) throw new Error("(sheet.js) Cannot draw sprite – index must be a number.");
         else if (start_index > sheet.size) throw new Error("(sheet.js) Cannot draw sprite – index out of range.");
+        if (!(context instanceof CanvasRenderingContext2D)) throw new Error("(sheet.js) Cannot draw sprite – rendering context must be 2d.");
         if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("(sheet.js) Cannot draw sprite – coordinates must be numbers.");
-        if (arguments.length >= 5) {
-            if (!(typeof arguments[4] === "number" || arguments[4] instanceof Number)) throw new Error("(sheet.js) Cannot draw sprite – frame must be a number.");
-            else if (start_index + arguments[4] - 1 > sheet.size) throw new Error("(sheet.js) Cannot draw sprite – frame out of range.");
-            index = start_index + arguments[4] - 1;
+        if (arguments.length >= 6) {
+            if (!(typeof arguments[5] === "number" || arguments[4] instanceof Number)) throw new Error("(sheet.js) Cannot draw sprite – frame must be a number.");
+            else if (start_index + arguments[5] - 1 > sheet.size) throw new Error("(sheet.js) Cannot draw sprite – frame out of range.");
+            index = start_index + arguments[5] - 1;
         }
         else index = start_index;
         i = index % sheet.width;
@@ -45,7 +42,7 @@ var Sheet = (function () {
 
         //  Drawing the sprite:
 
-        sheet.context.drawImage((sheet.image || sheet.source), i * sheet.sprite_width, j * sheet.sprite_height, sheet.sprite_width, sheet.sprite_height, x, y, sheet.sprite_width, sheet.sprite_height);
+        context.drawImage((sheet.image || sheet.source), i * sheet.sprite_width, j * sheet.sprite_height, sheet.sprite_width, sheet.sprite_height, x, y, sheet.sprite_width, sheet.sprite_height);
 
     }
 
@@ -72,9 +69,6 @@ var Sheet = (function () {
         //  Creating the image:
 
         Object.defineProperties(this, {
-            context: {
-                value: sheet.context
-            },
             draw: {
                 value: drawSprite.bind(this, sheet, index)
             },
@@ -105,7 +99,7 @@ var Sheet = (function () {
 
     //  Sprite sheet constructor:
 
-    function Sheet(context, source, sprite_width, sprite_height) {
+    function Sheet(source, sprite_width, sprite_height) {
 
         //  Variable setup:
 
@@ -114,8 +108,7 @@ var Sheet = (function () {
 
         //  Handling arguments and error checking:
 
-        if (!(context instanceof CanvasRenderingContext2D)) throw new Error("(sheet.js) Rendering context must be 2d.");
-        if (!(source instanceof HTMLImageElement || source instanceof SVGImageElement || source instanceof HTMLCanvasElement || source instanceof ImageBitmap)) throw new Error("(sheet.js) Rendering source must be an image.")
+        if (!(source instanceof HTMLImageElement || source instanceof SVGImageElement || source instanceof HTMLCanvasElement || (typeof createImageBitmap !== "undefined" && source instanceof ImageBitmap))) throw new Error("(sheet.js) Rendering source must be an image.")
         if (source instanceof HTMLImageElement && !source.complete) throw new Error("(sheet.js) Rendering source has not finished loading.");
         if (!(typeof sprite_width === "number" || sprite_width instanceof Number) || !(typeof sprite_height === "number" || sprite_height instanceof Number)) throw new Error("(sheet.js) Widths and heights must be numbers.");
 
@@ -134,9 +127,6 @@ var Sheet = (function () {
         //  Adding properties:
 
         Object.defineProperties(this, {
-            context: {
-                value: context
-            },
             height: {
                 value: source_height / sprite_height
             },
@@ -180,7 +170,7 @@ var Sheet = (function () {
 
     })
 
-    //  Other constructors:
+    //  Making other constructors accessible:
 
     Sheet.Sprite = Sprite;
 
