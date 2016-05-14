@@ -39,6 +39,10 @@ var Character = (function () {
             drawFunction: {
                 value: draw
             },
+            frame : {
+                value: 0,
+                writable: true
+            },
             sprites: {
                 value: sprites
             },
@@ -60,7 +64,7 @@ var Character = (function () {
     Character.prototype = Object.create(Object.prototype, {
         draw: {
             value: function(context) {
-                return this.drawFunction(context, this.sprites[this.dir], this.x, this.y);
+                return this.drawFunction(context, this.sprites[this.dir], this.x, this.y, this.frame);
             }
         },
         step: {

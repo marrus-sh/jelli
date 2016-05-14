@@ -33,8 +33,8 @@ var Sheet = (function () {
         if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("(sheet.js) Cannot draw sprite – coordinates must be numbers.");
         if (arguments.length >= 6) {
             if (!(typeof arguments[5] === "number" || arguments[5] instanceof Number)) throw new Error("(sheet.js) Cannot draw sprite – frame must be a number.");
-            else if (start_index + arguments[5] - 1 > sheet.size) throw new Error("(sheet.js) Cannot draw sprite – frame out of range.");
-            index = start_index + arguments[5] - 1;
+            else if (start_index + arguments[5] > sheet.size) throw new Error("(sheet.js) Cannot draw sprite – frame out of range.");
+            index = start_index + arguments[5];
         }
         else index = start_index;
         i = index % sheet.width;

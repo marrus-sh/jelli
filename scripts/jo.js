@@ -30,22 +30,22 @@ Requires: system.js, control.js, sheet.js
     var letters;
     var mainground;
     var palette = Object.create(null, {
-       TRANSPARENT: {value: "transparent"},
-       BLACK: {value: "#000000"},
-       DARKGREY: {value: "#4f4f4f"},
-       GREY: {value: "#777777"},
-       WHITE: {value: "#ffffff"},
-       RED: {value: "#87372f"},
-       CYAN: {value: "#47979f"},
-       PURPLE: {value: "#8b3f97"},
-       FOREST: {value: "#076323"},
-       GREEN: {value: "#579f47"},
-       DEEPBLUE: {value: "#002b57"},
-       BLUE: {value: "#174b77"},
-       YELLOW: {value: "#cbc35f"},
-       ORANGE: {value: "#ab7349"},
-       BROWN: {value: "#574300"},
-       ROSE: {value: "#7f1f39"}
+        TRANSPARENT: {value: "transparent"},
+        BLACK: {value: "#000000"},
+        DARKGREY: {value: "#4f4f4f"},
+        GREY: {value: "#777777"},
+        WHITE: {value: "#ffffff"},
+        RED: {value: "#87372f"},
+        CYAN: {value: "#47979f"},
+        PURPLE: {value: "#8b3f97"},
+        FOREST: {value: "#076323"},
+        GREEN: {value: "#579f47"},
+        DEEPBLUE: {value: "#002b57"},
+        BLUE: {value: "#174b77"},
+        YELLOW: {value: "#cbc35f"},
+        ORANGE: {value: "#ab7349"},
+        BROWN: {value: "#574300"},
+        ROSE: {value: "#7f1f39"}
     });
     var resized = true;
     var settings = {
@@ -298,7 +298,7 @@ Requires: system.js, control.js, sheet.js
         //  Mainground drawing:
 
         mainground.context.clearRect(0, 0, mainground.canvas.width, mainground.canvas.height);
-        characters[0].draw(mainground.context);
+        characters[0].draw(mainground.context, characters[0].data.frame);
 
         window.requestAnimationFrame(render);
 
@@ -330,7 +330,14 @@ Requires: system.js, control.js, sheet.js
                 this.dir = direction.RIGHT;
                 this.x++;
             }
-        }, Sheet.draw, null);
+            if (control.isActive("up") || control.isActive("down") || control.isActive("left") || control.isActive("right")) {
+                this.data.timer++;
+                if (!(this.data.timer %= 15)) this.frame = ++this.frame % 2;
+            }
+        }, Sheet.draw, {
+            frame: 0,
+            timer: 0
+        });
 
         logic();
 
