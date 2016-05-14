@@ -1,5 +1,5 @@
 /* jshint asi:true, browser:true */
-/* globals System, Control, Sheet, Letters */
+/* globals System, Control, Sheet, Letters, Character */
 /* jshint elision:true */
 
 /*
@@ -17,7 +17,15 @@ Requires: system.js, control.js, sheet.js
     "use strict";
 
     var background;
+    var character_sheet;
+    var characters = [];
     var control;
+    var direction = Object.create(null, {
+        DOWN: {value: 0},
+        LEFT: {value: 1},
+        UP: {value: 2},
+        RIGHT: {value: 3}
+    })
     var foreground;
     var letters;
     var mainground;
@@ -157,6 +165,7 @@ Requires: system.js, control.js, sheet.js
         if (typeof Control === "undefined" || !Control) throw new Error("(jo.js) Control module not loaded");
         if (typeof Sheet === "undefined" || !Sheet) throw new Error("(jo.js) Sheet module not loaded");
         if (typeof Letters === "undefined" || !Letters) throw new Error("(jo.js) Letters module not loaded");
+        if (typeof Character === "undefined" || !Character) throw new Error("(jo.js) Character module not loaded");
 
         //  System setup:
 
@@ -193,6 +202,7 @@ Requires: system.js, control.js, sheet.js
         //  Sheet setup:
 
         tiles = new Sheet(document.getElementById("jo-tiles"), 16, 16);
+        character_sheet = new Sheet(document.getElementById("jo-characters"), 16, 16);
 
         //  Letter setup:
 
@@ -269,6 +279,10 @@ Requires: system.js, control.js, sheet.js
 
     function logic() {
 
+        characters[0].step();
+
+        window.setTimeout(logic, 1000/60);
+
     }
 
     //  Rendering function:
@@ -281,6 +295,11 @@ Requires: system.js, control.js, sheet.js
             drawText();
         }
 
+        //  Mainground drawing:
+
+        mainground.context.clearRect(0, 0, mainground.canvas.width, mainground.canvas.height);
+        characters[0].draw(mainground.context);
+
         window.requestAnimationFrame(render);
 
     }
@@ -288,6 +307,30 @@ Requires: system.js, control.js, sheet.js
     //  Setup function:
 
     function setup() {
+
+        characters[0] = new Character([
+            character_sheet.getSprite(0, 2),
+            character_sheet.getSprite(2, 2),
+            character_sheet.getSprite(4, 2),
+            character_sheet.getSprite(6, 2)
+        ], 0, 0, direction.DOWN, function () {
+            if (control.isActive("up")) {
+                this.dir = direction.UP;
+                this.y--;
+            }
+            if (control.isActive("down")) {
+                this.dir = direction.DOWN;
+                this.y++;
+            }
+            if (control.isActive("left")) {
+                this.dir = direction.LEFT;
+                this.x--;
+            }
+            if (control.isActive("right")) {
+                this.dir = direction.RIGHT;
+                this.x++;
+            }
+        }, Sheet.draw, null);
 
         logic();
 

@@ -32,7 +32,7 @@ var Sheet = (function () {
         if (!(context instanceof CanvasRenderingContext2D)) throw new Error("(sheet.js) Cannot draw sprite – rendering context must be 2d.");
         if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("(sheet.js) Cannot draw sprite – coordinates must be numbers.");
         if (arguments.length >= 6) {
-            if (!(typeof arguments[5] === "number" || arguments[4] instanceof Number)) throw new Error("(sheet.js) Cannot draw sprite – frame must be a number.");
+            if (!(typeof arguments[5] === "number" || arguments[5] instanceof Number)) throw new Error("(sheet.js) Cannot draw sprite – frame must be a number.");
             else if (start_index + arguments[5] - 1 > sheet.size) throw new Error("(sheet.js) Cannot draw sprite – frame out of range.");
             index = start_index + arguments[5] - 1;
         }
@@ -169,6 +169,19 @@ var Sheet = (function () {
         }
 
     })
+
+    //  Draw an arbitrary sprite:
+
+    Sheet.draw = function(context, sprite, x, y /*  Optional frame  */) {
+        if (!(sprite instanceof Sprite)) throw new Error("(sprite.js) Cannot draw sprite – none provided.");
+        if (!(context instanceof CanvasRenderingContext2D)) throw new Error("(sheet.js) Cannot draw sprite – rendering context must be 2d.");
+        if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("(sheet.js) Cannot draw sprite – coordinates must be numbers.");
+        if (arguments.length >= 5) {
+            if (!(typeof arguments[4] === "number" || arguments[4] instanceof Number)) throw new Error("(sheet.js) Cannot draw sprite – frame must be a number.");
+            return sprite.draw(context, x, y, arguments[4])
+        }
+        return sprite.draw(context, x, y)
+    }
 
     //  Making other constructors accessible:
 
