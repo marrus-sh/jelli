@@ -1,5 +1,5 @@
 /* jshint asi:true, browser:true */
-/* globals System, Control, Sheet, Letters, Character */
+/* globals System, Control, Sheet, Letters, Character, Tiles */
 /* jshint elision:true */
 
 /*
@@ -25,10 +25,11 @@ Requires: system.js, control.js, sheet.js
         LEFT: {value: 1},
         UP: {value: 2},
         RIGHT: {value: 3}
-    })
+    });
     var foreground;
     var letters;
     var mainground;
+    var map = "AQEBAQEBAQEBMQEBAQEBAQEBAQEBAQEBATEBAQEBAQEBAQEBAQEBATU3NAEBAQEBMDAwMDAwMDA6ATgwMDABAQEBAQEBAQEBMzkyAQEBAQEBAQEBAQEBAQExAQEBAQEBAQEBAQEBAQEBMQEBAQEBAQEBAQEBAQEBATEBAQEBAQEBAQEBATMwMDA6AQEBAQEBAQEBAQEBAQEBMQEBAQEBAQ==";
     var palette = Object.create(null, {
         TRANSPARENT: {value: "transparent"},
         BLACK: {value: "#000000"},
@@ -48,12 +49,20 @@ Requires: system.js, control.js, sheet.js
         ROSE: {value: "#7f1f39"}
     });
     var resized = true;
-    var settings = {
-        button_area: 75,
-        screen_border: 8,
-        screen_width: 250,
-        screen_height: 160,
-    }
+    var settings = Object.create(null, {
+        BUTTON_AREA: {value: 75},
+        LETTER_WIDTH: {value: 4},
+        LETTER_HEIGHT: {value: 7},
+        SCREEN_BORDER: {value: 8},
+        SCREEN_WIDTH: {value: 250},
+        SCREEN_HEIGHT: {value: 160},
+        SPRITE_HEIGHT: {value: 16},
+        SPRITE_WIDTH: {value: 16},
+        SPRITES_WIDE: {value: 16},
+        VIEWPORT_X: {value: 3},
+        VIEWPORT_Y: {value: 0}
+    });
+    var structures;
     var system;
     var textground;
     var tiles;
@@ -62,16 +71,9 @@ Requires: system.js, control.js, sheet.js
 
     function drawBackground() {
 
-        //  Variable setup:
-
-        var grass = tiles.getSprite(0x01);
-        var i;
-
         //  Drawing the background:
 
-        for (i = 0; i < 0x100; i++) {
-            grass.draw(background.context, i % 0x10 * 0x10 - 3, Math.floor(i / 0x10) * 0x10);
-        }
+        tiles.drawMap(background.context, map, -settings.VIEWPORT_X, -settings.VIEWPORT_Y, settings.SPRITE_WIDTH, settings.SPRITE_HEIGHT, settings.SPRITES_WIDE);
 
     }
 
@@ -166,6 +168,7 @@ Requires: system.js, control.js, sheet.js
         if (typeof Sheet === "undefined" || !Sheet) throw new Error("(jo.js) Sheet module not loaded");
         if (typeof Letters === "undefined" || !Letters) throw new Error("(jo.js) Letters module not loaded");
         if (typeof Character === "undefined" || !Character) throw new Error("(jo.js) Character module not loaded");
+        if (typeof Tiles === "undefined" || !Tiles) throw new Error("(jo.js) Tiles module not loaded");
 
         //  System setup:
 
@@ -176,8 +179,8 @@ Requires: system.js, control.js, sheet.js
         foreground = system.screens[2];
         textground = system.screens[3];
 
-        textground.canvas.height = foreground.canvas.height = mainground.canvas.height = background.canvas.height = settings.screen_height;
-        textground.canvas.width = foreground.canvas.width = mainground.canvas.width = background.canvas.width = settings.screen_width;
+        textground.canvas.height = foreground.canvas.height = mainground.canvas.height = background.canvas.height = settings.SCREEN_HEIGHT;
+        textground.canvas.width = foreground.canvas.width = mainground.canvas.width = background.canvas.width = settings.SCREEN_WIDTH;
 
         document.body.appendChild(background.canvas);
         document.body.appendChild(mainground.canvas);
@@ -201,12 +204,15 @@ Requires: system.js, control.js, sheet.js
 
         //  Sheet setup:
 
-        tiles = new Sheet(document.getElementById("jo-tiles"), 16, 16);
-        character_sheet = new Sheet(document.getElementById("jo-characters"), 16, 16);
+        character_sheet = new Sheet(document.getElementById("jo-characters"), settings.SPRITE_WIDTH, settings.SPRITE_HEIGHT);
 
         //  Letter setup:
 
-        letters = new Letters(document.getElementById("jo-letters"), 4, 7);
+        letters = new Letters(document.getElementById("jo-letters"), settings.LETTER_WIDTH, settings.LETTER_HEIGHT);
+
+        //  Tiles setup:
+
+        tiles = new Tiles(new Sheet(document.getElementById("jo-tiles"), settings.SPRITE_WIDTH, settings.SPRITE_HEIGHT), document.getElementById("jo-tiles").dataset.joCollisions, Sheet.drawSheetAtIndex);
 
         //  Adding event listeners:
 
@@ -223,8 +229,8 @@ Requires: system.js, control.js, sheet.js
 
         //  Variable setup:
 
-        var body_height = document.body.clientHeight - (2 * settings.screen_border);
-        var body_width = document.body.clientWidth - (2 * settings.screen_border);
+        var body_height = document.body.clientHeight - 2 * settings.SCREEN_BORDER;
+        var body_width = document.body.clientWidth - 2 * settings.SCREEN_BORDER;
         var button_area;
         var i;
         var scaled_height;
@@ -232,12 +238,12 @@ Requires: system.js, control.js, sheet.js
         var temporary_height;
         var temporary_width;
 
-        if (document.documentElement.hasAttribute("data-jo-touch")) button_area = settings.button_area;
+        if (document.documentElement.hasAttribute("data-jo-touch")) button_area = settings.BUTTON_AREA;
         else button_area = 0;
 
         //  Controls:
 
-        if (body_width / body_height > settings.screen_width / settings.screen_height) {
+        if (body_width / body_height > settings.SCREEN_WIDTH / settings.SCREEN_HEIGHT) {
             document.documentElement.dataset.joLayout = "horizontal";
             body_width -= 2 * button_area;
         }
@@ -248,15 +254,15 @@ Requires: system.js, control.js, sheet.js
 
         //  Sizing:
 
-        if (body_width / body_height > settings.screen_width / settings.screen_height) {
-            if (body_height < settings.screen_height) scaled_height = body_height;
-            else scaled_height = settings.screen_height * Math.floor(body_height / settings.screen_height);
-            scaled_width = Math.floor(settings.screen_width * scaled_height / settings.screen_height);
+        if (body_width / body_height > settings.SCREEN_WIDTH / settings.SCREEN_HEIGHT) {
+            if (body_height < settings.SCREEN_HEIGHT) scaled_height = body_height;
+            else scaled_height = settings.SCREEN_HEIGHT * Math.floor(body_height / settings.SCREEN_HEIGHT);
+            scaled_width = Math.floor(settings.SCREEN_WIDTH * scaled_height / settings.SCREEN_HEIGHT);
         }
         else {
-            if (body_width < settings.screen_width) scaled_width = body_width;
-            else scaled_width = settings.screen_width * Math.floor(body_width / settings.screen_width);
-            scaled_height = Math.floor(settings.screen_height * scaled_width / settings.screen_width);
+            if (body_width < settings.SCREEN_WIDTH) scaled_width = body_width;
+            else scaled_width = settings.SCREEN_WIDTH * Math.floor(body_width / settings.SCREEN_WIDTH);
+            scaled_height = Math.floor(settings.SCREEN_HEIGHT * scaled_width / settings.SCREEN_WIDTH);
         }
 
         //  Applying layout:
@@ -264,9 +270,9 @@ Requires: system.js, control.js, sheet.js
         for (i = 0; i < system.canvases.length; i++) {
             system.canvases[i].style.width = scaled_width + "px";
             system.canvases[i].style.height = scaled_height + "px";
-            if (document.documentElement.dataset.joLayout === "vertical") system.canvases[i].style.top = "calc(50% - " + ((scaled_height / 2) + settings.screen_border + (button_area / 2)) + "px)";
-            else system.canvases[i].style.top = "calc(50% - " + ((scaled_height / 2) + settings.screen_border) + "px)";
-            system.canvases[i].style.left = "calc(50% - " + ((scaled_width / 2) + settings.screen_border) + "px)";
+            if (document.documentElement.dataset.joLayout === "vertical") system.canvases[i].style.top = "calc(50% - " + (scaled_height / 2 + settings.SCREEN_BORDER + button_area / 2) + "px)";
+            else system.canvases[i].style.top = "calc(50% - " + (scaled_height / 2 + settings.SCREEN_BORDER) + "px)";
+            system.canvases[i].style.left = "calc(50% - " + (scaled_width / 2 + settings.SCREEN_BORDER) + "px)";
         }
 
         //  Set resized equal to false:

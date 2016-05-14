@@ -21,7 +21,7 @@ var Character = (function () {
         //  Handling arguments and error checking:
 
         if (typeof sprites !== "object") throw new Error("(character.js) Sprites must be provided in an object.");
-        if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("(character.js) Widths and heights must be numbers.");
+        if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("(character.js) Initial position must be provided with numbers.");
         if (!(typeof dir === "string" || dir instanceof String || typeof dir === "number" || dir instanceof Number)) throw new Error("(character.js) Character direction must be a string or number.");
         if (!(typeof step === "function" || step instanceof Function)) throw new Error("(character.js) No step function provided");
         if (!(typeof draw === "function" || draw instanceof Function)) throw new Error("(character.js) No draw function provided");

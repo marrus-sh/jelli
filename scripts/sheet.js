@@ -26,7 +26,7 @@ var Sheet = (function () {
 
         //  Handling arguments and error checking:
 
-        if (!(sheet instanceof Sheet)) throw new Error("(sprite.js) Cannot draw sprite – no sheet provided.");
+        if (!(sheet instanceof Sheet)) throw new Error("(sheet.js) Cannot draw sprite – no sheet provided.");
         if (!(typeof start_index === "number" || start_index instanceof Number)) throw new Error("(sheet.js) Cannot draw sprite – index must be a number.");
         else if (start_index > sheet.size) throw new Error("(sheet.js) Cannot draw sprite – index out of range.");
         if (!(context instanceof CanvasRenderingContext2D)) throw new Error("(sheet.js) Cannot draw sprite – rendering context must be 2d.");
@@ -152,9 +152,15 @@ var Sheet = (function () {
     //  Sprite sheet prototyping:
 
     Sheet.prototype = Object.create(Object.prototype, {
-
-        //  Get sprites from sheet:
-
+        drawIndex: {
+            value: function(context, index, x, y) {
+                if (!(context instanceof CanvasRenderingContext2D)) throw new Error("(sheet.js) Cannot draw sprite at index – rendering context must be 2d.");
+                if (!(typeof index === "number" || index instanceof Number)) throw new Error("(sheet.js) Cannot draw sprite at index – none provided.");
+                else if (index >= this.size) throw new Error("(sheet.js) Cannot draw sprite at index – index out of range.");
+                if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("(sheet.js) Cannot draw sprite at index – coordinates must be numbers.");
+                return drawSprite(this, index, context, x, y);
+            }
+        },
         getSprite: {
             value: function (index /*  Optional length  */) {
                 var length;
@@ -167,10 +173,9 @@ var Sheet = (function () {
                 return new Sprite(this, index, length);
             }
         }
+    });
 
-    })
-
-    //  Draw an arbitrary sprite:
+    //  Conveinence functions for drawing an arbitrary sprite:
 
     Sheet.draw = function(context, sprite, x, y /*  Optional frame  */) {
         if (!(sprite instanceof Sprite)) throw new Error("(sprite.js) Cannot draw sprite – none provided.");
@@ -181,6 +186,14 @@ var Sheet = (function () {
             return sprite.draw(context, x, y, arguments[4])
         }
         return sprite.draw(context, x, y)
+    }
+    Sheet.drawSheetAtIndex = function(context, sheet, index, x, y) {
+        if (!(context instanceof CanvasRenderingContext2D)) throw new Error("(sheet.js) Cannot draw sprite at index – rendering context must be 2d.");
+        if (!(sheet instanceof Sheet)) throw new Error("(sprite.js) Cannot draw sprite – no sheet provided.");
+        if (!(typeof index === "number" || index instanceof Number)) throw new Error("(sheet.js) Cannot draw sprite at index – none provided.");
+        else if (index >= this.size) throw new Error("(sheet.js) Cannot draw sprite at index – index out of range.");
+        if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("(sheet.js) Cannot draw sprite at index – coordinates must be numbers.");
+        return sheet.drawIndex(context, index, x, y);
     }
 
     //  Making other constructors accessible:
