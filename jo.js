@@ -1209,7 +1209,7 @@ var Jo = (function () {
 
             datadoc.body = datadoc.importNode(document.body, true);
             document.body = document.createElement("body");
-            document.body.style.display = "none";
+            document.body.style.visibility = "hidden";
 
             //  Screen setup:
 
@@ -1307,7 +1307,6 @@ var Jo = (function () {
 
             //  Styling the body:
 
-            document.body.style.display = "block";
             document.body.style.position = "absolute";
             document.body.style.top = "0";
             document.body.style.bottom = "0";
@@ -1383,6 +1382,10 @@ var Jo = (function () {
                 document.getElementById("jo-ctls-lf").style.right = "50%";
                 document.getElementById("jo-ctls-rt").style.left = "50%";
             }
+
+            //  Making it visible:
+
+            document.body.style.visibility = "";
 
         }
 
