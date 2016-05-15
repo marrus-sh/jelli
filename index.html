@@ -1,20 +1,160 @@
 <!DOCTYPE html>
-<html>
+<html style="height:100%;background: url(splash.gif) center center / contain no-repeat black;">
     <head>
         <title>[Jo]</title>
         <meta charset="utf-8">
         <meta name="viewport" content="user-scalable=no,width=device-width">
-        <link rel="icon" href="images/icon.png">
-        <link rel="stylesheet" type="text/css" href="style.css">
-        <script type="text/javascript" src="scripts/system.js"></script>
-        <script type="text/javascript" src="scripts/control.js"></script>
-        <script type="text/javascript" src="scripts/sheet.js"></script>
-        <script type="text/javascript" src="scripts/letters.js"></script>
-        <script type="text/javascript" src="scripts/character.js"></script>
-        <script type="text/javascript" src="scripts/tiles.js"></script>
-        <script type="text/javascript" src="scripts/jo.js"></script>
+        <link rel="icon" href="icon.png">
+        <link rel="stylesheet" href="style.css">
+        <script type="text/javascript" src="jo.js"></script>
     </head>
-    <body>
+    <body hidden style="display: none;">
+        <h1>Jo: Modding guide and data elements</h1>
+        <p>
+            Any content you place in here remains hidden unless it is assigned the proper class for handling by the script.
+            By editing this file, you can completely reprogram the game.
+        </p>
+        <p>
+            Be sure to keep the <code>hidden</code> attribute on the <code>&lt;body&gt;</code> element, and to load all of the scripts in the <code>&lt;head&gt;</code>.
+            <code>&lt;meta name="viewport" content="user-scalable=no,width=device-width"&gt;</code> is also helpful.
+        </p>
+        <p>
+            My default setup sets the <code>background-image</code> of the <code>&lt;html&gt;</code> element to the file at <code>images/splash.gif</code>.
+            Some kind of splash image is useful to have, because nothing else will display until the user presses a key or taps the screen.
+        </p>
+        <section>
+            <h2>GUI Elements</h2>
+            <p>
+                These elements are used to render the game system itself, rather than things within the game.
+                They are not drawn to the canvas.
+                The first <code>&lt;img&gt;</code> elements with the given classes will be chosen.
+            </p>
+            <section>
+                <h3>The elements:</h3>
+                <img class="gui-border" alt="Border" src="images/gui/cnvs-border.png"
+                     data-sprite-width="8"
+                     data-sprite-height="8"
+                     data-system-background="#4f4f4f"
+                     data-screen-background="#000000"
+                     >
+                <img class="gui-buttons" alt="Buttons" src="images/gui/ctrl.png"
+                     data-sprite-width="16"
+                     data-sprite-height="16"
+                     data-button-width="24"
+                     data-button-height="24"
+                     >
+            </section>
+        </section>
+        <section>
+            <h2>Screens</h2>
+            <p>
+                The <code>&lt;canvas&gt;</code> element creates a screen where the game is actually drawn.
+                These elements should be listed in order, from back to front.
+                The <code>id</code> of these elements <strong>must</strong> be specified (and unique)&mdash;this is used as an identifier within the game's script.
+            </p>
+            <p>
+                The <code>data-type</code> attribute lets the game know how often the canvas should be cleared. <code>area</code> canvases are only cleared on area change, and are a good place to draw tiles.
+                <code>animation</code> canvases, on the other hand, are cleared every frame, and are intended for animations.
+                Canvases without this attribute must be cleared manually.
+            </p>
+            <section>
+                <h3>The canvases:</h3>
+                <canvas id="background" data-type="area" width="250" height="160">Map tiles go here.</canvas>
+                <canvas id="mainground" data-type="action" width="250" height="160">Characters and particles go here.</canvas>
+                <canvas id="foreground" data-type="animation" width="250" height="160">Structures go here.</canvas>
+                <canvas id="textground" width="250" height="160">Dialogue and the like goes here.</canvas>
+                <canvas id="menuground" width="250" height="160">HUDs and pause menus go here.</canvas>
+            </section>
+        </section>
+        <section>
+            <h2>Sprite sheets</h2>
+            <p>
+                These elements contain the sprites used throughout the game.
+                Their type is identified via their class: <code>letters</code> identifies an alphabet, <code>tileset</code> represents a tileset, and <code>sheet</code> represents any other spritesheet, such as one for use with characters.
+                The <code>id</code> of these elements <strong>must</strong> be specified (and unique)&mdash;this is used as an identifier within the game's script.
+            </p>
+            <p>
+                <code>tileset</code> sprite sheets <strong>must</strong> be provided with a <code>data-collisions</code> attribute, whose value is Base64-encoded binary collision data.
+                This data should be a sequence of 4-bit bytes, one for each tile in the set, indicating which parts of the tile prevent objects from passing through.
+                The least significant bit notes the top-left corner, the next the top-right, then the bottom-left, and the most significant bit indicates the bottom-right.
+                Thus, a tile which has been assigned the bit <code>0x7</code> = <code>0111</code> (big endian) only allows objects through its bottom-right corner, while the bit <code>0x8</code> = <code>1000</code> permits the opposite.
+            </p>
+            <p>
+                <code>letters</code> sprite sheets may optionally have any number of <code>data-palette-*</code> attributes assigned, these specify options for text colour.
+            </p>
+            <section>
+                <h3>The letters:</h3>
+                <img id="letters" class="letters" alt="Letters" src="images/letters.png"
+                     data-sprite-width="4"
+                     data-sprite-height="7"
+                     data-palette-transparent="transparent"
+                     data-palette-black="#000000"
+                     data-palette-darkgrey="#4f4f4f"
+                     data-palette-grey="#777777"
+                     data-palette-white="#ffffff"
+                     data-palette-red="#87372f"
+                     data-palette-cyan="#47979f"
+                     data-palette-purple="#8b3f97"
+                     data-palette-forest="#076323"
+                     data-palette-green="#579f47"
+                     data-palette-deepblue="#002b57"
+                     data-palette-blue="#174b77"
+                     data-palette-yellow="#cbc35f"
+                     data-palette-orange="#ab7349"
+                     data-palette-brown="#574300"
+                     data-palette-rose="#7f1f39"
+                     >
+            </section>
+            <section>
+                <h3>The tilesets:</h3>
+                <img id="tiles" class="tileset" alt="Tiles" src="images/tiles.png"
+                     data-sprite-width="16"
+                     data-sprite-height="16"
+                     data-collisions="8P////////9aw4Qh7bf/////////////AAAAAAAAAA////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8="
+                     >
+                <img id="structures" class="tileset" alt="Structures" src="images/structures.png"
+                     data-sprite-width="16"
+                     data-sprite-height="16"
+                     data-collisions="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+                     >
+            </section>
+            <section>
+                <h3>Other sheets:</h3>
+                <img id="characters" class="sheet" alt="Characters" src="images/characters.png"
+                     data-sprite-width="16"
+                     data-sprite-height="16"
+                     >
+            </section>
+        </section>
+        <section>
+            <h2>Areas</h2>
+            <p>
+                Areas are used to generate a static background and/or foreground on which a section of the game takes place.
+                Areas are given the class <code>area</code>, and should contain maps of the class <code>map</code>.
+                The <code>id</code> of areas <strong>must</strong> be specified (and unique)&mdash;they are used as an identifier within the game's script.
+            </p>
+            <p>
+                Maps tell the game how to render tiles on the screen.
+                They are Base64-encoded strings, which should decode into 8-bit binary data.
+                Each byte provides the index of the appropriate tile for that square in the map grid.
+                The <code>data-tileset</code> attribute identifies the tileset from which to draw the tile, and the <code>data-mapwidth</code> attribute should tell how many tiles the map is wide.
+                The <code>data-canvas</code> attribute should identify the canvas on which the map should be drawn.
+            </p>
+            <section>
+                <h3>A map:</h3>
+                <div id="area01">
+                    <span class="map"
+                          data-tileset="tiles"
+                          data-mapwidth="16"
+                          data-screen="background"
+                          >
+                        AQEBAQEBAQEBMQEBAQEBAQEBAQEBAQEBATEBAQEBAQEBAQEBAQEBATU3NAEBAQEBMDAwMDAwMDA6ATgwMDABAQEBAQEBAQEBMzkyAQEBAQEBAQEBAQEBAQExAQEBAQEBAQEBAQEBAQEBMQEBAQEBAQEBAQEBAQEBATEBAQEBAQEBAQEBATMwMDA6AQEBAQEBAQEBAQEBAQEBMQEBAQEBAQ==
+                    </span>
+                </div>
+            </section>
+        </section>
+
+
         <div id="jo-ctls-lf">
             <!--  Left Controls  -->
             <div id="jo-ctlr-l1">
@@ -42,12 +182,6 @@
             <div id="jo-ctlr-r3">
                 <div id="jo-ctrl-dnrw" title="Down Arrow"></div>
             </div>
-        </div>
-        <div id="jo-preload">
-            <img src="images/letters.png" id="jo-letters" alt="">
-            <img src="images/tiles.png" id="jo-tiles" alt="" data-jo-collisions="8P////////9aw4Qh7bf/////////////AAAAAAAAAA////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8=">
-            <img src="images/structures.png" id="jo-structures" alt="" data-jo-collisions="AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=">
-            <img src="images/characters.png" id="jo-characters" alt="">
         </div>
     </body>
 </html>

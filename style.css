@@ -1,53 +1,5 @@
 @charset "UTF-8";
 
-/*  Global attributes:  */
-
-*:root {
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: pixelated; /*  This is *actually* what we want.  */
-    -webkit-touch-callout:  none;
-    -webkit-user-select: none;
-    -ms-user-select: none;
-    -moz-user-select: none;
-    user-select: none;
-}
-
-/*  General layout:  */
-
-html {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    background: black;
-}
-body {
-    display: block;
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    margin: 0;
-    border: none;
-    background: #777777;
-}
-
-/*  Screens:  */
-
-canvas {
-    display: block;
-    position: absolute;
-    border: solid 8px;
-    border-radius: 8px;
-    border-image: url(images/gui/cnvs-border.png) 8 8 repeat;
-    padding: 0;
-}
-canvas:first-of-type {
-    background: #000000;
-}
-
 /*  Controls:  */
 
 *[id^="jo-ctls"] {
@@ -59,11 +11,11 @@ canvas:first-of-type {
     align-items: center;
     bottom: 0;
     margin: 0;
-    padding: 1.5px;
+    padding: 0;
     min-width: 72px;
     min-height: 72px;
 }
-html[data-jo-touch] *[id^=jo-ctls] {
+html[data-touch] *[id^=jo-ctls] {
     display: flex;
 }
 #jo-ctls-lf {
@@ -151,25 +103,6 @@ html[data-jo-touch] *[id^=jo-ctls] {
 }
 #jo-ctrl-rtrw[data-control-active] {
     background-position: 60% 60%;
-}
-
-/*  Preload  */
-
-#jo-preload {
-    display: none;
-}
-
-/*  No layout  */
-
-html:not([data-jo-layout]) body {
-    background-image: url(images/splash.gif);
-    background-position: center center;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-color: transparent;
-}
-html:not([data-jo-layout]) *:not(body) {
-    display: none;
 }
 
 /*  Horizontal layout:  */
