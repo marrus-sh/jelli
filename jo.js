@@ -1214,7 +1214,7 @@ var Jo = (function () {
             //  Screen setup:
 
             for (collection = datadoc.getElementsByTagName("canvas"), i = 0; i < collection.length; i++) {
-                Object.defineProperty(screens, collection.item(i).id, {value: new Screen(placed(collection.item(i)), "2d")});
+                Object.defineProperty(screens, collection.item(i).id, {value: new Screen(placed(collection.item(i)), "2d"), enumerable: true});
             }
 
             //  Control setup:
@@ -1431,6 +1431,10 @@ var Jo = (function () {
                 drawText();
 
             }
+
+            //  Drawing the characters:
+
+            characters[0].draw(screens.mainground.context);
 
             //  Reset various flags:
 
