@@ -823,74 +823,6 @@ var Jo = (function () {
 
     })();
 
-    //  Character:
-
-    var Character = (function () {
-
-        //  Character data:
-
-        function Character(sprites, x, y, dir, step, draw, data) {
-
-            //  Handling arguments and error checking:
-
-            if (typeof sprites !== "object") throw new Error("(character.js) Sprites must be provided in an object.");
-            if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("(character.js) Initial position must be provided with numbers.");
-            if (!(typeof dir === "string" || dir instanceof String || typeof dir === "number" || dir instanceof Number)) throw new Error("(character.js) Character direction must be a string or number.");
-            if (!(typeof step === "function" || step instanceof Function)) throw new Error("(character.js) No step function provided");
-            if (!(typeof draw === "function" || draw instanceof Function)) throw new Error("(character.js) No draw function provided");
-
-            //  Adding properties:
-
-            Object.defineProperties(this, {
-                data: {
-                    value: data
-                },
-                dir: {
-                    value: dir,
-                    writable: true
-                },
-                drawFunction: {
-                    value: draw
-                },
-                frame : {
-                    value: 0,
-                    writable: true
-                },
-                sprites: {
-                    value: sprites
-                },
-                stepFunction: {
-                    value: step
-                },
-                x: {
-                    value: x,
-                    writable: true
-                },
-                y: {
-                    value: y,
-                    writable: true
-                }
-            });
-
-        }
-
-        Character.prototype = Object.create(Object.prototype, {
-            draw: {
-                value: function(context) {
-                    return this.drawFunction(context, this.sprites[this.dir], this.x, this.y, this.frame);
-                }
-            },
-            step: {
-                value: function() {
-                    return this.stepFunction(this.data);
-                }
-            }
-        });
-
-        return Character;
-
-    })();
-
     //  Tileset:
 
     var Tileset = (function () {
@@ -1043,6 +975,225 @@ var Jo = (function () {
 
     })();
 
+    //  JoScript:
+
+    var JoScript = (function () {
+
+        //  Getting values:
+
+        function value(dataobj, prop) {
+            if (typeof dataobj !== "object") throw new Error("[JoScript] Error: No data object provided.");
+            if (!isNaN(Number(prop))) return Number(prop);
+            else if ((typeof prop === "string" || prop instanceof String) && prop[0] === "-") {
+                if (typeof dataobj[prop.substr(1)] === "number" || dataobj[prop.substr(1)] instanceof Number) return -dataobj[prop];
+            }
+            else if (typeof dataobj[prop] === "number" || dataobj[prop] instanceof Number) return dataobj[prop];
+            else throw new Error("[JoScript] Variable did not resolve into a number.");
+        }
+
+        //  Script object constructor:
+
+        function JoScript(props) {
+
+            //  Setting up variables:
+
+            var i;
+
+            //  Handling arguments and error checking:
+
+            if (typeof props === undefined) return;
+            if (typeof props === "string" || props instanceof String) {
+                this[props] = 0;
+                return;
+            }
+            if (!(typeof props === "object" && props instanceof Array)) throw new Error("[JoScript] Data object property names must be provided in an array.");
+
+            for (i = 0; i < props.length; i++) {
+                if (!(typeof props[i] === "string" || props[i] instanceof String)) throw new Error("[JoScript] Data object property names must be provided as strings.");
+                this[props[i]] = 0;
+            }
+
+        }
+
+        //  Script object prototyping:
+
+        JoScript.prototype = Object.create(Object.prototype, {
+
+            declare: {
+                value: function(prop) {
+                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JoScript] Variables must be specified as strings.");
+                    if (prop.indexOf("-") !== -1) throw new Error("[JoScript] Dashes are not allowed in variable names.");
+                    if (this.hasOwnProperty(prop)) throw new Error("[JoScript] Attempted to declare an already-declared variable.");
+                    this[prop] = 0;
+                }
+            },
+            get: {
+                value: function(prop) {
+                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JoScript] Variables must be specified as strings.");
+                    if (prop.indexOf("-") !== -1) throw new Error("[JoScript] Dashes are not allowed in variable names.");
+                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JoScript] Attempted to get a non-declared value.");
+                    return value(this, prop);
+                }
+            },
+            increment: {
+                value: function(prop /*  optional value  */) {
+                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JoScript] Variables must be specified as strings.");
+                    if (prop.indexOf("-") !== -1) throw new Error("[JoScript] Dashes are not allowed in variable names.");
+                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JoScript] Attempted to increment a non-declared value.");
+                    if (arguments[1] !== undefined) this[prop] += value(this, arguments[1]);
+                    else return this[prop]++;
+                }
+
+            },
+            mod_increment: {
+                value: function(prop, mod /*  optional value  */) {
+                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JoScript] Variables must be specified as strings.");
+                    if (prop.indexOf("-") !== -1) throw new Error("[JoScript] Dashes are not allowed in variable names.");
+                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JoScript] Attempted to increment a non-declared value.");
+                    if (arguments[2] !== undefined) this[prop] += value(this, arguments[2]);
+                    else this[prop]++;
+                    return this[prop] %= value(this, mod);
+                }
+
+            },
+            set: {
+                value: function(prop, to) {
+                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JoScript] Variables must be specified as strings.");
+                    if (prop.indexOf("-") !== -1) throw new Error("[JoScript] Dashes are not allowed in variable names.");
+                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JoScript] Attempted to set a non-declared value.");
+                    return (this[prop] = value(this, to));
+                }
+            },
+            void: {
+                value: function(prop) {
+                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JoScript] Variables must be specified as strings.");
+                    if (prop.indexOf("-") !== -1) throw new Error("[JoScript] Dashes are not allowed in variable names.");
+                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JoScript] Attempted to void a non-declared value.");
+                    this[prop] = 0;
+                }
+            }
+
+        });
+
+        JoScript.parse = function (script, dataobj) {
+
+            //  Setting up variables:
+
+            var args;
+            var b;
+            var breakdown;
+            var condition;
+            var i;
+            var j;
+            var line;
+            var lines;
+            var n;
+            var s;
+            var regex = /^\s*(?:(?:((?:-?\s*\(\s*-?\w+(?:\s*[<>=]\s*-?\w+)?\s*\)\s*)+)?\s*(?:(\w+)\s*(\(\s*-?\w+(?:\s*,\s*-?\w+)*\s*\))?|(\?))|([:;]))|>>.*)\s*$/;
+            var conds_regex = /(-)?\s*\(\s*(-?\w+)(?:\s*([<>=])\s*(-?\w+))?\s*\)/g;
+
+            //  Handling arguments and error checking:
+
+            if (!(typeof script === "string" || script instanceof String)) throw new Error("[JoScript] Error: Script is not a string.");
+            if (typeof dataobj !== "object") throw new Error("[JoScript] Error: No data object provided.");
+
+            //  Parsing the lines:
+
+            for (lines = script.split("\n"), i = 0; i < lines.length; i++) {
+
+                //  Setting the current line:
+
+                line = lines[i].trim();
+                if (line === "") continue;
+                breakdown = regex.exec(line);
+                if (!breakdown) throw new Error("[JoScript] Error on line " + i+1 + ": Parsing error.");
+
+                //  If there are conditions:
+
+                if (breakdown[1]) {
+                    b = false;
+                    while ((condition = conds_regex.exec(breakdown[1])) && !b) {
+                        if (condition[1]) n = true;
+                        else n = false;
+                        switch (condition[3]) {
+                            case "=":
+                                b = n ? value(dataobj, condition[2]) !== value(dataobj, condition[4]) : value(dataobj, condition[2]) === value(dataobj, condition[4]);
+                                break;
+                            case "<":
+                                b = n ? value(dataobj, condition[2]) >= value(dataobj, condition[4]) : value(dataobj, condition[2]) < value(dataobj, condition[4]);
+                                break;
+                            case ">":
+                                b = n ? value(dataobj, condition[2]) <= value(dataobj, condition[4]) : value(dataobj, condition[2] > value(dataobj, condition[4]));
+                                break;
+                            default:
+                                b = n ? !value(dataobj, condition[2]) : !!value(dataobj, condition[2]);
+                                break;
+                        }
+                    }
+                }
+                else b = true;
+
+                //  If the line ends in `?`:
+
+                if (breakdown[4]) {
+
+                    //  Setting up variables:
+
+                    n = false;
+                    j = 0;
+                    s = "";
+
+                    while (++i < lines.length) {
+
+                        //  Setting the current line:
+
+                        line = lines[i].trim();
+                        if (line === "") continue;
+                        breakdown = regex.exec(line);
+
+                        //  Managing nesting levels and ELSE statements:
+
+                        if (!breakdown) throw new Error("[JoScript] Error on line " + i+1 + ": Parsing error.");
+                        if (breakdown[5] === ";") {
+                            if (--j < 0) break;
+                            continue;
+                        }
+                        if (!j && breakdown[5] === ":") {
+                            if (!n) n = true;
+                            else throw new Error("[JoScript] Error on line " + i+1 + ": Improper second 'else'.");
+                            continue;
+                        }
+
+                        //  Adds the line to the string if necessary:
+
+                        if ((!n && b) || (n && !b)) {
+                            s += line + "\n";
+                            if (breakdown[4]) j++;
+                        }
+
+                    }
+
+                    //  Parses the resultant string:
+
+                    JoScript.parse(s, dataobj);
+
+                }
+
+                else if (b && breakdown[2]) {
+                    if (breakdown[3]) {
+                        dataobj[breakdown[2]].apply(dataobj, breakdown[3].substring(1, breakdown[3].length - 1).trim().split(/\s*,\s*/));
+                    }
+                    else dataobj[breakdown[2]].apply(dataobj);
+                }
+
+            }
+
+        }
+
+        return JoScript;
+
+    })();
+
     /*
         The actual game code follows.
         I've placed it inside its own closure for convenient packaging, but it requires all of the previous modules to be loaded.
@@ -1065,12 +1216,79 @@ var Jo = (function () {
         var current_area;
         var resized = true;
 
-        var direction = Object.create(null, {
-            DOWN: {value: 0},
-            LEFT: {value: 1},
-            UP: {value: 2},
-            RIGHT: {value: 3}
+        var global_object = Object.create(JoScript.prototype, {
+            "key_start": {get: function() {return Number(control.isActive("start"));}},
+            "key_select": {get: function() {return Number(control.isActive("select"));}},
+            "key_menu": {get: function() {return Number(control.isActive("menu"));}},
+            "key_look": {get: function() {return Number(control.isActive("look"));}},
+            "key_exit": {get: function() {return Number(control.isActive("exit"));}},
+            "key_action": {get: function() {return Number(control.isActive("action"));}},
+            "key_up": {get: function() {return Number(control.isActive("up"));}},
+            "key_down": {get: function() {return Number(control.isActive("down"));}},
+            "key_left": {get: function() {return Number(control.isActive("left"));}},
+            "key_right": {get: function() {return Number(control.isActive("right"));}}
         });
+
+        //  Character constructor:
+
+        function Character(sprites, props, initScript, stepScript) {
+
+            //  Setting up variables:
+
+            var i;
+
+            //  Handling arguments and error checking:
+
+            if (!(typeof sprites === "object" && sprites instanceof Array)) throw new Error("[Jo] Cannot create character – sprites must be provided in an array.");
+            if (!(typeof props === "object" && props instanceof Array)) throw new Error("[Jo] Cannot create character – variables must be provided in an array.");
+            if (!(typeof initScript === "string" || initScript instanceof String)) throw new Error("[Jo] Cannot create character – No init function provided.");
+            if (!(typeof stepScript === "string" || stepScript instanceof String)) throw new Error("[Jo] Cannot create character – No step function provided.");
+
+            //  Defining properties:
+
+            Object.defineProperties(this, {  //  Note that $ is not valid in JoScript variable names
+                init$cript: {
+                    value: initScript
+                },
+                sprite$: {
+                    value: sprites
+                },
+                step$cript: {
+                    value: stepScript
+                }
+            });
+
+            this.declare("x");
+            this.declare("y");
+            this.declare("dir");
+            this.declare("frame");
+
+            for (i = 0; i < props.length; i++) {
+                if (!(typeof props[i] === "string" || props[i] instanceof String)) throw new Error("[Jo] Cannot create character – Property names must be strings.");
+                this.declare(props[i]);
+            }
+
+        }
+
+        Character.prototype = Object.create(global_object, {
+            draw: {
+                value: function (context) {
+                    return this.sprite$[this.get("dir")].draw(context, this.get("x"), this.get("y"), this.get("frame"));
+                }
+            },
+            init: {
+                value: function () {
+                    return JoScript.parse(this.init$cript, this);
+                }
+            },
+            step: {
+                value: function () {
+                    return JoScript.parse(this.step$cript, this);
+                }
+            }
+        });
+
+        //  Clear the screens:
 
         function clearScreens() {
 
@@ -1183,8 +1401,14 @@ var Jo = (function () {
 
             //  Setting up variables:
 
+            var char_proto;
             var collection;
+            var collection2;
             var i;
+            var j;
+            var m;
+            var n;
+
             function imported(node) {
                 if (typeof node === "string" || node instanceof String) node = datadoc.getElementById(node);
                 if (!(node instanceof Node)) throw new Error("[Jo] Cannot import node – none provided");
@@ -1202,8 +1426,8 @@ var Jo = (function () {
             if (typeof Control === "undefined" || !Control) throw new Error("[Jo] Control module not loaded");
             if (typeof Sheet === "undefined" || !Sheet) throw new Error("[Jo] Sheet module not loaded");
             if (typeof Letters === "undefined" || !Letters) throw new Error("[Jo] Letters module not loaded");
-            if (typeof Character === "undefined" || !Character) throw new Error("[Jo] Character module not loaded");
             if (typeof Tileset === "undefined" || !Tileset) throw new Error("[Jo] Tileset module not loaded");
+            if (typeof JoScript === "undefined" || !Tileset) throw new Error("[Jo] JoScript module not loaded");
 
             //  Setting up datadoc and clearing the body:
 
@@ -1245,6 +1469,25 @@ var Jo = (function () {
             }
             for (collection = datadoc.getElementsByClassName("sheet"), i = 0; i < collection.length; i++) {
                 Object.defineProperty(sheets, collection.item(i).id, {value: new Sheet(imported(collection.item(i)), Number(collection.item(i).dataset.spriteWidth), Number(collection.item(i).dataset.spriteHeight))});
+            }
+
+            //  Character loading:
+
+            for (collection = datadoc.getElementsByClassName("character"), i = 0; i < collection.length; i++) {
+                m = {};
+                n = [];
+                for (collection2 = collection.item(i).getElementsByClassName("sprite"), j = 0; j < collection2.length; j++) {
+                    n.push(sheets[collection2.item(j).dataset.sheet].getSprite(Number(collection2.item(j).dataset.index), Number(collection2.item(j).dataset.length)));
+                    if (collection2.item(j).hasAttribute("title")) m[collection2.item(j).getAttribute("title")] = j;
+                }
+                Object.defineProperty(characters, collection.item(i).id, {
+                    value: new Character(n, collection.item(i).dataset.vars.split(/\s+/), collection.item(i).getElementsByClassName("init").item(0).text || collection.item(i).getElementsByClassName("init").item(0).textContent, collection.item(i).getElementsByClassName("step").item(0).text || collection.item(i).getElementsByClassName("step").item(0).textContent),
+                    enumerable: true
+                });
+                for (j in m) {
+                    characters[collection.item(i).id].declare(j);
+                    characters[collection.item(i).id].set(j, m[j]);
+                }
             }
 
             //  Adding event listeners:
@@ -1393,7 +1636,17 @@ var Jo = (function () {
 
         function logic() {
 
-            characters[0].step();
+            //  Setting up variables:
+
+            var i;
+
+            //  Stepping the characters:
+
+            for (i in characters) {
+                characters[i].step()
+            }
+
+            //  setTimeout for that logic:
 
             window.setTimeout(logic, 1000/60);
 
@@ -1434,11 +1687,15 @@ var Jo = (function () {
 
             //  Drawing the characters:
 
-            characters[0].draw(screens.mainground.context);
+            for (i in characters) {
+                characters[i].draw(screens.mainground.context)
+            }
 
             //  Reset various flags:
 
             clear_area = resized = false;
+
+            //  Request new frame:
 
             window.requestAnimationFrame(render);
 
@@ -1447,37 +1704,6 @@ var Jo = (function () {
         //  Setup function:
 
         function setup() {
-
-            characters[0] = new Character([
-                sheets.characters.getSprite(0, 2),
-                sheets.characters.getSprite(2, 2),
-                sheets.characters.getSprite(4, 2),
-                sheets.characters.getSprite(6, 2)
-            ], 0, 0, direction.DOWN, function () {
-                if (control.isActive("up")) {
-                    this.dir = direction.UP;
-                    this.y--;
-                }
-                if (control.isActive("down")) {
-                    this.dir = direction.DOWN;
-                    this.y++;
-                }
-                if (control.isActive("left")) {
-                    this.dir = direction.LEFT;
-                    this.x--;
-                }
-                if (control.isActive("right")) {
-                    this.dir = direction.RIGHT;
-                    this.x++;
-                }
-                if (control.isActive("up") || control.isActive("down") || control.isActive("left") || control.isActive("right")) {
-                    this.data.timer++;
-                    if (!(this.data.timer %= 15)) this.frame = ++this.frame % 2;
-                }
-            }, Sheet.draw, {
-                frame: 0,
-                timer: 0
-            });
 
             current_area = datadoc.getElementById("area01");
 

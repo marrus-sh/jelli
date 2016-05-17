@@ -127,11 +127,85 @@
             </section>
         </section>
         <section>
+            <h2>Characters</h2>
+            <p>
+                Characters are used to insert any interactive element&mdash;including NPCs and player characters, but also potentially other elements, like doors&mdash;into the game.
+                They have the class <code>character</code>, and should contain sprites of class <code>sprite</code>.
+                The <code>id</code>s of characters <strong>must</strong> be specified (and unique)&mdash;they are used as an identifier within the game's script.
+                The <code>data-vars</code> element is used to declare character variables for use later in code; these are initialized to 0.
+            </p>
+            <p>
+                Characters are rendered using sprites, which take a couple of attributes.
+                <code>title</code> names the sprite&mdash;these need to be unique within a given character but not necessarily across the document.
+                It essentially functions by setting up a character variable with the value of the sprite's number, and you can always just use the number instead.
+                <code>data-sheet</code> specifies which <code>sheet</code> to draw the sprite from, while <code>data-index</code> specifies the starting index for the sprite, and <code>data-length</code> specifies the length of the animation.
+            </p>
+            <section>
+                <h3>Some characters:</h3>
+                <div id="jo" class="character"
+                     data-vars="timer"
+                     >
+                    <span class="sprite"
+                          title="dn"
+                          data-sheet="characters"
+                          data-index="0"
+                          data-length="2"
+                          ></span>
+                    <span class="sprite"
+                          title="lf"
+                          data-sheet="characters"
+                          data-index="2"
+                          data-length="2"
+                          ></span>
+                    <span class="sprite"
+                          title="up"
+                          data-sheet="characters"
+                          data-index="4"
+                          data-length="2"
+                          ></span>
+                    <span class="sprite"
+                          title="rt"
+                          data-sheet="characters"
+                          data-index="6"
+                          data-length="2"
+                          ></span>
+                    <script type="text/plain" class="init">
+                        set (x, 0)
+                        set (y, 0)
+                        set (dir, dn)
+                        set (frame, 0)
+                    </script>
+                    <script type="text/plain" class="step">
+                        (key_up) ?
+                            increment (y, -1)
+                            set (dir, up)
+                        ;
+                        (key_down) ?
+                            increment (y)
+                            set (dir, dn)
+                        ;
+                        (key_left) ?
+                            increment (x, -1)
+                            set (dir, lf)
+                        ;
+                        (key_right) ?
+                            increment (x)
+                            set (dir, rt)
+                        ;
+                        (key_up)(key_down)(key_left)(key_right) ?
+                            mod_increment (timer, 15)
+                            -(timer) mod_increment (frame, 2)
+                        ;
+                    </script>
+                </div>
+            </section>
+        </section>
+        <section>
             <h2>Areas</h2>
             <p>
                 Areas are used to generate a static background and/or foreground on which a section of the game takes place.
                 Areas are given the class <code>area</code>, and should contain maps of the class <code>map</code>.
-                The <code>id</code> of areas <strong>must</strong> be specified (and unique)&mdash;they are used as an identifier within the game's script.
+                The <code>id</code>s of areas <strong>must</strong> be specified (and unique)&mdash;they are used as an identifier within the game's script.
             </p>
             <p>
                 Maps tell the game how to render tiles on the screen.
