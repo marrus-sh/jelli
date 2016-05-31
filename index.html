@@ -127,27 +127,30 @@
             </section>
         </section>
         <section>
-            <h2>Characters</h2>
+            <h2>Sprites</h2>
             <p>
-                Characters are used to insert any interactive element&mdash;including NPCs and player characters, but also potentially other elements, like doors&mdash;into the game.
-                They have the class <code>character</code>, and should contain sprites of class <code>sprite</code>.
-                The <code>id</code>s of characters <strong>must</strong> be specified (and unique)&mdash;they are used as an identifier within the game's script.
-                The <code>data-vars</code> element is used to declare character variables for use later in code; these are initialized to 0.
+                Game characters are rendered using collections of sprites, which are given the class <code>sprites</code> and contain sprites of class <code>sprite</code>.
+                The <code>id</code>s of sprite collections <strong>must</strong> be specified (and unique)&mdash;they are used as an identifier within the game's script.
+                Additionally, the <code>data-sheet</code> attribute needs to be defined:
+                It specifies which <code>sheet</code> to draw the sprites from.
             </p>
             <p>
-                Characters are rendered using sprites, which take a couple of attributes.
-                <code>title</code> names the sprite&mdash;these need to be unique within a given character but not necessarily across the document.
+                The <code>data-width</code> and <code>data-height</code> attributes do <strong>not</strong> set the width and height of the sprites themselves (these are determined by the sheet), but rather the width and height of the sprite bounding box (for collision checking).
+                The centre of this box is aligned with the centre of the sprite.
+                If not set, these attributes default to the sprite widths and heights as specified by the sheet.
+            </p>
+            <p>
+                The sprites themselves take a couple of attributes:
+                <code>title</code> names the sprite&mdash;these need to be unique within a given sprite collection but not necessarily across the document.
                 It essentially functions by setting up a character variable with the value of the sprite's number, and you can always just use the number instead.
-                <code>data-sheet</code> specifies which <code>sheet</code> to draw the sprite from, while <code>data-index</code> specifies the starting index for the sprite, and <code>data-length</code> specifies the length of the animation.
+                <code>data-index</code> (required) specifies the starting index for the sprite, and <code>data-length</code> specifies the length of the animation (this defaults to 1).
             </p>
             <section>
-                <h3>Some characters:</h3>
-                <div id="jo" class="character"
+                <h3>Sprite collections:</h3>
+                <div id="jo" class="sprites"
                      data-sheet="characters"
                      data-width="12"
-                     data-height="16"
-                     data-vars="timer"
-                     >
+                     data-height="16">
                     <span class="sprite"
                           title="dn"
                           data-index="0"
@@ -168,100 +171,27 @@
                           data-index="6"
                           data-length="2"
                           ></span>
-                    <script type="text/plain" class="init">
-                        set (x, 88)
-                        set (y, 120)
-                        set (dir, dn)
-                        set (frame, 0)
-                    </script>
-                    <script type="text/plain" class="step">
-                        (key_up) ?
-                            (key_down) ?
-                                (key_left) ?
-                                    (key_right) ?
-                                        targetBy (0, 0)
-                                    :
-                                        targetBy (-1, 0)
-                                    ;
-                                :
-                                    (key_right) ?
-                                        targetBy (1, 0)
-                                    :
-                                        targetBy (0, 0)
-                                    ;
-                                ;
-                            :
-                                (key_left) ?
-                                    (key_right) ?
-                                        targetBy (0, -1)
-                                    :
-                                        targetBy (-1, -1)
-                                    ;
-                                :
-                                    (key_right) ?
-                                        targetBy (1, -1)
-                                    :
-                                        targetBy (0, -1)
-                                    ;
-                                ;
-                            ;
-                        :
-                            (key_down) ?
-                                (key_left) ?
-                                    (key_right) ?
-                                        targetBy (0, 1)
-                                    :
-                                        targetBy (-1, 1)
-                                    ;
-                                :
-                                    (key_right) ?
-                                        targetBy (1, 1)
-                                    :
-                                        targetBy (0, 1)
-                                    ;
-                                ;
-                            :
-                                (key_left) ?
-                                    (key_right) ?
-                                        targetBy (0, 0)
-                                    :
-                                        targetBy (-1, 0)
-                                    ;
-                                :
-                                    (key_right) ?
-                                        targetBy (1, 0)
-                                    :
-                                        targetBy (0, 0)
-                                    ;
-                                ;
-                            ;
-                        ;
-                        (key_left) ?
-                            (key_right) ?
-                                (key_up) ?
-                                    -(key_down) set (dir, up)
-                                :
-                                    (key_down) set (dir, dn)
-                                ;
-                            :
-                                set (dir, lf)
-                            ;
-                        :
-                            (key_right) ?
-                                set (dir, rt)
-                            :
-                                (key_up) ?
-                                    -(key_down) set (dir, up)
-                                :
-                                    (key_down) set (dir, dn)
-                                ;
-                            ;
-                        ;
-                        (key_up)(key_down)(key_left)(key_right) ?
-                            mod_increment (timer, 15)
-                            -(timer) mod_increment (frame, 2)
-                        ;
-                    </script>
+                </div>
+                <div id="sign" class="sprites"
+                     data-sheet="characters"
+                     data-width="8"
+                     data-height="14">
+                    <span class="sprite"
+                          title="dn"
+                          data-index="8"
+                          ></span>
+                    <span class="sprite"
+                          title="lf"
+                          data-index="9"
+                          ></span>
+                    <span class="sprite"
+                          title="up"
+                          data-index="10"
+                          ></span>
+                    <span class="sprite"
+                          title="rt"
+                          data-index="11"
+                          ></span>
                 </div>
             </section>
         </section>
@@ -269,7 +199,7 @@
             <h2>Areas</h2>
             <p>
                 Areas are used to generate a static background and/or foreground on which a section of the game takes place.
-                Areas are given the class <code>area</code>, and should contain maps of the class <code>map</code>.
+                Areas are given the class <code>area</code>, and should contain maps of the class <code>map</code> and characters of the class <code>character</code>.
                 The <code>id</code>s of areas <strong>must</strong> be specified (and unique)&mdash;they are used as an identifier within the game's script.
             </p>
             <p>
@@ -279,9 +209,26 @@
                 The <code>data-tileset</code> attribute identifies the tileset from which to draw the tile, and the <code>data-mapwidth</code> attribute should tell how many tiles the map is wide.
                 The <code>data-canvas</code> attribute should identify the canvas on which the map should be drawn.
             </p>
+            <p>
+                Characters are used to insert any interactive element&mdash;including NPCs and player characters, but also potentially other elements, like doors&mdash;into the game.
+                They have the class <code>character</code>, and should a couple of scripts.
+                The <code>data-vars</code> element is used to declare character variables for use later in code; these are initialized to 0.
+                The <code>data-sprites</code> element tells which sprite collection to use with the character.
+            </p>
+            <p>
+                Characters generally need scripting.
+                This is accomplished through two scripts, which should be placed inside the character.
+                The first, of class <code>init</code>, specifies the initialization code, which is run when the area is loaded.
+                The second, of class <code>step</code>, specifies the code to run each time the game's logic is processed.
+                These scripts should have type <code>text/plain</code> and be written in JoScript.
+            </p>
+            <p>
+                Characters are destroyed when an area is unloaded, and the values of their variables are not stored.
+            </p>
             <section>
-                <h3>A map:</h3>
-                <div id="area01">
+                <h3>An area:</h3>
+                <div id="area01" class="area"
+                     >
                     <span class="map"
                           data-tileset="tiles"
                           data-mapwidth="16"
@@ -292,6 +239,114 @@
                           data-mapwidth="16"
                           data-screen="foreground"
                           >AAAAAAAAAAAAAAAAAAAaEgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABkQAAAAAAAAAAAAAAAAAAAWEgAAAAAAAAAAAAAAAAAAFhAAAAAAAAAAAAAAAAAAABYSFRUVFRUVFRUYABcVFRUUGA==</span>
+                    <div class="character"
+                         data-sprites="jo"
+                         data-vars="timer"
+                         >
+                        <script type="text/plain" class="init">
+                            set (x, 88)
+                            set (y, 120)
+                            set (dir, dn)
+                            set (frame, 0)
+                        </script>
+                        <script type="text/plain" class="step">
+                            (key_up) ?
+                                (key_down) ?
+                                    (key_left) ?
+                                        (key_right) ?
+                                            targetBy (0, 0)
+                                        :
+                                            targetBy (-1, 0)
+                                        ;
+                                    :
+                                        (key_right) ?
+                                            targetBy (1, 0)
+                                        :
+                                            targetBy (0, 0)
+                                        ;
+                                    ;
+                                :
+                                    (key_left) ?
+                                        (key_right) ?
+                                            targetBy (0, -1)
+                                        :
+                                            targetBy (-1, -1)
+                                        ;
+                                    :
+                                        (key_right) ?
+                                            targetBy (1, -1)
+                                        :
+                                            targetBy (0, -1)
+                                        ;
+                                    ;
+                                ;
+                            :
+                                (key_down) ?
+                                    (key_left) ?
+                                        (key_right) ?
+                                            targetBy (0, 1)
+                                        :
+                                            targetBy (-1, 1)
+                                        ;
+                                    :
+                                        (key_right) ?
+                                            targetBy (1, 1)
+                                        :
+                                            targetBy (0, 1)
+                                        ;
+                                    ;
+                                :
+                                    (key_left) ?
+                                        (key_right) ?
+                                            targetBy (0, 0)
+                                        :
+                                            targetBy (-1, 0)
+                                        ;
+                                    :
+                                        (key_right) ?
+                                            targetBy (1, 0)
+                                        :
+                                            targetBy (0, 0)
+                                        ;
+                                    ;
+                                ;
+                            ;
+                            (key_left) ?
+                                (key_right) ?
+                                    (key_up) ?
+                                        -(key_down) set (dir, up)
+                                    :
+                                        (key_down) set (dir, dn)
+                                    ;
+                                :
+                                    set (dir, lf)
+                                ;
+                            :
+                                (key_right) ?
+                                    set (dir, rt)
+                                :
+                                    (key_up) ?
+                                        -(key_down) set (dir, up)
+                                    :
+                                        (key_down) set (dir, dn)
+                                    ;
+                                ;
+                            ;
+                            (key_up)(key_down)(key_left)(key_right) ?
+                                mod_increment (timer, 15)
+                                -(timer) mod_increment (frame, 2)
+                            ;
+                        </script>
+                        <div class="character"
+                             data-sprites="sign">
+                            <script type="text/plain" class="init">
+                                set (x, 120)
+                                set (y, 120)
+                                set (dir, dn)
+                                set (frame, 0)
+                            </script>
+                        </div>
+                    </div>
                 </div>
             </section>
         </section>

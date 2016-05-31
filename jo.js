@@ -1427,6 +1427,32 @@ var Jo = (function () {
         }
 
         Character.prototype = Object.create(global_object, {
+            getCollision$Edge: {
+                value: function (dir, x, y) {
+                    if (!(dir == "left" || dir == "top" || dir == "right" || dir == "bottom")) throw new Error("[Jo] Cannot get collision edge – No proper directional keyword provided.");
+                    if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Jo] Cannot find collision – coordinates must be numbers.");
+                    if (x <= this.get("x") - this.width / 2 || x >= this.get("x") + this.width / 2 || y <= this.get("y") - this.height / 2 || y >= this.get("y") + this.height / 2) {
+                        switch (dir) {
+                            case "left":
+                            case "right":
+                                return x;
+                            case "top":
+                            case "bottom":
+                                return y;
+                        }
+                    }
+                    switch (dir) {
+                        case "left":
+                            return this.get("x") - this.width / 2;
+                        case "right":
+                            return this.get("x") + this.width / 2;
+                        case "top":
+                            return this.get("y") - this.height / 2;
+                        case "bottom":
+                            return this.get("y") + this.height / 2;
+                    }
+                }
+            },
             draw$: {
                 value: function (context) {
                     return this.sprite$[this.get("dir")].draw(context, Math.floor(this.get("x") - this.sprite_width / 2), Math.floor(this.get("y") - this.sprite_height / 2), this.get("frame"));
@@ -1476,6 +1502,14 @@ var Jo = (function () {
                                 if (sx === undefined || sx > tx) sx = tx;
                             }
                         }
+                        for (i = 0; i < characters.length; i++) {
+                            if (this === characters[i]) continue;
+                            k = Math.floor(this.height / characters[i].height) + 1;
+                            for (j = 0; j <= k; j++) {
+                                tx = characters[i].getCollision$Edge("left", this.get("x") + ux + this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
+                                if (sx === undefined || sx > tx) sx = tx;
+                            }
+                        }
                         if (sx !== undefined) this.set("x", sx - this.width / 2);
                     }
                     else if (dx < 0) {
@@ -1483,6 +1517,14 @@ var Jo = (function () {
                             k = Math.floor(this.height / (maps[i].tile_height / 2)) + 1;
                             for (j = 0; j <= k; j++) {
                                 tx = maps[i].getCollisionEdge("right", this.get("x") + ux - this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
+                                if (sx === undefined || sx < tx) sx = tx;
+                            }
+                        }
+                        for (i = 0; i < characters.length; i++) {
+                            if (this === characters[i]) continue;
+                            k = Math.floor(this.height / characters[i].height) + 1;
+                            for (j = 0; j <= k; j++) {
+                                tx = characters[i].getCollision$Edge("right", this.get("x") + ux - this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
                                 if (sx === undefined || sx < tx) sx = tx;
                             }
                         }
@@ -1496,6 +1538,14 @@ var Jo = (function () {
                                 if (sy === undefined || sy > ty) sy = ty;
                             }
                         }
+                        for (i = 0; i < characters.length; i++) {
+                            if (this === characters[i]) continue;
+                            k = Math.floor(this.width / characters[i].width) + 1;
+                            for (j = 0; j <= k; j++) {
+                                ty = characters[i].getCollision$Edge("top", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy + this.height / 2);
+                                if (sy === undefined || sy > ty) sy = ty;
+                            }
+                        }
                         if (sy !== undefined) this.set("y", sy - this.height / 2);
                     }
                     else if (dy < 0) {
@@ -1503,6 +1553,14 @@ var Jo = (function () {
                             k = Math.floor(this.width / (maps[i].tile_width / 2)) + 1;
                             for (j = 0; j <= k; j++) {
                                 ty = maps[i].getCollisionEdge("bottom", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy - this.height / 2);
+                                if (sy === undefined || sy < ty) sy = ty;
+                            }
+                        }
+                        for (i = 0; i < characters.length; i++) {
+                            if (this === characters[i]) continue;
+                            k = Math.floor(this.width / characters[i].width) + 1;
+                            for (j = 0; j <= k; j++) {
+                                ty = characters[i].getCollision$Edge("bottom", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy - this.height / 2);
                                 if (sy === undefined || sy < ty) sy = ty;
                             }
                         }
@@ -1695,26 +1753,6 @@ var Jo = (function () {
                 Object.defineProperty(sheets, collection.item(i).id, {value: new Sheet(imported(collection.item(i)), Number(collection.item(i).dataset.spriteWidth), Number(collection.item(i).dataset.spriteHeight))});
             }
 
-            //  Character loading:
-
-            for (collection = datadoc.getElementsByClassName("character"), i = 0; i < collection.length; i++) {
-                m = {};
-                n = [];
-                for (collection2 = collection.item(i).getElementsByClassName("sprite"), j = 0; j < collection2.length; j++) {
-                    n.push(sheets[collection.item(i).dataset.sheet].getSprite(Number(collection2.item(j).dataset.index), Number(collection2.item(j).dataset.length)));
-                    if (collection2.item(j).hasAttribute("title")) m[collection2.item(j).getAttribute("title")] = j;
-                }
-                Object.defineProperty(characters, collection.item(i).id, {
-                    value: new Character(n, Number(collection.item(i).dataset.width || n[0].width), Number(collection.item(i).dataset.height || n[0].height), collection.item(i).dataset.vars.split(/\s+/), collection.item(i).getElementsByClassName("init").item(0).text || collection.item(i).getElementsByClassName("init").item(0).textContent, collection.item(i).getElementsByClassName("step").item(0).text || collection.item(i).getElementsByClassName("step").item(0).textContent),
-                    enumerable: true
-                });
-                for (j in m) {
-                    characters[collection.item(i).id].declare(j);
-                    characters[collection.item(i).id].set(j, m[j]);
-                }
-                characters[collection.item(i).id].init$();
-            }
-
             //  Adding event listeners:
 
             document.body.addEventListener("touchmove", function (e) {e.preventDefault();}, false);
@@ -1863,15 +1901,42 @@ var Jo = (function () {
 
             //  Setting up variables:
 
+            var collection;
+            var collection2;
             var i;
-            var map;
+            var j;
+            var item;
+            var item2;
+            var m;
+            var n;
 
             //  Loading maps:
 
             maps = [];
-            for (i = 0; i < current_area.getElementsByClassName("map").length; i++) {
-                map = current_area.getElementsByClassName("map").item(i);
-                maps[i] = tilesets[map.dataset.tileset].getMap(screens[map.dataset.screen].context, map.textContent.trim(), Number(map.dataset.mapwidth));
+            for (collection = current_area.getElementsByClassName("map"), i = 0; i < collection.length; i++) {
+                item = collection.item(i);
+                maps[i] = tilesets[item.dataset.tileset].getMap(screens[item.dataset.screen].context, item.textContent.trim(), Number(item.dataset.mapwidth));
+            }
+
+            //  Loading characters:
+
+            characters = [];
+            for (collection = current_area.getElementsByClassName("character"), i = 0; i < collection.length; i++) {
+                item = collection.item(i);
+                m = {};
+                n = [];
+                if (!datadoc.getElementById(item.dataset.sprites) || datadoc.getElementById(item.dataset.sprites).className !== "sprites") throw new Error("[Jo] Cannot load character – No sprites provided.");
+                else item2 = datadoc.getElementById(item.dataset.sprites);
+                for (collection2 = item2.getElementsByClassName("sprite"), j = 0; j < collection2.length; j++) {
+                    n.push(sheets[item2.dataset.sheet].getSprite(Number(collection2.item(j).dataset.index), Number(collection2.item(j).dataset.length ? collection2.item(j).dataset.length : 1)));
+                    if (collection2.item(j).hasAttribute("title")) m[collection2.item(j).getAttribute("title")] = j;
+                }
+                characters[i] = new Character(n, Number(item2.dataset.width || n[0].width), Number(item2.dataset.height || n[0].height), item.dataset.vars ? item.dataset.vars.split(/\s+/) : [], item.getElementsByClassName("init").item(0) ? item.getElementsByClassName("init").item(0).text || item.getElementsByClassName("init").item(0).textContent : "", item.getElementsByClassName("step").item(0) ? item.getElementsByClassName("step").item(0).text || item.getElementsByClassName("step").item(0).textContent : "");
+                for (j in m) {
+                    characters[i].declare(j);
+                    characters[i].set(j, m[j]);
+                }
+                characters[i].init$();
             }
 
         }
@@ -1886,7 +1951,7 @@ var Jo = (function () {
 
             //  Stepping the characters:
 
-            for (i in characters) {
+            for (i = 0; i < characters.length; i++) {
                 characters[i].step$()
             }
 
@@ -1930,7 +1995,7 @@ var Jo = (function () {
 
             //  Drawing the characters:
 
-            for (i in characters) {
+            for (i = 0; i < characters.length; i++) {
                 characters[i].draw$(screens.mainground.context)
             }
 
