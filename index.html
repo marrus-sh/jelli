@@ -59,11 +59,11 @@
             </p>
             <section>
                 <h3>The canvases:</h3>
-                <canvas id="background" data-type="area" width="250" height="160">Map tiles go here.</canvas>
-                <canvas id="mainground" data-type="animation" width="250" height="160">Characters and particles go here.</canvas>
-                <canvas id="foreground" data-type="area" width="250" height="160">Structures go here.</canvas>
-                <canvas id="textground" width="250" height="160">Dialogue and the like goes here.</canvas>
-                <canvas id="menuground" width="250" height="160">HUDs and pause menus go here.</canvas>
+                <canvas id="background" data-type="area" width="256" height="160">Map tiles go here.</canvas>
+                <canvas id="mainground" data-type="animation" width="256" height="160">Characters and particles go here.</canvas>
+                <canvas id="foreground" data-type="area" width="256" height="160">Structures go here.</canvas>
+                <canvas id="textground" width="256" height="160">Dialogue and the like goes here.</canvas>
+                <canvas id="menuground" width="256" height="160">HUDs and pause menus go here.</canvas>
             </section>
         </section>
         <section>
@@ -107,15 +107,15 @@
             </section>
             <section>
                 <h3>The tilesets:</h3>
-                <img id="tiles" class="tileset" alt="Tiles" src="images/tiles.png"
+                <img id="tiles" class="tileset" alt="Tiles" src="images/tiles/world01.png"
                      data-sprite-width="16"
                      data-sprite-height="16"
-                     data-collisions="//////////9aw4Qh7bf/////////////AAAAAAAAAAD///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8="
+                     data-collisions="D/////////8AAAAAAAAAAP9aw4Qh7bf/AAAAAAAAD/8P//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8="
                      >
-                <img id="structures" class="tileset" alt="Structures" src="images/structures.png"
+                <img id="structures" class="tileset" alt="Structures" src="images/structures/world01.png"
                      data-sprite-width="16"
                      data-sprite-height="16"
-                     data-collisions="DwAAAAAAAAD///////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+                     data-collisions="AAAAAAAAAAD///////AAAAAAAAAAAAAA8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
                      >
             </section>
             <section>
@@ -143,54 +143,119 @@
             <section>
                 <h3>Some characters:</h3>
                 <div id="jo" class="character"
+                     data-sheet="characters"
+                     data-width="12"
+                     data-height="16"
                      data-vars="timer"
                      >
                     <span class="sprite"
                           title="dn"
-                          data-sheet="characters"
                           data-index="0"
                           data-length="2"
                           ></span>
                     <span class="sprite"
                           title="lf"
-                          data-sheet="characters"
                           data-index="2"
                           data-length="2"
                           ></span>
                     <span class="sprite"
                           title="up"
-                          data-sheet="characters"
                           data-index="4"
                           data-length="2"
                           ></span>
                     <span class="sprite"
                           title="rt"
-                          data-sheet="characters"
                           data-index="6"
                           data-length="2"
                           ></span>
                     <script type="text/plain" class="init">
-                        set (x, 0)
-                        set (y, 0)
+                        set (x, 88)
+                        set (y, 120)
                         set (dir, dn)
                         set (frame, 0)
                     </script>
                     <script type="text/plain" class="step">
                         (key_up) ?
-                            increment (y, -1)
-                            set (dir, up)
-                        ;
-                        (key_down) ?
-                            increment (y)
-                            set (dir, dn)
+                            (key_down) ?
+                                (key_left) ?
+                                    (key_right) ?
+                                        targetBy (0, 0)
+                                    :
+                                        targetBy (-1, 0)
+                                    ;
+                                :
+                                    (key_right) ?
+                                        targetBy (1, 0)
+                                    :
+                                        targetBy (0, 0)
+                                    ;
+                                ;
+                            :
+                                (key_left) ?
+                                    (key_right) ?
+                                        targetBy (0, -1)
+                                    :
+                                        targetBy (-1, -1)
+                                    ;
+                                :
+                                    (key_right) ?
+                                        targetBy (1, -1)
+                                    :
+                                        targetBy (0, -1)
+                                    ;
+                                ;
+                            ;
+                        :
+                            (key_down) ?
+                                (key_left) ?
+                                    (key_right) ?
+                                        targetBy (0, 1)
+                                    :
+                                        targetBy (-1, 1)
+                                    ;
+                                :
+                                    (key_right) ?
+                                        targetBy (1, 1)
+                                    :
+                                        targetBy (0, 1)
+                                    ;
+                                ;
+                            :
+                                (key_left) ?
+                                    (key_right) ?
+                                        targetBy (0, 0)
+                                    :
+                                        targetBy (-1, 0)
+                                    ;
+                                :
+                                    (key_right) ?
+                                        targetBy (1, 0)
+                                    :
+                                        targetBy (0, 0)
+                                    ;
+                                ;
+                            ;
                         ;
                         (key_left) ?
-                            increment (x, -1)
-                            set (dir, lf)
-                        ;
-                        (key_right) ?
-                            increment (x)
-                            set (dir, rt)
+                            (key_right) ?
+                                (key_up) ?
+                                    -(key_down) set (dir, up)
+                                :
+                                    (key_down) set (dir, dn)
+                                ;
+                            :
+                                set (dir, lf)
+                            ;
+                        :
+                            (key_right) ?
+                                set (dir, rt)
+                            :
+                                (key_up) ?
+                                    -(key_down) set (dir, up)
+                                :
+                                    (key_down) set (dir, dn)
+                                ;
+                            ;
                         ;
                         (key_up)(key_down)(key_left)(key_right) ?
                             mod_increment (timer, 15)
@@ -221,12 +286,12 @@
                           data-tileset="tiles"
                           data-mapwidth="16"
                           data-screen="background"
-                          >MDAwMDAwMDAwMzAwMDAwMDAwMDAwMDAwMDMwMDAwMDAwMDAwMDAwMDc5NjAwMDAwMjIyMjIyMjI8MDoyMjIwMDAwMDAwMDAwNTs0MDAwMDAwMDAwMDAwMDAzMDAwMDAwMDAwMDAwMDAwMzAwMDAwMDAwMDAwMDAwMDMwMDAwMDAwMDAwMDUyMjI8MDAwMDAwMDAwMDAwMDAwMzAwMDAwMA==</span>
+                          >EBAQEBAQEBAQExAQEBAQEBAQEBAQEBAQEBMQEBAQEBAQEBAQEBAQEBgXGRAQEBAQEhISEhISEhIVEBQSEhIQEBAQEBAQEBAQGhYbEBAQEBAQEBAQEBAQEBATEBAQEBAQEBAQEBAQEBAQExAQEBAQEBAQEBAQABAQEBMQEBAQEBAQEBAQEBoSEhIVEBAQEBAQEBAQEBAQEBAQExAQEBAQEA==</span>
                     <span class="map"
                           data-tileset="structures"
                           data-mapwidth="16"
                           data-screen="foreground"
-                          >AAAAAAAAAAAAAAAAAAAaEgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABkQAAAAAAAAAAAAAAAAAAAWEgAAAAAAAAAAAAAAAAAAFhAAAAAAAAAAAAAAAAAAABYSFRUVFRUVFRUYABcVFRUUGA==</span>
+                          >AAAAAAAAAAAAAAAAAAAaEgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABkQAAAAAAAAAAAAAAAAAAAWEgAAAAAAAAAAAAAAAAAAFhAAAAAAAAAAAAAAAAAAABYSFRUVFRUVFRUYABcVFRUUGA==</span>
                 </div>
             </section>
         </section>

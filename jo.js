@@ -842,7 +842,7 @@ var Jo = (function () {
 
             //  Handling arguments and error checking:
 
-            if (!(typeof base64 === "string" || base64 instanceof String) || base64.length % 4) throw new Error("(tiles.js) Collisions must be provided as a Base64-encoded string.");
+            if (!(typeof base64 === "string" || base64 instanceof String) || base64.length % 4) throw new Error("[Tileset] Collisions must be provided as a Base64-encoded string.");
 
             //  Setting up values:
 
@@ -852,12 +852,12 @@ var Jo = (function () {
 
             //  Finding out how many placeholders there are:
 
-            placeholders = (base64[base64.length - 2] === "=" + base64[base64.length - 1] === "=");
+            placeholders = ((base64[base64.length - 2] === "=") + (base64[base64.length - 1] === "="));
 
             //  Setting up the array:
 
             if (typeof Uint8Array !== 'undefined') data = new Uint8Array(3 * base64.length / 4 - placeholders);
-            else data = new Array(base64.length);
+            else data = new Array(3 * base64.length / 4 - placeholders);
 
             //  Loading data:
 
@@ -894,15 +894,169 @@ var Jo = (function () {
 
         }
 
-        //  Tiles constructor:
+        //  Map constructor:
+
+        function Map(tileset, context, map, tiles_wide /*  x, y (if not provided, the map will be centred on the screen)  */) {
+
+            //  Setting up variables:
+
+            var decoded_map;
+            var tiles_tall;
+            var x;
+            var y;
+
+            //  Handling arguments and error checking:
+
+            if (!(context instanceof CanvasRenderingContext2D)) throw new Error("[Tileset] Cannot create map – canvas context must be 2d.");
+            if (!(tileset instanceof Tileset)) throw new Error("[Tileset] Cannot create map – no tileset provided");
+            if (!(typeof map === "string" || map instanceof String) || map.length % 4) throw new Error("[Tileset] Cannot create map – map must be provided as a Base64-encoded string.");
+            if (!(typeof tiles_wide === "number" || tiles_wide instanceof Number)) throw new Error("[Tileset] Cannot create map – width of map not specified.");
+            decoded_map = decode64(map);
+            if (decoded_map.length % tiles_wide !== 0) throw new Error("[Tileset] Cannot create map – provided map not evenly divided by its width.");
+            if (arguments.length >= 6) {
+                if (!(typeof arguments[4] === "number" || arguments[4] instanceof Number) || !(typeof arguments[5] === "number" || arguments[5] instanceof Number)) throw new Error("[Tileset] Cannot create map – starting coordinates must be numbers.");
+                x = arguments[4];
+                y = arguments[5];
+            }
+            else {
+                x = Math.floor((context.canvas.width - tileset.tile_width * tiles_wide) / 2);
+                y = Math.floor((context.canvas.height - tileset.tile_height * (decoded_map.length / tiles_wide)) / 2);
+            }
+            tiles_tall = decoded_map.length / tiles_wide;
+
+            //  Making the map:
+
+
+            Object.defineProperties(this, {
+                context: {
+                    value: context
+                },
+                map: {
+                    value: decoded_map
+                },
+                tile_height: {
+                    value: tileset.tile_height
+                },
+                tile_width: {
+                    value: tileset.tile_width
+                },
+                tiles_tall: {
+                    value: tiles_tall
+                },
+                tiles_wide: {
+                    value: tiles_wide
+                },
+                tileset: {
+                    value: tileset
+                },
+                x: {
+                    value: x
+                },
+                y: {
+                    value: y
+                }
+            });
+
+        }
+
+        //  Map prototyping:
+
+        Map.prototype = Object.create(Object.prototype, {
+            collides: {
+                value: function (x, y) {
+                    var collision;
+                    if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Tileset] Cannot find collision – coordinates must be numbers.");
+                    if (x < this.x || x >= this.x + this.tile_width * this.tiles_wide || y < this.y || y >= this.y + this.tile_height * this.tiles_tall) return 0xF;
+                    collision = this.tileset.getCollision(this.map[Math.floor((x - this.x) / this.tile_width) + Math.floor((y - this.y) / this.tile_height) * this.tiles_wide]);
+                    if ((0 <= x && x % this.tile_width <= this.tile_width / 2) || (0 > x && x % this.tile_width <= -this.tile_width / 2)) {
+                        if ((0 <= y && y % this.tile_height <= this.tile_height / 2) || (0 > y && y % this.tile_height <= -this.tile_height / 2)) return collision & 0x1;
+                        else return collision & 0x4;
+                    }
+                    else {
+                        if ((0 <= y && y % this.tile_height <= this.tile_height / 2) || (0 > y && y % this.tile_height <= -this.tile_height / 2)) return collision & 0x2;
+                        else return collision & 0x8;
+                    }
+                }
+            },
+            getCollisionEdge: {
+                value: function (dir, x, y) {
+                    var collision;
+                    var corner;
+                    var i;
+                    var ix;
+                    var iy;
+                    if (!(dir == "left" || dir == "top" || dir == "right" || dir == "bottom")) throw new Error("[Tileset] Cannot get collision edge – No proper directional keyword provided.");
+                    if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Tileset] Cannot find collision – coordinates must be numbers.");
+                    if ((x - this.x) % (this.tile_width / 2) === 0 || (y - this.y) % (this.tile_height / 2) === 0) {
+                        switch (dir) {
+                            case "left":
+                            case "right":
+                                return x;
+                            case "top":
+                            case "bottom":
+                                return y;
+                        }
+                    }
+                    ix = Math.floor((x - this.x) / this.tile_width);
+                    iy = Math.floor((y - this.y) / this.tile_height);
+                    i = ix + iy * this.tiles_wide;
+                    if (x < this.x || x >= this.x + this.tile_width * this.tiles_wide || y < this.y || y >= this.y + this.tile_height * this.tiles_tall) {
+                        collision = 0xF;
+                        corner = 0xF;
+                    }
+                    else {
+                        collision = this.tileset.getCollision(this.map[i]);
+                        corner = this.collides(x, y);
+                    }
+                    if (!corner && (dir == "left" || dir == "right")) return x;
+                    else if (!corner && (dir == "top" || dir == "bottom")) return y;
+                    switch (dir) {
+                        case "left":
+                            if (x > this.x + this.tile_width * this.tiles_wide) return this.x + this.tile_width * this.tiles_wide;
+                            else if (y < this.y || y >= this.y + this.tile_height * this.tiles_tall) return x;
+                            if ((corner == 0x2 && !(collision & 0x1)) || (corner == 0x8 && !(collision & 0x4))) return ix * this.tile_width + this.tile_width / 2;
+                            else return ix * this.tile_width;
+                            break;
+                        case "right":
+                            if (x < this.x) return this.x;
+                            else if (y < this.y || y >= this.y + this.tile_height * this.tiles_tall) return x;
+                            if ((corner == 0x1 && !(collision & 0x2)) || (corner == 0x4 && !(collision & 0x8))) return ix * this.tile_width + this.tile_width / 2;
+                            else return ix * this.tile_width + this.tile_width;
+                            break;
+                        case "top":
+                            if (y > this.y + this.tile_height * this.tiles_tall) return this.y + this.tile_height * this.tiles_tall;
+                            else if (x < this.x || x >= this.x + this.tile_width * this.tiles_wide) return y;
+                            if ((corner == 0x4 && !(collision & 0x1)) || (corner == 0x8 && !(collision & 0x2))) return iy * this.tile_height + this.tile_height / 2;
+                            else return iy * this.tile_height;
+                            break;
+                        case "bottom":
+                            if (y < this.y) return this.y;
+                            else if (x < this.x || x >= this.x + this.tile_width * this.tiles_wide) return y;
+                            if ((corner == 0x1 && !(collision & 0x4)) || (corner == 0x2 && !(collision & 0x8))) return iy * this.tile_height + this.tile_height / 2;
+                            else return iy * this.tile_height + this.tile_height;
+                            break;
+                    }
+                }
+            },
+            draw: {
+                value: function () {
+                    var i;
+                    for (i = 0; i < this.map.length; i++) {
+                        this.tileset.draw(this.context, this.map[i], this.x + (i % this.tiles_wide) * this.tile_width, this.y + Math.floor(i / this.tiles_wide) * this.tile_height);
+                    }
+                }
+            }
+        });
+
+        //  Tileset constructor:
 
         function Tileset(sheet, tile_width, tile_height, collisions, draw) {
 
             //  Handling arguments and error checking:
 
-            if (!(typeof tile_width === "number" || tile_width instanceof Number) || !(typeof tile_height === "number" || tile_height instanceof Number)) throw new Error("(tiles.js) Cannot draw map – tile widths and heights must be numbers.");
-            if (!(typeof collisions === "string" || collisions instanceof String) || collisions.length % 4) throw new Error("(tiles.js) Collisions must be provided as a Base64-encoded string.");
-            if (!(typeof draw === "function" || draw instanceof Function)) throw new Error("(tiles.js) No draw function provided");
+            if (!(typeof tile_width === "number" || tile_width instanceof Number) || !(typeof tile_height === "number" || tile_height instanceof Number)) throw new Error("[Tileset] Cannot create tileset – tile widths and heights must be numbers.");
+            if (!(typeof collisions === "string" || collisions instanceof String) || collisions.length % 4) throw new Error("[Tileset] Collisions must be provided as a Base64-encoded string.");
+            if (!(typeof draw === "function" || draw instanceof Function)) throw new Error("[Tileset] No draw function provided");
 
             //  Adding properties:
 
@@ -929,34 +1083,23 @@ var Jo = (function () {
         //  Tiles prototyping:
 
         Tileset.prototype = Object.create(Object.prototype, {
-            drawMap: {
-                value: function (context, map, tiles_wide /*  x, y (if not provided, the map will be centred on the screen)  */) {
-                    var decoded_map;
-                    var i;
-                    var x;
-                    var y;
-                    if (!(context instanceof CanvasRenderingContext2D)) throw new Error("(tiles.js) Cannot draw map – canvas context must be 2d.");
-                    if (!(typeof map === "string" || map instanceof String) || map.length % 4) throw new Error("(tiles.js) Cannot draw map – map must be provided as a Base64-encoded string.");
-                    if (!(typeof tiles_wide === "number" || tiles_wide instanceof Number)) throw new Error("(tiles.js) Cannot draw map – width of map not specified.");
-                    decoded_map = decode64(map);
-                    if (!(decoded_map) % tiles_wide) throw new Error("(tiles.js) Cannot draw map – provided map not evenly divided by its width.");
-                    if (arguments.length >= 5) {
-                        if (!(typeof arguments[3] === "number" || arguments[3] instanceof Number) || !(typeof arguments[4] === "number" || arguments[4] instanceof Number)) throw new Error("(tiles.js) Cannot draw map – starting coordinates must be numbers.");
-                        x = arguments[3];
-                        y = arguments[4];
-                    }
-                    else {
-                        x = Math.floor((context.canvas.width - this.tile_width * tiles_wide) / 2);
-                        y = Math.floor((context.canvas.height - this.tile_height * (decoded_map.length / tiles_wide)) / 2);
-                    }
-                    for (i = 0; i < decoded_map.length; i++) {
-                        this.drawFunction(context, this.sheet, decoded_map[i], x + (i % tiles_wide) * this.tile_width, y + Math.floor(i / tiles_wide) * this.tile_height);
-                    }
-                },
-                getCollision: {
-                    value: function (index) {
-                        return (this.collisions[Math.floor(index / 2)] >> 4 * (index % 2)) & 0xF;
-                    }
+            draw: {
+                value: function (context, index, x, y) {
+                    if (!(context instanceof CanvasRenderingContext2D)) throw new Error("[Tileset] Cannot draw tile – canvas context must be 2d.");
+                    if (!(typeof index === "number" || index instanceof Number)) throw new Error("[Tileset] Cannot draw tile – index must be a number.");
+                    if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Tileset] Cannot draw tile – coordinates must be numbers.");
+                    return this.drawFunction(context, this.sheet, index, x, y);
+                }
+            },
+            getMap: {
+                value: function (context, map, tiles_wide) {
+                    return new Map(this, context, map, tiles_wide);
+                }
+            },
+            getCollision: {
+                value: function (index) {
+                    if (!(typeof index === "number" || index instanceof Number)) throw new Error("[Tileset] Cannot get collision – index must be a number.");
+                    return (this.collisions[Math.floor(index / 2)] >> 4 * ((index + 1) % 2)) & 0xF;
                 }
             }
         });
@@ -970,6 +1113,10 @@ var Jo = (function () {
             BOTTOMLEFT: {value: 0x4},
             BOTTOMRIGHT: {value: 0x8}
         });
+
+        //  Making constructors accessible:
+
+        Tileset.Map = Map;
 
         return Tileset;
 
@@ -1029,9 +1176,6 @@ var Jo = (function () {
             },
             get: {
                 value: function(prop) {
-                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JoScript] Variables must be specified as strings.");
-                    if (prop.indexOf("-") !== -1) throw new Error("[JoScript] Dashes are not allowed in variable names.");
-                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JoScript] Attempted to get a non-declared value.");
                     return value(this, prop);
                 }
             },
@@ -1083,14 +1227,14 @@ var Jo = (function () {
             var b;
             var breakdown;
             var condition;
+            var conds_regex = /(-)?\s*\(\s*(-?\w+)(?:\s*([<>=])\s*(-?\w+))?\s*\)/g;
             var i;
             var j;
             var line;
             var lines;
             var n;
-            var s;
             var regex = /^\s*(?:(?:((?:-?\s*\(\s*-?\w+(?:\s*[<>=]\s*-?\w+)?\s*\)\s*)+)?\s*(?:(\w+)\s*(\(\s*-?\w+(?:\s*,\s*-?\w+)*\s*\))?|(\?))|([:;]))|>>.*)\s*$/;
-            var conds_regex = /(-)?\s*\(\s*(-?\w+)(?:\s*([<>=])\s*(-?\w+))?\s*\)/g;
+            var s;
 
             //  Handling arguments and error checking:
 
@@ -1106,7 +1250,7 @@ var Jo = (function () {
                 line = lines[i].trim();
                 if (line === "") continue;
                 breakdown = regex.exec(line);
-                if (!breakdown) throw new Error("[JoScript] Error on line " + i+1 + ": Parsing error.");
+                if (!breakdown) throw new Error("[JoScript] Error on line " + (i + 1) + ": Parsing error.");
 
                 //  If there are conditions:
 
@@ -1153,23 +1297,20 @@ var Jo = (function () {
 
                         //  Managing nesting levels and ELSE statements:
 
-                        if (!breakdown) throw new Error("[JoScript] Error on line " + i+1 + ": Parsing error.");
+                        if (!breakdown) throw new Error("[JoScript] Error on line " + (i + 1) + ": Parsing error.");
+                        if (breakdown[4]) j++;
                         if (breakdown[5] === ";") {
                             if (--j < 0) break;
-                            continue;
                         }
                         if (!j && breakdown[5] === ":") {
                             if (!n) n = true;
-                            else throw new Error("[JoScript] Error on line " + i+1 + ": Improper second 'else'.");
+                            else throw new Error("[JoScript] Error on line " + (i + 1) + ": Improper second 'else'.");
                             continue;
                         }
 
                         //  Adds the line to the string if necessary:
 
-                        if ((!n && b) || (n && !b)) {
-                            s += line + "\n";
-                            if (breakdown[4]) j++;
-                        }
+                        if ((!n && b) || (n && !b)) s += line + "\n";
 
                     }
 
@@ -1210,6 +1351,7 @@ var Jo = (function () {
         var letters = Object.create(null);
         var screens = Object.create(null);
         var sheets = Object.create(null);
+        var maps = [];
         var tilesets = Object.create(null);
 
         var clear_area = true;
@@ -1231,7 +1373,7 @@ var Jo = (function () {
 
         //  Character constructor:
 
-        function Character(sprites, props, initScript, stepScript) {
+        function Character(sprites, width, height, props, initScript, stepScript) {
 
             //  Setting up variables:
 
@@ -1247,19 +1389,33 @@ var Jo = (function () {
             //  Defining properties:
 
             Object.defineProperties(this, {  //  Note that $ is not valid in JoScript variable names
+                height: {
+                    value: height
+                },
                 init$cript: {
                     value: initScript
                 },
                 sprite$: {
                     value: sprites
                 },
+                sprite_height: {
+                    value: sprites[0].height
+                },
+                sprite_width: {
+                    value: sprites[0].width
+                },
                 step$cript: {
                     value: stepScript
+                },
+                width: {
+                    value: width
                 }
             });
 
             this.declare("x");
+            this.set("x", this.sprite_width / 2);
             this.declare("y");
+            this.set("y", this.sprite_height / 2);
             this.declare("dir");
             this.declare("frame");
 
@@ -1271,19 +1427,82 @@ var Jo = (function () {
         }
 
         Character.prototype = Object.create(global_object, {
-            draw: {
+            draw$: {
                 value: function (context) {
-                    return this.sprite$[this.get("dir")].draw(context, this.get("x"), this.get("y"), this.get("frame"));
+                    return this.sprite$[this.get("dir")].draw(context, Math.floor(this.get("x") - this.sprite_width / 2), Math.floor(this.get("y") - this.sprite_height / 2), this.get("frame"));
                 }
             },
-            init: {
+            init$: {
                 value: function () {
                     return JoScript.parse(this.init$cript, this);
                 }
             },
-            step: {
+            step$: {
                 value: function () {
                     return JoScript.parse(this.step$cript, this);
+                }
+            },
+            target: {
+                value: function(cx, cy) {
+                    var dx = this.get(cx) - this.get("x");
+                    var dy = this.get(cy) - this.get("y");
+                    return this.targetBy(dx, dy);
+                }
+            },
+            targetBy: {
+                value: function(dx, dy) {
+                    var c = false;
+                    var d;
+                    var i;
+                    var j;
+                    var ux;
+                    var uy;
+                    var sx;
+                    var sy;
+                    var tx;
+                    var ty;
+                    dx = this.get(dx);
+                    dy = this.get(dy);
+                    d = Math.sqrt(dx * dx + dy * dy);
+                    if (!d) return;
+                    ux = dx / d;
+                    uy = dy / d;
+                    if (dx > 0) {
+                        for (i = 0; i < maps.length; i++) {
+                            for (j = 0; j < 4; j++) {
+                                tx = maps[i].getCollisionEdge("left", this.get("x") + ux + this.width / 2, this.get("y") + (j - 1.5) * this.height / 3);
+                                if (sx === undefined || sx > tx) sx = tx;
+                            }
+                        }
+                        if (sx !== undefined) this.set("x", sx - this.width / 2);
+                    }
+                    else if (dx < 0) {
+                        for (i = 0; i < maps.length; i++) {
+                            for (j = 0; j < 4; j++) {
+                                tx = maps[i].getCollisionEdge("right", this.get("x") + ux - this.width / 2, this.get("y") + (j - 1.5) * this.height / 3);
+                                if (sx === undefined || sx < tx) sx = tx;
+                            }
+                        }
+                        if (sx !== undefined) this.set("x", sx + this.width / 2);
+                    }
+                    if (dy > 0) {
+                        for (i = 0; i < maps.length; i++) {
+                            for (j = 0; j < 4; j++) {
+                                ty = maps[i].getCollisionEdge("top", this.get("x") + (j - 1.5) * this.width / 3, this.get("y") + uy + this.height / 2);
+                                if (sy === undefined || sy > ty) sy = ty;
+                            }
+                        }
+                        if (sy !== undefined) this.set("y", sy - this.height / 2);
+                    }
+                    else if (dy < 0) {
+                        for (i = 0; i < maps.length; i++) {
+                            for (j = 0; j < 4; j++) {
+                                ty = maps[i].getCollisionEdge("bottom", this.get("x") + (j - 1.5) * this.width / 3, this.get("y") + uy - this.height / 2);
+                                if (sy === undefined || sy < ty) sy = ty;
+                            }
+                        }
+                        if (sy !== undefined) this.set("y", sy + this.height / 2);
+                    }
                 }
             }
         });
@@ -1477,17 +1696,18 @@ var Jo = (function () {
                 m = {};
                 n = [];
                 for (collection2 = collection.item(i).getElementsByClassName("sprite"), j = 0; j < collection2.length; j++) {
-                    n.push(sheets[collection2.item(j).dataset.sheet].getSprite(Number(collection2.item(j).dataset.index), Number(collection2.item(j).dataset.length)));
+                    n.push(sheets[collection.item(i).dataset.sheet].getSprite(Number(collection2.item(j).dataset.index), Number(collection2.item(j).dataset.length)));
                     if (collection2.item(j).hasAttribute("title")) m[collection2.item(j).getAttribute("title")] = j;
                 }
                 Object.defineProperty(characters, collection.item(i).id, {
-                    value: new Character(n, collection.item(i).dataset.vars.split(/\s+/), collection.item(i).getElementsByClassName("init").item(0).text || collection.item(i).getElementsByClassName("init").item(0).textContent, collection.item(i).getElementsByClassName("step").item(0).text || collection.item(i).getElementsByClassName("step").item(0).textContent),
+                    value: new Character(n, Number(collection.item(i).dataset.width || n[0].width), Number(collection.item(i).dataset.height || n[0].height), collection.item(i).dataset.vars.split(/\s+/), collection.item(i).getElementsByClassName("init").item(0).text || collection.item(i).getElementsByClassName("init").item(0).textContent, collection.item(i).getElementsByClassName("step").item(0).text || collection.item(i).getElementsByClassName("step").item(0).textContent),
                     enumerable: true
                 });
                 for (j in m) {
                     characters[collection.item(i).id].declare(j);
                     characters[collection.item(i).id].set(j, m[j]);
                 }
+                characters[collection.item(i).id].init$();
             }
 
             //  Adding event listeners:
@@ -1632,6 +1852,25 @@ var Jo = (function () {
 
         }
 
+        //  Area loading:
+
+        function loadArea() {
+
+            //  Setting up variables:
+
+            var i;
+            var map;
+
+            //  Loading maps:
+
+            maps = [];
+            for (i = 0; i < current_area.getElementsByClassName("map").length; i++) {
+                map = current_area.getElementsByClassName("map").item(i);
+                maps[i] = tilesets[map.dataset.tileset].getMap(screens[map.dataset.screen].context, map.textContent.trim(), Number(map.dataset.mapwidth));
+            }
+
+        }
+
         //  Logic function:
 
         function logic() {
@@ -1643,7 +1882,7 @@ var Jo = (function () {
             //  Stepping the characters:
 
             for (i in characters) {
-                characters[i].step()
+                characters[i].step$()
             }
 
             //  setTimeout for that logic:
@@ -1659,7 +1898,6 @@ var Jo = (function () {
             //  Setting up variables:
 
             var i;
-            var maps = current_area.getElementsByClassName("map");
 
             //  Managing layout:
 
@@ -1676,7 +1914,7 @@ var Jo = (function () {
                 //  Drawing the tiles:
 
                 for (i = 0; i < maps.length; i++) {
-                    tilesets[maps.item(i).dataset.tileset].drawMap(screens[maps.item(i).dataset.screen].context, maps.item(i).textContent.trim(), Number(maps.item(i).dataset.mapwidth));
+                    maps[i].draw();
                 }
 
                 //  Drawing the text:
@@ -1688,7 +1926,7 @@ var Jo = (function () {
             //  Drawing the characters:
 
             for (i in characters) {
-                characters[i].draw(screens.mainground.context)
+                characters[i].draw$(screens.mainground.context)
             }
 
             //  Reset various flags:
@@ -1706,6 +1944,8 @@ var Jo = (function () {
         function setup() {
 
             current_area = datadoc.getElementById("area01");
+
+            loadArea();
 
             document.documentElement.setAttribute("data-loaded", "");
 
