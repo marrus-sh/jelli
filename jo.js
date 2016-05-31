@@ -1455,6 +1455,7 @@ var Jo = (function () {
                     var d;
                     var i;
                     var j;
+                    var k;
                     var ux;
                     var uy;
                     var sx;
@@ -1469,8 +1470,9 @@ var Jo = (function () {
                     uy = dy / d;
                     if (dx > 0) {
                         for (i = 0; i < maps.length; i++) {
-                            for (j = 0; j < 4; j++) {
-                                tx = maps[i].getCollisionEdge("left", this.get("x") + ux + this.width / 2, this.get("y") + (j - 1.5) * this.height / 3);
+                            k = Math.floor(this.height / (maps[i].tile_height / 2)) + 1;
+                            for (j = 0; j <= k; j++) {
+                                tx = maps[i].getCollisionEdge("left", this.get("x") + ux + this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
                                 if (sx === undefined || sx > tx) sx = tx;
                             }
                         }
@@ -1478,8 +1480,9 @@ var Jo = (function () {
                     }
                     else if (dx < 0) {
                         for (i = 0; i < maps.length; i++) {
-                            for (j = 0; j < 4; j++) {
-                                tx = maps[i].getCollisionEdge("right", this.get("x") + ux - this.width / 2, this.get("y") + (j - 1.5) * this.height / 3);
+                            k = Math.floor(this.height / (maps[i].tile_height / 2)) + 1;
+                            for (j = 0; j <= k; j++) {
+                                tx = maps[i].getCollisionEdge("right", this.get("x") + ux - this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
                                 if (sx === undefined || sx < tx) sx = tx;
                             }
                         }
@@ -1487,8 +1490,9 @@ var Jo = (function () {
                     }
                     if (dy > 0) {
                         for (i = 0; i < maps.length; i++) {
-                            for (j = 0; j < 4; j++) {
-                                ty = maps[i].getCollisionEdge("top", this.get("x") + (j - 1.5) * this.width / 3, this.get("y") + uy + this.height / 2);
+                            k = Math.floor(this.width / (maps[i].tile_width / 2)) + 1;
+                            for (j = 0; j <= k; j++) {
+                                ty = maps[i].getCollisionEdge("top", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy + this.height / 2);
                                 if (sy === undefined || sy > ty) sy = ty;
                             }
                         }
@@ -1496,8 +1500,9 @@ var Jo = (function () {
                     }
                     else if (dy < 0) {
                         for (i = 0; i < maps.length; i++) {
-                            for (j = 0; j < 4; j++) {
-                                ty = maps[i].getCollisionEdge("bottom", this.get("x") + (j - 1.5) * this.width / 3, this.get("y") + uy - this.height / 2);
+                            k = Math.floor(this.width / (maps[i].tile_width / 2)) + 1;
+                            for (j = 0; j <= k; j++) {
+                                ty = maps[i].getCollisionEdge("bottom", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy - this.height / 2);
                                 if (sy === undefined || sy < ty) sy = ty;
                             }
                         }
