@@ -1689,13 +1689,8 @@ var Jo = (function () {
 
             //  Setting up variables:
 
-            var char_proto;
             var collection;
-            var collection2;
             var i;
-            var j;
-            var m;
-            var n;
 
             function imported(node) {
                 if (typeof node === "string" || node instanceof String) node = datadoc.getElementById(node);
@@ -1945,6 +1940,10 @@ var Jo = (function () {
                 characters[i].init$();
             }
 
+            //  Clearing the area render:
+
+            clear_area = true;
+
         }
 
         //  Logic function:
@@ -1986,17 +1985,9 @@ var Jo = (function () {
             //  Drawing the area:
 
             if (clear_area) {
-
-                //  Drawing the tiles:
-
                 for (i = 0; i < maps.length; i++) {
                     maps[i].draw();
                 }
-
-                //  Drawing the text:
-
-                drawText();
-
             }
 
             //  Drawing the characters:
@@ -2004,6 +1995,10 @@ var Jo = (function () {
             for (i = 0; i < characters.length; i++) {
                 characters[i].draw$(screens.mainground.context)
             }
+
+            //  Drawing the text:
+
+            drawText();
 
             //  Reset various flags:
 
@@ -2025,9 +2020,9 @@ var Jo = (function () {
 
             document.documentElement.setAttribute("data-loaded", "");
 
-            logic();
-
             window.requestAnimationFrame(render);
+
+            logic();
 
         }
 
