@@ -1373,7 +1373,7 @@ var Jo = (function () {
 
         //  Character constructor:
 
-        function Character(sprites, width, height, props, initScript, stepScript) {
+        function Character(sprites, box_x, box_y, box_width, box_height, props, initScript, stepScript) {
 
             //  Setting up variables:
 
@@ -1390,10 +1390,16 @@ var Jo = (function () {
 
             Object.defineProperties(this, {  //  Note that $ is not valid in JoScript variable names
                 height: {
-                    value: height
+                    value: box_height
                 },
                 init$cript: {
                     value: initScript
+                },
+                origin_x: {
+                    value: box_x
+                },
+                origin_y: {
+                    value: box_y
                 },
                 sprite$: {
                     value: sprites
@@ -1408,7 +1414,7 @@ var Jo = (function () {
                     value: stepScript
                 },
                 width: {
-                    value: width
+                    value: box_width
                 }
             });
 
@@ -1455,7 +1461,7 @@ var Jo = (function () {
             },
             draw$: {
                 value: function (context) {
-                    return this.sprite$[this.get("dir")].draw(context, Math.floor(this.get("x") - this.sprite_width / 2), Math.floor(this.get("y") - this.sprite_height / 2), this.get("frame"));
+                    return this.sprite$[this.get("dir")].draw(context, Math.floor(this.get("x") - this.origin_x), Math.floor(this.get("y") - this.origin_y), this.get("frame"));
                 }
             },
             init$: {
@@ -1599,7 +1605,7 @@ var Jo = (function () {
         //  Draw functions:
 
         function drawText() {
-            letters.letters.setColor(letters.letters.source.dataset.paletteYellow);
+            letters.letters.setColor(letters.letters.source.dataset.paletteDeepblue);
             letters.letters.createBlock(
                 "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x49\x0A\x0B\x0C\x0D\x0E\x0F",
                 "\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x49\x1A\x1B\x1C\x1D\x1E\x1F",
@@ -1620,7 +1626,7 @@ var Jo = (function () {
                 "\xE0\xE1\xE2\xE3\xE4\xE5\xE6\xE7\xE8\xE9\x49\xEA\xEB\xEC\xED\xEE\xEF",
                 "",
                 "\xF0\xF1\xF2\xF3\xF4\xF5\xF6\xF7\xF8\xF9\x49\xFA\xFB\xFC\xFD\xFE\xFF"
-            ).draw(screens.textground.context, 0, 0);
+            )//.draw(screens.textground.context, 0, 0);
 
         }
 
@@ -1931,7 +1937,7 @@ var Jo = (function () {
                     n.push(sheets[item2.dataset.sheet].getSprite(Number(collection2.item(j).dataset.index), Number(collection2.item(j).dataset.length ? collection2.item(j).dataset.length : 1)));
                     if (collection2.item(j).hasAttribute("title")) m[collection2.item(j).getAttribute("title")] = j;
                 }
-                characters[i] = new Character(n, Number(item2.dataset.width || n[0].width), Number(item2.dataset.height || n[0].height), item.dataset.vars ? item.dataset.vars.split(/\s+/) : [], item.getElementsByClassName("init").item(0) ? item.getElementsByClassName("init").item(0).text || item.getElementsByClassName("init").item(0).textContent : "", item.getElementsByClassName("step").item(0) ? item.getElementsByClassName("step").item(0).text || item.getElementsByClassName("step").item(0).textContent : "");
+                characters[i] = new Character(n, Number(item2.dataset.boxX || n[0].width / 2), Number(item2.dataset.boxY || n[0].height / 2), Number(item2.dataset.boxWidth || n[0].width), Number(item2.dataset.boxHeight || n[0].height), item.dataset.vars ? item.dataset.vars.split(/\s+/) : [], item.getElementsByClassName("init").item(0) ? item.getElementsByClassName("init").item(0).text || item.getElementsByClassName("init").item(0).textContent : "", item.getElementsByClassName("step").item(0) ? item.getElementsByClassName("step").item(0).text || item.getElementsByClassName("step").item(0).textContent : "");
                 for (j in m) {
                     characters[i].declare(j);
                     characters[i].set(j, m[j]);
@@ -2013,7 +2019,7 @@ var Jo = (function () {
 
         function setup() {
 
-            current_area = datadoc.getElementById("area01");
+            current_area = datadoc.getElementById("testarea");
 
             loadArea();
 

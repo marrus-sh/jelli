@@ -110,12 +110,12 @@
                 <img id="tiles" class="tileset" alt="Tiles" src="images/tiles/world01.png"
                      data-sprite-width="16"
                      data-sprite-height="16"
-                     data-collisions="D/////////8AAAAAAAAAAP9aw4Qh7bf/AAAAAAAAD/8P//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8="
+                     data-collisions="D/////////8AAAAAAAAAAPpcOEIe17//AAAAAAAAD/8Dz////////w8A//////////////////////////////////////////////////////////////////////////////////////////////////////////////////8="
                      >
                 <img id="structures" class="tileset" alt="Structures" src="images/structures/world01.png"
                      data-sprite-width="16"
                      data-sprite-height="16"
-                     data-collisions="AAAAAAAAAAD///////AAAAAAAAAAAAAA8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+                     data-collisions="AAAAAAAAAAAP/////////wAAAAAAAAAA8AAAAAAAAAAAwAAAAAAAAP//AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
                      >
             </section>
             <section>
@@ -135,9 +135,8 @@
                 It specifies which <code>sheet</code> to draw the sprites from.
             </p>
             <p>
-                The <code>data-width</code> and <code>data-height</code> attributes do <strong>not</strong> set the width and height of the sprites themselves (these are determined by the sheet), but rather the width and height of the sprite bounding box (for collision checking).
-                The centre of this box is aligned with the centre of the sprite.
-                If not set, these attributes default to the sprite widths and heights as specified by the sheet.
+                The <code>data-box-x</code>, <code>data-box-y</code>, <code>data-box-width</code>, and <code>data-box-height</code> attributes set the center and dimensions of the sprite bounding box (for collision checking).
+                If not set, the box will fill the entire sprite.
             </p>
             <p>
                 The sprites themselves take a couple of attributes:
@@ -149,8 +148,10 @@
                 <h3>Sprite collections:</h3>
                 <div id="jo" class="sprites"
                      data-sheet="characters"
-                     data-width="12"
-                     data-height="16">
+                     data-box-x="8"
+                     data-box-y="8.5"
+                     data-box-width="12"
+                     data-box-height="15">
                     <span class="sprite"
                           title="dn"
                           data-index="0"
@@ -227,18 +228,18 @@
             </p>
             <section>
                 <h3>An area:</h3>
-                <div id="area01" class="area"
+                <div id="testarea" class="area"
                      >
                     <span class="map"
                           data-tileset="tiles"
                           data-mapwidth="16"
                           data-screen="background"
-                          >EBAQEBAQEBAQExAQEBAQEBAQEBAQEBAQEBMQEBAQEBAQEBAQEBAQEBgXGRAQEBAQEhISEhISEhIVEBQSEhIQEBAQEBAQEBAQGhYbEBAQEBAQEBAQEBAQEBATEBAQEBAQEBAQEBAQEBAQExAQEBAQEBAQEBAQABAQEBMQEBAQEBAQEBAQEBoSEhIVEBAQEBAQEBAQEBAQEBAQExAQEBAQEA==</span>
+                          >EBAQEBAQHhAQEBAQEBAQEBAQEBAQHBUQEBAQEBAQEBAQEBAQEBATGBIWGRAQEBAQEBAQEBAQFBESFRMQEBAQEBAQEBAQEBMaEhcbEBAQEBA1MzMzNhAUHRAQECUjIyMmMTw0OzIQHxAQEBAhLCQrIjEyEDEyEBAQEBAQISIQISIxOjM5MhAQUlMQECEqIykiNzQ0NDgQEFBQEBAnJCQkKA==</span>
                     <span class="map"
                           data-tileset="structures"
                           data-mapwidth="16"
                           data-screen="foreground"
-                          >AAAAAAAAAAAAAAAAAAAaEgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABkQAAAAAAAAAAAAAAAAAAAWEgAAAAAAAAAAAAAAAAAAFhAAAAAAAAAAAAAAAAAAABYSFRUVFRUVFRUYABcVFRUUGA==</span>
+                          >AB4AAAAAAAAAAAAAAAAAABwVAAAAAAAAAAAAAAAAAAAAExgSFhkAAAAAAAAAAAAAABQREhUTAAAAAAAAAAAAAAATGhIXGwAAAAAAAAAAAAAAFB0AAAAAAAAAAAAAAAAAAB8AAAAAAAAAAAAAAAAAAAAAMAAAAABQUQAAAAAAAAAAAAAAAAAAUlMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==</span>
                     <div class="character"
                          data-sprites="jo"
                          data-vars="timer"
@@ -337,15 +338,28 @@
                                 -(timer) mod_increment (frame, 2)
                             ;
                         </script>
-                        <div class="character"
-                             data-sprites="sign">
-                            <script type="text/plain" class="init">
-                                set (x, 120)
-                                set (y, 120)
-                                set (dir, dn)
-                                set (frame, 0)
-                            </script>
-                        </div>
+                    </div>
+                </div>
+                <div id="area01" class="area"
+                     >
+                    <span class="map"
+                          data-tileset="tiles"
+                          data-mapwidth="16"
+                          data-screen="background"
+                          >EBAQEBAQEBAQExAQEBAQEBAQEBAQEBAQEBMQEBAQEBAQEBAQEBAQEBgXGRAQEBAQEhISEhISEhIVEBQSEhIQEBAQEBAQEBAQGhYbEBAQEBAQEBAQEBAQEBATEBAQEBAQEBAQEBAQEBAQExAQEBAQEBAQEBAQABAQEBMQEBAQEBAQEBAQEBoSEhIVEBAQEBAQEBAQEBAQEBAQExAQEBAQEA==</span>
+                    <span class="map"
+                          data-tileset="structures"
+                          data-mapwidth="16"
+                          data-screen="foreground"
+                          >AAAAAAAAAAAAAAAAAAAaEgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABkQAAAAAAAAAAAAAAAAAAAWEgAAAAAAAAAAAAAAAAAAFhAAAAAAAAAAAAAAAAAAABYSFRUVFRUVFRUYABcVFRUUGA==</span>
+                    <div class="character"
+                         data-sprites="sign">
+                        <script type="text/plain" class="init">
+                            set (x, 120)
+                            set (y, 120)
+                            set (dir, dn)
+                            set (frame, 0)
+                        </script>
                     </div>
                 </div>
             </section>
