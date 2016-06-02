@@ -179,12 +179,12 @@
                      data-box-width="10"
                      data-box-height="10">
                     <span class="sprite"
-                          title="inactive"
+                          title="lf"
                           data-index="0"
                           data-length="2"
                           ></span>
                     <span class="sprite"
-                          title="active"
+                          title="rt"
                           data-index="2"
                           data-length="2"
                           ></span>
@@ -238,16 +238,15 @@
                         <script type="text/plain" class="init">
                             set (x, 88)
                             set (y, 120)
-                            set (dir, inactive)
-                            set (frame, 0)
+                            set (dir, lf)
                         </script>
                         <script type="text/plain" class="step">
                             (key_down) set (y, 136)
                             (key_up) set (y, 120)
                             (key_action) ?
-                                set (dir, active)
+                                set (dir, rt)
                             :
-                                set (dir, inactive)
+                                set (dir, lf)
                             ;
                             mod_increment (timer, 10)
                             -(timer) mod_increment (frame, 2)
@@ -267,12 +266,11 @@
                         <script type="text/plain" class="init">
                             set (x, 16)
                             set (y, 80)
-                            set (dir, inactive)
-                            set (frame, 0)
+                            set (dir, rt)
                         </script>
                         <script type="text/plain" class="step">
 
-                            >>  This controls movement
+                            >>  This controls jelly movement:
 
                             (key_up) ?
                                 (key_down) ?
@@ -336,11 +334,19 @@
                                 ;
                             ;
 
-                            >>  This makes the jelly fall a little regardless
+                            >>  This controls the direction the jelly is facing:
+
+                            (key_left) ?
+                                -(key_right) set (dir, lf)
+                            :
+                                (key_right) set (dir, rt)
+                            ;
+
+                            >>  This makes the jelly fall a little regardless:
 
                             targetBy (0, .1)
 
-                            >>  This increments the timer if an arrow key is pressed
+                            >>  This increments the timer if an arrow key is pressed:
 
                             (key_up)(key_down)(key_left)(key_right) ?
                                 mod_increment (timer, 15)
