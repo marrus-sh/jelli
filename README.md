@@ -1,4 +1,4 @@
-#  Jo  #
+#  Jelli  #
 
-A video game by @literallybenjam.
-Work in progress.
+A game engine!
+Read the source code of [index.html](index.html) for instructions on use.

@@ -3,13 +3,13 @@
 
 /*
 
-#  jo.js: A Video Game  #
+#  Jelli Game Engine  #
 
 */
 
 //  All inside an anonymous function for strictness and proper closure:
 
-var Jo = (function () {
+var Jelli = (function () {
 
     "use strict";
 
@@ -1122,25 +1122,26 @@ var Jo = (function () {
 
     })();
 
-    //  JoScript:
+    //  JelliScript:
 
-    var JoScript = (function () {
+    var Jelli = (function () {
 
         //  Getting values:
 
         function value(dataobj, prop) {
-            if (typeof dataobj !== "object") throw new Error("[JoScript] Error: No data object provided.");
+            if (typeof dataobj !== "object") throw new Error("[JelliScript] Error: No data object provided.");
             if (!isNaN(Number(prop))) return Number(prop);
             else if ((typeof prop === "string" || prop instanceof String) && prop[0] === "-") {
                 if (typeof dataobj[prop.substr(1)] === "number" || dataobj[prop.substr(1)] instanceof Number) return -dataobj[prop];
             }
             else if (typeof dataobj[prop] === "number" || dataobj[prop] instanceof Number) return dataobj[prop];
-            else throw new Error("[JoScript] Variable did not resolve into a number.");
+            else if (typeof dataobj.parent$ === "object") return value(dataobj.parent$, prop);
+            else throw new Error("[JelliScript] Variable did not resolve into a number.");
         }
 
-        //  Script object constructor:
+        //  Jelli object constructor:
 
-        function JoScript(props) {
+        function Jelli(props /*  Optional parent  */) {
 
             //  Setting up variables:
 
@@ -1150,27 +1151,41 @@ var Jo = (function () {
 
             if (typeof props === undefined) return;
             if (typeof props === "string" || props instanceof String) {
-                this[props] = 0;
+                this.declare(props);
                 return;
             }
-            if (!(typeof props === "object" && props instanceof Array)) throw new Error("[JoScript] Data object property names must be provided in an array.");
+            if (typeof props !== "object") throw new Error("[JelliScript] Data object property names must be provided in an object or an array.");
 
-            for (i = 0; i < props.length; i++) {
-                if (!(typeof props[i] === "string" || props[i] instanceof String)) throw new Error("[JoScript] Data object property names must be provided as strings.");
-                this[props[i]] = 0;
+            //  Declaring properties:
+
+            if (props instanceof Array) {
+                for (i = 0; i < props.length; i++) {
+                    if (!(typeof props[i] === "string" || props[i] instanceof String)) throw new Error("[JelliScript] Data object property names must be provided as strings.");
+                    this.declare(props[i]);
+                }
             }
+            else {
+                for (i in props) {
+                    this.declare(i);
+                    this.set(i, props[i]);
+                }
+            }
+
+            //  Setting up parent:
+
+            if (arguments[1] instanceof Jelli) this.parent$ = arguments[1];
 
         }
 
-        //  Script object prototyping:
+        //  Jelli object prototyping:
 
-        JoScript.prototype = Object.create(Object.prototype, {
+        Jelli.prototype = Object.create(Object.prototype, {
 
             declare: {
                 value: function(prop) {
-                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JoScript] Variables must be specified as strings.");
-                    if (prop.indexOf("-") !== -1) throw new Error("[JoScript] Dashes are not allowed in variable names.");
-                    if (this.hasOwnProperty(prop)) throw new Error("[JoScript] Attempted to declare an already-declared variable.");
+                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
+                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
+                    if (this.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to declare an already-declared variable.");
                     this[prop] = 0;
                 }
             },
@@ -1181,9 +1196,9 @@ var Jo = (function () {
             },
             increment: {
                 value: function(prop /*  optional value  */) {
-                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JoScript] Variables must be specified as strings.");
-                    if (prop.indexOf("-") !== -1) throw new Error("[JoScript] Dashes are not allowed in variable names.");
-                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JoScript] Attempted to increment a non-declared value.");
+                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
+                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
+                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to increment a non-declared value.");
                     if (arguments[1] !== undefined) this[prop] += value(this, arguments[1]);
                     else return this[prop]++;
                 }
@@ -1191,9 +1206,9 @@ var Jo = (function () {
             },
             mod_increment: {
                 value: function(prop, mod /*  optional value  */) {
-                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JoScript] Variables must be specified as strings.");
-                    if (prop.indexOf("-") !== -1) throw new Error("[JoScript] Dashes are not allowed in variable names.");
-                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JoScript] Attempted to increment a non-declared value.");
+                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
+                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
+                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to increment a non-declared value.");
                     if (arguments[2] !== undefined) this[prop] += value(this, arguments[2]);
                     else this[prop]++;
                     return this[prop] %= value(this, mod);
@@ -1202,24 +1217,24 @@ var Jo = (function () {
             },
             set: {
                 value: function(prop, to) {
-                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JoScript] Variables must be specified as strings.");
-                    if (prop.indexOf("-") !== -1) throw new Error("[JoScript] Dashes are not allowed in variable names.");
-                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JoScript] Attempted to set a non-declared value.");
+                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
+                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
+                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to set a non-declared value.");
                     return (this[prop] = value(this, to));
                 }
             },
             void: {
                 value: function(prop) {
-                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JoScript] Variables must be specified as strings.");
-                    if (prop.indexOf("-") !== -1) throw new Error("[JoScript] Dashes are not allowed in variable names.");
-                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JoScript] Attempted to void a non-declared value.");
+                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
+                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
+                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to void a non-declared value.");
                     this[prop] = 0;
                 }
             }
 
         });
 
-        JoScript.parse = function (script, dataobj) {
+        Jelli.parseScript = function (script, dataobj) {
 
             //  Setting up variables:
 
@@ -1238,8 +1253,8 @@ var Jo = (function () {
 
             //  Handling arguments and error checking:
 
-            if (!(typeof script === "string" || script instanceof String)) throw new Error("[JoScript] Error: Script is not a string.");
-            if (typeof dataobj !== "object") throw new Error("[JoScript] Error: No data object provided.");
+            if (!(typeof script === "string" || script instanceof String)) throw new Error("[JelliScript] Error: Script is not a string.");
+            if (typeof dataobj !== "object") throw new Error("[JelliScript] Error: No data object provided.");
 
             //  Parsing the lines:
 
@@ -1250,7 +1265,7 @@ var Jo = (function () {
                 line = lines[i].trim();
                 if (line === "") continue;
                 breakdown = regex.exec(line);
-                if (!breakdown) throw new Error("[JoScript] Error on line " + (i + 1) + ": Parsing error.");
+                if (!breakdown) throw new Error("[JelliScript] Error on line " + (i + 1) + ": Parsing error.");
 
                 //  If there are conditions:
 
@@ -1297,14 +1312,14 @@ var Jo = (function () {
 
                         //  Managing nesting levels and ELSE statements:
 
-                        if (!breakdown) throw new Error("[JoScript] Error on line " + (i + 1) + ": Parsing error.");
+                        if (!breakdown) throw new Error("[JelliScript] Error on line " + (i + 1) + ": Parsing error.");
                         if (breakdown[4]) j++;
                         if (breakdown[5] === ";") {
                             if (--j < 0) break;
                         }
                         if (!j && breakdown[5] === ":") {
                             if (!n) n = true;
-                            else throw new Error("[JoScript] Error on line " + (i + 1) + ": Improper second 'else'.");
+                            else throw new Error("[JelliScript] Error on line " + (i + 1) + ": Improper second 'else'.");
                             continue;
                         }
 
@@ -1316,7 +1331,7 @@ var Jo = (function () {
 
                     //  Parses the resultant string:
 
-                    JoScript.parse(s, dataobj);
+                    Jelli.parseScript(s, dataobj);
 
                 }
 
@@ -1331,12 +1346,12 @@ var Jo = (function () {
 
         }
 
-        return JoScript;
+        return Jelli;
 
     })();
 
     /*
-        The actual game code follows.
+        The game engine itself follows.
         I've placed it inside its own closure for convenient packaging, but it requires all of the previous modules to be loaded.
     */
 
@@ -1344,32 +1359,17 @@ var Jo = (function () {
 
         //  Setting up variables:
 
-        var datadoc = document.implementation.createHTMLDocument("Jo");
+        var datadoc = document.implementation.createHTMLDocument("Jelli Data Document");
 
-        var characters = [];
         var control;
+
         var letters = Object.create(null);
         var screens = Object.create(null);
         var sheets = Object.create(null);
-        var maps = [];
         var tilesets = Object.create(null);
 
-        var clear_area = true;
-        var current_area;
-        var resized = true;
-
-        var global_object = Object.create(JoScript.prototype, {
-            "key_start": {get: function() {return Number(control.isActive("start"));}},
-            "key_select": {get: function() {return Number(control.isActive("select"));}},
-            "key_menu": {get: function() {return Number(control.isActive("menu"));}},
-            "key_look": {get: function() {return Number(control.isActive("look"));}},
-            "key_exit": {get: function() {return Number(control.isActive("exit"));}},
-            "key_action": {get: function() {return Number(control.isActive("action"));}},
-            "key_up": {get: function() {return Number(control.isActive("up"));}},
-            "key_down": {get: function() {return Number(control.isActive("down"));}},
-            "key_left": {get: function() {return Number(control.isActive("left"));}},
-            "key_right": {get: function() {return Number(control.isActive("right"));}}
-        });
+        var game;
+        var area;
 
         //  Character constructor:
 
@@ -1381,14 +1381,14 @@ var Jo = (function () {
 
             //  Handling arguments and error checking:
 
-            if (!(typeof sprites === "object" && sprites instanceof Array)) throw new Error("[Jo] Cannot create character – sprites must be provided in an array.");
-            if (!(typeof props === "object" && props instanceof Array)) throw new Error("[Jo] Cannot create character – variables must be provided in an array.");
-            if (!(typeof initScript === "string" || initScript instanceof String)) throw new Error("[Jo] Cannot create character – No init function provided.");
-            if (!(typeof stepScript === "string" || stepScript instanceof String)) throw new Error("[Jo] Cannot create character – No step function provided.");
+            if (!(typeof sprites === "object" && sprites instanceof Array)) throw new Error("[Jelli] Cannot create character – sprites must be provided in an array.");
+            if (!(typeof props === "object" && props instanceof Array)) throw new Error("[Jelli] Cannot create character – variables must be provided in an array.");
+            if (!(typeof initScript === "string" || initScript instanceof String)) throw new Error("[Jelli] Cannot create character – No init function provided.");
+            if (!(typeof stepScript === "string" || stepScript instanceof String)) throw new Error("[Jelli] Cannot create character – No step function provided.");
 
             //  Defining properties:
 
-            Object.defineProperties(this, {  //  Note that $ is not valid in JoScript variable names
+            Object.defineProperties(this, {  //  Note that $ is not valid in JelliScript variable names
                 height: {
                     value: box_height
                 },
@@ -1400,6 +1400,9 @@ var Jo = (function () {
                 },
                 origin_y: {
                     value: box_y
+                },
+                parent$: {
+                    value: area
                 },
                 sprite$: {
                     value: sprites
@@ -1426,17 +1429,17 @@ var Jo = (function () {
             this.declare("frame");
 
             for (i = 0; i < props.length; i++) {
-                if (!(typeof props[i] === "string" || props[i] instanceof String)) throw new Error("[Jo] Cannot create character – Property names must be strings.");
+                if (!(typeof props[i] === "string" || props[i] instanceof String)) throw new Error("[Jelli] Cannot create character – Property names must be strings.");
                 this.declare(props[i]);
             }
 
         }
 
-        Character.prototype = Object.create(global_object, {
+        Character.prototype = Object.create(Jelli.prototype, {
             getCollision$Edge: {
                 value: function (dir, x, y) {
-                    if (!(dir == "left" || dir == "top" || dir == "right" || dir == "bottom")) throw new Error("[Jo] Cannot get collision edge – No proper directional keyword provided.");
-                    if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Jo] Cannot find collision – coordinates must be numbers.");
+                    if (!(dir == "left" || dir == "top" || dir == "right" || dir == "bottom")) throw new Error("[Jelli] Cannot get collision edge – No proper directional keyword provided.");
+                    if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Jelli] Cannot find collision – coordinates must be numbers.");
                     if (x <= this.get("x") - this.width / 2 || x >= this.get("x") + this.width / 2 || y <= this.get("y") - this.height / 2 || y >= this.get("y") + this.height / 2) {
                         switch (dir) {
                             case "left":
@@ -1466,12 +1469,12 @@ var Jo = (function () {
             },
             init$: {
                 value: function () {
-                    return JoScript.parse(this.init$cript, this);
+                    return Jelli.parseScript(this.init$cript, this);
                 }
             },
             step$: {
                 value: function () {
-                    return JoScript.parse(this.step$cript, this);
+                    return Jelli.parseScript(this.step$cript, this);
                 }
             },
             target: {
@@ -1494,6 +1497,7 @@ var Jo = (function () {
                     var sy;
                     var tx;
                     var ty;
+                    if (!(area instanceof Jelli)) throw new Error("[Jelli] Could not target character – No area has been loaded");
                     dx = this.get(dx);
                     dy = this.get(dy);
                     d = Math.sqrt(dx * dx + dy * dy);
@@ -1501,72 +1505,72 @@ var Jo = (function () {
                     ux = dx / d;
                     uy = dy / d;
                     if (dx > 0) {
-                        for (i = 0; i < maps.length; i++) {
-                            k = Math.floor(this.height / (maps[i].tile_height / 2)) + 1;
+                        for (i = 0; i < area.map$.length; i++) {
+                            k = Math.floor(this.height / (area.map$[i].tile_height / 2)) + 1;
                             for (j = 0; j <= k; j++) {
-                                tx = maps[i].getCollisionEdge("left", this.get("x") + ux + this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
+                                tx = area.map$[i].getCollisionEdge("left", this.get("x") + ux + this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
                                 if (sx === undefined || sx > tx) sx = tx;
                             }
                         }
-                        for (i = 0; i < characters.length; i++) {
-                            if (this === characters[i]) continue;
-                            k = Math.floor(this.height / characters[i].height) + 1;
+                        for (i = 0; i < area.character$.length; i++) {
+                            if (this === area.character$[i]) continue;
+                            k = Math.floor(this.height / area.character$[i].height) + 1;
                             for (j = 0; j <= k; j++) {
-                                tx = characters[i].getCollision$Edge("left", this.get("x") + ux + this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
+                                tx = area.character$[i].getCollision$Edge("left", this.get("x") + ux + this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
                                 if (sx === undefined || sx > tx) sx = tx;
                             }
                         }
                         if (sx !== undefined) this.set("x", sx - this.width / 2);
                     }
                     else if (dx < 0) {
-                        for (i = 0; i < maps.length; i++) {
-                            k = Math.floor(this.height / (maps[i].tile_height / 2)) + 1;
+                        for (i = 0; i < area.map$.length; i++) {
+                            k = Math.floor(this.height / (area.map$[i].tile_height / 2)) + 1;
                             for (j = 0; j <= k; j++) {
-                                tx = maps[i].getCollisionEdge("right", this.get("x") + ux - this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
+                                tx = area.map$[i].getCollisionEdge("right", this.get("x") + ux - this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
                                 if (sx === undefined || sx < tx) sx = tx;
                             }
                         }
-                        for (i = 0; i < characters.length; i++) {
-                            if (this === characters[i]) continue;
-                            k = Math.floor(this.height / characters[i].height) + 1;
+                        for (i = 0; i < area.character$area.character$area.character$.length; i++) {
+                            if (this === area.character$area.character$area.character$[i]) continue;
+                            k = Math.floor(this.height / area.character$area.character$area.character$[i].height) + 1;
                             for (j = 0; j <= k; j++) {
-                                tx = characters[i].getCollision$Edge("right", this.get("x") + ux - this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
+                                tx = area.character$area.character$area.character$[i].getCollision$Edge("right", this.get("x") + ux - this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
                                 if (sx === undefined || sx < tx) sx = tx;
                             }
                         }
                         if (sx !== undefined) this.set("x", sx + this.width / 2);
                     }
                     if (dy > 0) {
-                        for (i = 0; i < maps.length; i++) {
-                            k = Math.floor(this.width / (maps[i].tile_width / 2)) + 1;
+                        for (i = 0; i < area.map$.length; i++) {
+                            k = Math.floor(this.width / (area.map$[i].tile_width / 2)) + 1;
                             for (j = 0; j <= k; j++) {
-                                ty = maps[i].getCollisionEdge("top", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy + this.height / 2);
+                                ty = area.map$[i].getCollisionEdge("top", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy + this.height / 2);
                                 if (sy === undefined || sy > ty) sy = ty;
                             }
                         }
-                        for (i = 0; i < characters.length; i++) {
-                            if (this === characters[i]) continue;
-                            k = Math.floor(this.width / characters[i].width) + 1;
+                        for (i = 0; i < area.character$area.character$.length; i++) {
+                            if (this === area.character$area.character$[i]) continue;
+                            k = Math.floor(this.width / area.character$area.character$[i].width) + 1;
                             for (j = 0; j <= k; j++) {
-                                ty = characters[i].getCollision$Edge("top", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy + this.height / 2);
+                                ty = area.character$area.character$[i].getCollision$Edge("top", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy + this.height / 2);
                                 if (sy === undefined || sy > ty) sy = ty;
                             }
                         }
                         if (sy !== undefined) this.set("y", sy - this.height / 2);
                     }
                     else if (dy < 0) {
-                        for (i = 0; i < maps.length; i++) {
-                            k = Math.floor(this.width / (maps[i].tile_width / 2)) + 1;
+                        for (i = 0; i < area.map$.length; i++) {
+                            k = Math.floor(this.width / (area.map$[i].tile_width / 2)) + 1;
                             for (j = 0; j <= k; j++) {
-                                ty = maps[i].getCollisionEdge("bottom", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy - this.height / 2);
+                                ty = area.map$[i].getCollisionEdge("bottom", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy - this.height / 2);
                                 if (sy === undefined || sy < ty) sy = ty;
                             }
                         }
-                        for (i = 0; i < characters.length; i++) {
-                            if (this === characters[i]) continue;
-                            k = Math.floor(this.width / characters[i].width) + 1;
+                        for (i = 0; i < area.character$.length; i++) {
+                            if (this === area.character$[i]) continue;
+                            k = Math.floor(this.width / area.character$[i].width) + 1;
                             for (j = 0; j <= k; j++) {
-                                ty = characters[i].getCollision$Edge("bottom", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy - this.height / 2);
+                                ty = area.character$[i].getCollision$Edge("bottom", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy - this.height / 2);
                                 if (sy === undefined || sy < ty) sy = ty;
                             }
                         }
@@ -1589,7 +1593,7 @@ var Jo = (function () {
             for (i in screens) {
                 switch (screens[i].canvas.dataset.type) {
                     case "area":
-                        if (clear_area) screens[i].clear();
+                        if (area.get("clear")) screens[i].clear();
                         break;
                     case "animation":
                         screens[i].clear();
@@ -1642,11 +1646,7 @@ var Jo = (function () {
                     k = e.code || e.key || e.keyIdentifier || e.keyCode;
                     if (document.documentElement.hasAttribute("data-touch")) {
                         document.documentElement.removeAttribute("data-touch");
-                        resized = true;
-                    }
-                    if (!document.documentElement.hasAttribute("data-loaded")) {
-                        setup();
-                        break;
+                        game.set("resized", 1);
                     }
                     if (k === "Tab" || k === "U+0009" || k === 0x09) {
                         if (!(document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement)) {
@@ -1665,17 +1665,13 @@ var Jo = (function () {
                     break;
 
                 case "resize":
-                    resized = true;
+                    game.set("resized", 1);
                     break;
 
                 case "touchstart":
                     if (!document.documentElement.hasAttribute("data-touch")) {
                         document.documentElement.setAttribute("data-touch", "");
-                        resized = true;
-                    }
-                    if (!document.documentElement.hasAttribute("data-loaded")) {
-                        setup();
-                        break;
+                        game.set("resized", 1);
                     }
                     break;
 
@@ -1694,29 +1690,37 @@ var Jo = (function () {
 
             function imported(node) {
                 if (typeof node === "string" || node instanceof String) node = datadoc.getElementById(node);
-                if (!(node instanceof Node)) throw new Error("[Jo] Cannot import node – none provided");
+                if (!(node instanceof Node)) throw new Error("[Jelli] Cannot import node – none provided");
                 return document.importNode(node, true);
             }
             function placed(node) {
                 if (typeof node === "string" || node instanceof String) node = datadoc.getElementById(node);
-                if (!(node instanceof Node)) throw new Error("[Jo] Cannot place node – none provided");
+                if (!(node instanceof Node)) throw new Error("[Jelli] Cannot place node – none provided");
                 return document.body.appendChild(document.importNode(node, true));
             }
 
             //  Making sure modules are loaded:
 
-            if (typeof Screen === "undefined" || !Screen) throw new Error("[Jo] Screen module not loaded");
-            if (typeof Control === "undefined" || !Control) throw new Error("[Jo] Control module not loaded");
-            if (typeof Sheet === "undefined" || !Sheet) throw new Error("[Jo] Sheet module not loaded");
-            if (typeof Letters === "undefined" || !Letters) throw new Error("[Jo] Letters module not loaded");
-            if (typeof Tileset === "undefined" || !Tileset) throw new Error("[Jo] Tileset module not loaded");
-            if (typeof JoScript === "undefined" || !Tileset) throw new Error("[Jo] JoScript module not loaded");
+            if (typeof Screen === "undefined" || !Screen) throw new Error("[Jelli] Screen module not loaded");
+            if (typeof Control === "undefined" || !Control) throw new Error("[Jelli] Control module not loaded");
+            if (typeof Sheet === "undefined" || !Sheet) throw new Error("[Jelli] Sheet module not loaded");
+            if (typeof Letters === "undefined" || !Letters) throw new Error("[Jelli] Letters module not loaded");
+            if (typeof Tileset === "undefined" || !Tileset) throw new Error("[Jelli] Tileset module not loaded");
+            if (typeof Jelli === "undefined" || !Tileset) throw new Error("[Jelli] JelliScript module not loaded");
 
             //  Setting up datadoc and clearing the body:
 
             datadoc.body = datadoc.importNode(document.body, true);
             document.body = document.createElement("body");
             document.body.style.visibility = "hidden";
+
+            //  JelliScript setup:
+
+            game = new Jelli([
+                "resized"
+            ].concat(document.documentElement.dataset.vars ? document.documentElement.dataset.vars.split(/\s+/) : []));
+            game.set("resized", 1); //  This triggers initial layout
+            Object.defineProperty(game, "loadArea", {value: function (prop) {return loadArea(game.get(prop));}});
 
             //  Screen setup:
 
@@ -1742,6 +1746,20 @@ var Jo = (function () {
             control.add("start").addKeys("start", 0x51, "U+0051", "KeyQ", "Q", "q").linkElement("start", "jo-ctrl-strt");
             control.add("up").addKeys("up", 0x26, "ArrowUp", "Up").linkElement("up", "jo-ctrl-uprw");
 
+            Object.defineProperties(game, {
+                "key_start": {get: function() {return Number(control.isActive("start"));}},
+                "key_select": {get: function() {return Number(control.isActive("select"));}},
+                "key_menu": {get: function() {return Number(control.isActive("menu"));}},
+                "key_look": {get: function() {return Number(control.isActive("look"));}},
+                "key_exit": {get: function() {return Number(control.isActive("exit"));}},
+                "key_action": {get: function() {return Number(control.isActive("action"));}},
+                "key_up": {get: function() {return Number(control.isActive("up"));}},
+                "key_down": {get: function() {return Number(control.isActive("down"));}},
+                "key_left": {get: function() {return Number(control.isActive("left"));}},
+                "key_right": {get: function() {return Number(control.isActive("right"));}},
+                "touch": {get: function() {return 0;}}
+            });
+
             //  Sprite sheet setup:
 
             for (collection = datadoc.getElementsByClassName("letters"), i = 0; i < collection.length; i++) {
@@ -1760,6 +1778,15 @@ var Jo = (function () {
             window.addEventListener("keydown", handleEvent, false);
             window.addEventListener("resize", handleEvent, false);
             window.addEventListener("touchstart", handleEvent, false);
+
+            //  Initializing the game code:
+
+            if (document.head.getElementsByClassName("init").item(0)) Jelli.parseScript(document.head.getElementsByClassName("init").item(0).text || document.head.getElementsByClassName("init").item(0).textContent, game);
+
+            //  Starting the render and logic processes:
+
+            window.requestAnimationFrame(render)
+            logic();
 
         }
 
@@ -1898,12 +1925,13 @@ var Jo = (function () {
 
         //  Area loading:
 
-        function loadArea() {
+        function loadArea(index) {
 
             //  Setting up variables:
 
             var collection;
             var collection2;
+            var elt;
             var i;
             var j;
             var item;
@@ -1911,38 +1939,49 @@ var Jo = (function () {
             var m;
             var n;
 
+            //  Handling arguments and error checking:
+
+            if (!(typeof index === "number" || index instanceof Number)) throw new Error("[Jelli] Could not load area – index must be a number.");
+            elt = datadoc.getElementsByClassName("area").item(index);
+            if (!(elt instanceof Element)) throw new Error("[Jelli] Could not load area – no element found at the specified index.");
+
+            //  Area setup:
+
+            area = new Jelli([
+                "clear",
+                "index"
+            ].concat(elt.dataset.vars ? elt.dataset.vars.split(/\s+/) : []), game);
+            area.set("clear", 1);
+            area.set("index", index);
+            Object.defineProperty(area, "elt$", function () {return elt;});
+
             //  Loading maps:
 
-            maps = [];
-            for (collection = current_area.getElementsByClassName("map"), i = 0; i < collection.length; i++) {
+            area.map$ = [];
+            for (collection = elt.getElementsByClassName("map"), i = 0; i < collection.length; i++) {
                 item = collection.item(i);
-                maps[i] = tilesets[item.dataset.tileset].getMap(screens[item.dataset.screen].context, item.textContent.trim(), Number(item.dataset.mapwidth));
+                area.map$[i] = tilesets[item.dataset.tileset].getMap(screens[item.dataset.screen].context, item.textContent.trim(), Number(item.dataset.mapwidth));
             }
 
             //  Loading characters:
 
-            characters = [];
-            for (collection = current_area.getElementsByClassName("character"), i = 0; i < collection.length; i++) {
+            area.character$ = [];
+            for (collection = elt.getElementsByClassName("character"), i = 0; i < collection.length; i++) {
                 item = collection.item(i);
                 m = {};
                 n = [];
-                if (!datadoc.getElementById(item.dataset.sprites) || datadoc.getElementById(item.dataset.sprites).className !== "sprites") throw new Error("[Jo] Cannot load character – No sprites provided.");
+                if (!datadoc.getElementById(item.dataset.sprites) || datadoc.getElementById(item.dataset.sprites).className !== "sprites") throw new Error("[Jelli] Cannot load character – No sprites provided.");
                 else item2 = datadoc.getElementById(item.dataset.sprites);
                 for (collection2 = item2.getElementsByClassName("sprite"), j = 0; j < collection2.length; j++) {
                     n.push(sheets[item2.dataset.sheet].getSprite(Number(collection2.item(j).dataset.index), Number(collection2.item(j).dataset.length ? collection2.item(j).dataset.length : 1)));
                     if (collection2.item(j).hasAttribute("title")) m[collection2.item(j).getAttribute("title")] = j;
                 }
-                characters[i] = new Character(n, Number(item2.dataset.boxX || n[0].width / 2), Number(item2.dataset.boxY || n[0].height / 2), Number(item2.dataset.boxWidth || n[0].width), Number(item2.dataset.boxHeight || n[0].height), item.dataset.vars ? item.dataset.vars.split(/\s+/) : [], item.getElementsByClassName("init").item(0) ? item.getElementsByClassName("init").item(0).text || item.getElementsByClassName("init").item(0).textContent : "", item.getElementsByClassName("step").item(0) ? item.getElementsByClassName("step").item(0).text || item.getElementsByClassName("step").item(0).textContent : "");
+                area.character$[i] = new Character(n, Number(item2.dataset.boxX || n[0].width / 2), Number(item2.dataset.boxY || n[0].height / 2), Number(item2.dataset.boxWidth || n[0].width), Number(item2.dataset.boxHeight || n[0].height), item.dataset.vars ? item.dataset.vars.split(/\s+/) : [], item.getElementsByClassName("init").item(0) ? item.getElementsByClassName("init").item(0).text || item.getElementsByClassName("init").item(0).textContent : "", item.getElementsByClassName("step").item(0) ? item.getElementsByClassName("step").item(0).text || item.getElementsByClassName("step").item(0).textContent : "");
                 for (j in m) {
-                    characters[i].declare(j);
-                    characters[i].set(j, m[j]);
+                    Object.defineProperty(area.character$[i], j, {value: m[j]});
                 }
-                characters[i].init$();
+                area.character$[i].init$();
             }
-
-            //  Clearing the area render:
-
-            clear_area = true;
 
         }
 
@@ -1954,10 +1993,18 @@ var Jo = (function () {
 
             var i;
 
+            //  Game stepping:
+
+            if (document.head.getElementsByClassName("step").item(0)) Jelli.parseScript(document.head.getElementsByClassName("step").item(0).text || document.head.getElementsByClassName("step").item(0).textContent, game);
+
+            //  If no area is loaded:
+
+            if (!(area instanceof Jelli)) return;
+
             //  Stepping the characters:
 
-            for (i = 0; i < characters.length; i++) {
-                characters[i].step$()
+            for (i = 0; i < area.character$.length; i++) {
+                area.character$[i].step$()
             }
 
             //  setTimeout for that logic:
@@ -1976,24 +2023,28 @@ var Jo = (function () {
 
             //  Managing layout:
 
-            if (resized) layout();
+            if (game.get("resized")) layout();
 
             //  Clearing the screens, if needed:
 
             clearScreens();
 
+            //  If no area is loaded:
+
+            if (!(area instanceof Jelli)) return;
+
             //  Drawing the area:
 
-            if (clear_area) {
-                for (i = 0; i < maps.length; i++) {
-                    maps[i].draw();
+            if (area.get("clear")) {
+                for (i = 0; i < area.map$.length; i++) {
+                    area.map$[i].draw();
                 }
             }
 
             //  Drawing the characters:
 
-            for (i = 0; i < characters.length; i++) {
-                characters[i].draw$(screens.mainground.context)
+            for (i = 0; i < area.character$.length; i++) {
+                area.character$[i].draw$(screens.mainground.context)
             }
 
             //  Drawing the text:
@@ -2002,27 +2053,11 @@ var Jo = (function () {
 
             //  Reset various flags:
 
-            clear_area = resized = false;
+            area.set("clear", game.set("resized", 0));
 
             //  Request new frame:
 
             window.requestAnimationFrame(render);
-
-        }
-
-        //  Setup function:
-
-        function setup() {
-
-            current_area = datadoc.getElementById("testarea");
-
-            loadArea();
-
-            document.documentElement.setAttribute("data-loaded", "");
-
-            window.requestAnimationFrame(render);
-
-            logic();
 
         }
 

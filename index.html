@@ -1,27 +1,62 @@
 <!DOCTYPE html>
-<html style="height:100%;background: url(splash.gif) center center / contain no-repeat black;">
+<html style="height:100%;background: url(splash.gif) center center / contain no-repeat black;"
+      data-vars="splashing">
     <head>
-        <title>[Jo]</title>
+        <title>Jelli : A Game Engine</title>
         <meta charset="utf-8">
         <meta name="viewport" content="user-scalable=no,width=device-width">
         <link rel="icon" href="icon.png">
         <link rel="stylesheet" href="style.css">
-        <script type="text/javascript" src="jo.js"></script>
+        <script type="text/javascript" src="jelli.js"></script>
+        <script type="text/plain" class="init">
+
+            >>  Area 0 is the splash screen (see below)
+
+            loadArea (0)
+            set (splashing, 1)
+
+        </script>
+        <script type="text/plain" class="step">
+
+            >>  Loads the first area on keypress:
+
+            >>  (splashing) ?
+            >>      (key_start)(key_action)(touch) ?
+            >>          loadArea (1)
+            >>          set (splashing, 0)
+            >>      ;
+            >>  ;
+
+        </script>
     </head>
     <body hidden style="display: none;">
-        <h1>Jo: Modding guide and data elements</h1>
+        <h1>Jelli : A Game Engine</h1>
         <p>
             Any content you place in here remains hidden unless it is assigned the proper class for handling by the script.
-            By editing this file, you can completely reprogram the game.
+            By editing this file, you can program your game.
         </p>
         <p>
             Be sure to keep the <code>hidden</code> attribute on the <code>&lt;body&gt;</code> element, and to load all of the scripts in the <code>&lt;head&gt;</code>.
             <code>&lt;meta name="viewport" content="user-scalable=no,width=device-width"&gt;</code> is also helpful.
         </p>
         <p>
-            My default setup sets the <code>background-image</code> of the <code>&lt;html&gt;</code> element to the file at <code>images/splash.gif</code>.
+            My default setup sets the <code>background-image</code> of the <code>&lt;html&gt;</code> element to the file at <code>splash.gif</code>.
             Some kind of splash image is useful to have, because nothing else will display until the user presses a key or taps the screen.
         </p>
+        <section>
+            <h2>Game setup</h2>
+            <p>
+                Certain attributes on the &lt;html&gt; element can be used to configure game settings.
+                The <code>data-vars</code> attribute declares global JelliScript variables which can be accessed from any JelliScript code.
+            </p>
+            <p>
+                Sometimes the game itself needs scripting which cannot be achieved at a lower level.
+                This can be accomplished through two scripts, which should appear in the &lt;head&gt;.
+                The first, of class <code>init</code>, specifies the initialization code, which is run during game setup.
+                The second, of class <code>step</code>, specifies the code to run each time the game's logic is processed.
+                These scripts should have type <code>text/plain</code> and be written in JelliScript.
+            </p>
+        </section>
         <section>
             <h2>GUI Elements</h2>
             <p>
@@ -85,7 +120,7 @@
             </p>
             <section>
                 <h3>The letters:</h3>
-                <img id="letters" class="letters" alt="Letters" src="images/letters.png"
+                <img id="letters" class="letters" alt="Letters" src="letters/letters.png"
                      data-sprite-width="4"
                      data-sprite-height="7"
                      data-palette-transparent="transparent"
@@ -108,20 +143,15 @@
             </section>
             <section>
                 <h3>The tilesets:</h3>
-                <img id="tiles" class="tileset" alt="Tiles" src="images/tiles/world01.png"
+                <img id="splash" class="tileset" alt="Splash screen tiles" src="tilesets/splash.png"
                      data-sprite-width="16"
                      data-sprite-height="16"
-                     data-collisions="D/////////8AAAAAAAAAAPpcOEIe17//AAAAAAAAD/8Dz////////w8A//////////////////////////////////////////////////////////////////////////////////////////////////////////////////8="
-                     >
-                <img id="structures" class="tileset" alt="Structures" src="images/structures/world01.png"
-                     data-sprite-width="16"
-                     data-sprite-height="16"
-                     data-collisions="AAAAAAAAAAAP/////////wAAAAAAAAAA8AAAAAAAAAAAwAAAAAAAAP//AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+                     data-collisions="//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8="
                      >
             </section>
             <section>
                 <h3>Other sheets:</h3>
-                <img id="characters" class="sheet" alt="Characters" src="images/characters.png"
+                <img id="characters" class="sheet" alt="Jelly" src="sheets/characters.png"
                      data-sprite-width="16"
                      data-sprite-height="16"
                      >
@@ -147,52 +177,21 @@
             </p>
             <section>
                 <h3>Sprite collections:</h3>
-                <div id="jo" class="sprites"
+                <div id="jelly" class="sprites"
                      data-sheet="characters"
                      data-box-x="8"
-                     data-box-y="8.5"
-                     data-box-width="12"
-                     data-box-height="15">
+                     data-box-y="8"
+                     data-box-width="10"
+                     data-box-height="10">
                     <span class="sprite"
-                          title="dn"
+                          title="inactive"
                           data-index="0"
                           data-length="2"
                           ></span>
                     <span class="sprite"
-                          title="lf"
+                          title="active"
                           data-index="2"
                           data-length="2"
-                          ></span>
-                    <span class="sprite"
-                          title="up"
-                          data-index="4"
-                          data-length="2"
-                          ></span>
-                    <span class="sprite"
-                          title="rt"
-                          data-index="6"
-                          data-length="2"
-                          ></span>
-                </div>
-                <div id="sign" class="sprites"
-                     data-sheet="characters"
-                     data-width="8"
-                     data-height="14">
-                    <span class="sprite"
-                          title="dn"
-                          data-index="8"
-                          ></span>
-                    <span class="sprite"
-                          title="lf"
-                          data-index="9"
-                          ></span>
-                    <span class="sprite"
-                          title="up"
-                          data-index="10"
-                          ></span>
-                    <span class="sprite"
-                          title="rt"
-                          data-index="11"
                           ></span>
                 </div>
             </section>
@@ -202,7 +201,9 @@
             <p>
                 Areas are used to generate a static background and/or foreground on which a section of the game takes place.
                 Areas are given the class <code>area</code>, and should contain maps of the class <code>map</code> and characters of the class <code>character</code>.
-                The <code>id</code>s of areas <strong>must</strong> be specified (and unique)&mdash;they are used as an identifier within the game's script.
+                Areas are referred to by index:
+                The first area you define will have index 0, and the numbers will increase from there.
+                (It makes sense to have area 0 be a splash screen).
             </p>
             <p>
                 Maps tell the game how to render tiles on the screen.
@@ -222,144 +223,39 @@
                 This is accomplished through two scripts, which should be placed inside the character.
                 The first, of class <code>init</code>, specifies the initialization code, which is run when the area is loaded.
                 The second, of class <code>step</code>, specifies the code to run each time the game's logic is processed.
-                These scripts should have type <code>text/plain</code> and be written in JoScript.
+                These scripts should have type <code>text/plain</code> and be written in JelliScript.
             </p>
             <p>
                 Characters are destroyed when an area is unloaded, and the values of their variables are not stored.
             </p>
             <section>
                 <h3>An area:</h3>
-                <div id="testarea" class="area"
-                     >
+                <div class="area" title="Splash screen">
                     <span class="map"
-                          data-tileset="tiles"
+                          data-tileset="splash"
                           data-mapwidth="16"
                           data-screen="background"
-                          >EBAQEBAQHhAQEBAQEBAQEBAQEBAQHBUQEBAQEBAQEBAQEBAQEBATGBIWGRAQEBAQEBAQEBAQFBESFRMQEBAQEBAQEBAQEBMaEhcbEBAQEBA1MzMzNhAUHRAQECUjIyMmMTw0OzIQHxAQEBAhLCQrIjEyEDEyEBAQEBAQISIQISIxOjM5MhAQUlMQECEqIykiNzQ0NDgQEFBQEBAnJCQkKA==</span>
-                    <span class="map"
-                          data-tileset="structures"
-                          data-mapwidth="16"
-                          data-screen="foreground"
-                          >AB4AAAAAAAAAAAAAAAAAABwVAAAAAAAAAAAAAAAAAAAAExgSFhkAAAAAAAAAAAAAABQREhUTAAAAAAAAAAAAAAATGhIXGwAAAAAAAAAAAAAAFB0AAAAAAAAAAAAAAAAAAB8AAAAAAAAAAAAAAAAAAAAAMAAAAABQUQAAAAAAAAAAAAAAAAAAUlMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==</span>
+                          >AAEAAQABAAEAAQABAAEAAQIDAgMCAwIDAgMCAwIDAgMAAQABAAEAAQABAAEAAQABAgMCAwIDAgMCAwIDAgMCAwABAAEAAQABAAEAAQABAAECAwIDAgMCAwIDAgMCAwIDAAEAAQABAAEAAQABAAEAAQIDAgMCAwIDAgMCAwIDAgMAAQABAAEAAQABAAEAAQABAgMCAwIDAgMCAwIDAgMCAw==</span>
                     <div class="character"
-                         data-sprites="jo"
+                         data-sprites="jelly"
                          data-vars="timer"
                          >
                         <script type="text/plain" class="init">
                             set (x, 88)
                             set (y, 120)
-                            set (dir, dn)
+                            set (dir, inactive)
                             set (frame, 0)
                         </script>
                         <script type="text/plain" class="step">
-                            (key_up) ?
-                                (key_down) ?
-                                    (key_left) ?
-                                        (key_right) ?
-                                            targetBy (0, 0)
-                                        :
-                                            targetBy (-1, 0)
-                                        ;
-                                    :
-                                        (key_right) ?
-                                            targetBy (1, 0)
-                                        :
-                                            targetBy (0, 0)
-                                        ;
-                                    ;
-                                :
-                                    (key_left) ?
-                                        (key_right) ?
-                                            targetBy (0, -1)
-                                        :
-                                            targetBy (-1, -1)
-                                        ;
-                                    :
-                                        (key_right) ?
-                                            targetBy (1, -1)
-                                        :
-                                            targetBy (0, -1)
-                                        ;
-                                    ;
-                                ;
+                            (key_down) set (y, 136)
+                            (key_up) set (y, 120)
+                            (key_action) ?
+                                set (dir, active)
                             :
-                                (key_down) ?
-                                    (key_left) ?
-                                        (key_right) ?
-                                            targetBy (0, 1)
-                                        :
-                                            targetBy (-1, 1)
-                                        ;
-                                    :
-                                        (key_right) ?
-                                            targetBy (1, 1)
-                                        :
-                                            targetBy (0, 1)
-                                        ;
-                                    ;
-                                :
-                                    (key_left) ?
-                                        (key_right) ?
-                                            targetBy (0, 0)
-                                        :
-                                            targetBy (-1, 0)
-                                        ;
-                                    :
-                                        (key_right) ?
-                                            targetBy (1, 0)
-                                        :
-                                            targetBy (0, 0)
-                                        ;
-                                    ;
-                                ;
+                                set (dir, inactive)
                             ;
-                            (key_left) ?
-                                (key_right) ?
-                                    (key_up) ?
-                                        -(key_down) set (dir, up)
-                                    :
-                                        (key_down) set (dir, dn)
-                                    ;
-                                :
-                                    set (dir, lf)
-                                ;
-                            :
-                                (key_right) ?
-                                    set (dir, rt)
-                                :
-                                    (key_up) ?
-                                        -(key_down) set (dir, up)
-                                    :
-                                        (key_down) set (dir, dn)
-                                    ;
-                                ;
-                            ;
-                            (key_up)(key_down)(key_left)(key_right) ?
-                                mod_increment (timer, 15)
-                                -(timer) mod_increment (frame, 2)
-                            ;
-                        </script>
-                    </div>
-                </div>
-                <div id="area01" class="area"
-                     >
-                    <span class="map"
-                          data-tileset="tiles"
-                          data-mapwidth="16"
-                          data-screen="background"
-                          >EBAQEBAQEBAQExAQEBAQEBAQEBAQEBAQEBMQEBAQEBAQEBAQEBAQEBgXGRAQEBAQEhISEhISEhIVEBQSEhIQEBAQEBAQEBAQGhYbEBAQEBAQEBAQEBAQEBATEBAQEBAQEBAQEBAQEBAQExAQEBAQEBAQEBAQABAQEBMQEBAQEBAQEBAQEBoSEhIVEBAQEBAQEBAQEBAQEBAQExAQEBAQEA==</span>
-                    <span class="map"
-                          data-tileset="structures"
-                          data-mapwidth="16"
-                          data-screen="foreground"
-                          >AAAAAAAAAAAAAAAAAAAaEgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABkQAAAAAAAAAAAAAAAAAAAWEgAAAAAAAAAAAAAAAAAAFhAAAAAAAAAAAAAAAAAAABYSFRUVFRUVFRUYABcVFRUUGA==</span>
-                    <div class="character"
-                         data-sprites="sign">
-                        <script type="text/plain" class="init">
-                            set (x, 120)
-                            set (y, 120)
-                            set (dir, dn)
-                            set (frame, 0)
+                            mod_increment (timer, 10)
+                            -(timer) mod_increment (frame, 2)
                         </script>
                     </div>
                 </div>
@@ -370,12 +266,12 @@
         <div id="jo-ctls-lf">
             <!--  Left Controls  -->
             <div id="jo-ctlr-l1">
-                <div id="jo-ctrl-strt" title="Start"></div>
                 <div id="jo-ctrl-selc" title="Select"></div>
+                <div id="jo-ctrl-strt" title="Start"></div>
             </div>
             <div id="jo-ctlr-l2">
-                <div id="jo-ctrl-menu" title="Menu"></div>
                 <div id="jo-ctrl-look" title="Look"></div>
+                <div id="jo-ctrl-menu" title="Menu"></div>
             </div>
             <div id="jo-ctlr-l3">
                 <div id="jo-ctrl-exit" title="Exit"></div>
