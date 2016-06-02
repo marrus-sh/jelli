@@ -33,7 +33,7 @@ html[data-touch] *[id^=jo-ctls] {
     width: 100%;
 }
 *[id^="jo-ctrl"] {
-    background-image: url(images/gui/ctrl.png);
+    background-image: url(gui/ctrl.png);
     background-size: 600% 600%;
     background-position: 100% 20%;
     background-repeat: no-repeat;
