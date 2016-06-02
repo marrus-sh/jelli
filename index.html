@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html style="height:100%;background: url(splash.gif) center center / contain no-repeat black;"
-      data-vars="splashing">
+<html data-vars="splashing">
     <head>
         <title>Jelli : A Game Engine</title>
         <meta charset="utf-8">
@@ -36,12 +35,8 @@
             By editing this file, you can program your game.
         </p>
         <p>
-            Be sure to keep the <code>hidden</code> attribute on the <code>&lt;body&gt;</code> element, and to load all of the scripts in the <code>&lt;head&gt;</code>.
+            Be sure to keep the <code>hidden</code> attribute on the <code>&lt;body&gt;</code> element, and to load the jelli script in the <code>&lt;head&gt;</code>.
             <code>&lt;meta name="viewport" content="user-scalable=no,width=device-width"&gt;</code> is also helpful.
-        </p>
-        <p>
-            My default setup sets the <code>background-image</code> of the <code>&lt;html&gt;</code> element to the file at <code>splash.gif</code>.
-            Some kind of splash image is useful to have, because nothing else will display until the user presses a key or taps the screen.
         </p>
         <section>
             <h2>Game setup</h2>
@@ -66,13 +61,13 @@
             </p>
             <section>
                 <h3>The elements:</h3>
-                <img class="gui-border" alt="Border" src="images/gui/cnvs-border.png"
+                <img class="gui-border" alt="Border" src="gui/cnvs-border.png"
                      data-sprite-width="8"
                      data-sprite-height="8"
                      data-system-background="#4f4f4f"
                      data-screen-background="#000000"
                      >
-                <img class="gui-buttons" alt="Buttons" src="images/gui/ctrl.png"
+                <img class="gui-buttons" alt="Buttons" src="gui/ctrl.png"
                      data-sprite-width="16"
                      data-sprite-height="16"
                      data-button-width="24"
