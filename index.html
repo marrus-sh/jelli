@@ -19,12 +19,12 @@
 
             >>  Loads the first area on keypress:
 
-            >>  (splashing) ?
-            >>      (key_start)(key_action)(touch) ?
-            >>          loadArea (1)
-            >>          set (splashing, 0)
-            >>      ;
-            >>  ;
+            (splashing) ?
+                (key_start)(key_action)(touch) ?
+                    loadArea (1)
+                    set (splashing, 0)
+                ;
+            ;
 
         </script>
     </head>
@@ -138,10 +138,10 @@
             </section>
             <section>
                 <h3>The tilesets:</h3>
-                <img id="splash" class="tileset" alt="Splash screen tiles" src="tilesets/splash.png"
+                <img id="tiles" class="tileset" alt="Tiles" src="tilesets/tiles.png"
                      data-sprite-width="16"
                      data-sprite-height="16"
-                     data-collisions="//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8="
+                     data-collisions="AADAPw=="
                      >
             </section>
             <section>
@@ -224,10 +224,10 @@
                 Characters are destroyed when an area is unloaded, and the values of their variables are not stored.
             </p>
             <section>
-                <h3>An area:</h3>
+                <h3>Some areas:</h3>
                 <div class="area" title="Splash screen">
                     <span class="map"
-                          data-tileset="splash"
+                          data-tileset="tiles"
                           data-mapwidth="16"
                           data-screen="background"
                           >AAEAAQABAAEAAQABAAEAAQIDAgMCAwIDAgMCAwIDAgMAAQABAAEAAQABAAEAAQABAgMCAwIDAgMCAwIDAgMCAwABAAEAAQABAAEAAQABAAECAwIDAgMCAwIDAgMCAwIDAAEAAQABAAEAAQABAAEAAQIDAgMCAwIDAgMCAwIDAgMAAQABAAEAAQABAAEAAQABAgMCAwIDAgMCAwIDAgMCAw==</span>
@@ -251,6 +251,102 @@
                             ;
                             mod_increment (timer, 10)
                             -(timer) mod_increment (frame, 2)
+                        </script>
+                    </div>
+                </div>
+                <div class="area" title="The Sea">
+                    <span class="map"
+                          data-tileset="tiles"
+                          data-mapwidth="16"
+                          data-screen="background"
+                          >BwcHBwcHBwcHBwcHBwcHBwYGBgYGBgYGBgYGBgYGBgYFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBAQEBAQEBAQEBAQEBAQEBA==</span>
+                    <div class="character"
+                         data-sprites="jelly"
+                         data-vars="timer"
+                         >
+                        <script type="text/plain" class="init">
+                            set (x, 16)
+                            set (y, 80)
+                            set (dir, inactive)
+                            set (frame, 0)
+                        </script>
+                        <script type="text/plain" class="step">
+
+                            >>  This controls movement
+
+                            (key_up) ?
+                                (key_down) ?
+                                    (key_left) ?
+                                        (key_right) ?
+                                            targetBy (0, 0)
+                                        :
+                                            targetBy (-1, 0)
+                                        ;
+                                    :
+                                        (key_right) ?
+                                            targetBy (1, 0)
+                                        :
+                                            targetBy (0, 0)
+                                        ;
+                                    ;
+                                :
+                                    (key_left) ?
+                                        (key_right) ?
+                                            targetBy (0, -1)
+                                        :
+                                            targetBy (-1, -1)
+                                        ;
+                                    :
+                                        (key_right) ?
+                                            targetBy (1, -1)
+                                        :
+                                            targetBy (0, -1)
+                                        ;
+                                    ;
+                                ;
+                            :
+                                (key_down) ?
+                                    (key_left) ?
+                                        (key_right) ?
+                                            targetBy (0, 1)
+                                        :
+                                            targetBy (-1, 1)
+                                        ;
+                                    :
+                                        (key_right) ?
+                                            targetBy (1, 1)
+                                        :
+                                            targetBy (0, 1)
+                                        ;
+                                    ;
+                                :
+                                    (key_left) ?
+                                        (key_right) ?
+                                            targetBy (0, 0)
+                                        :
+                                            targetBy (-1, 0)
+                                        ;
+                                    :
+                                        (key_right) ?
+                                            targetBy (1, 0)
+                                        :
+                                            targetBy (0, 0)
+                                        ;
+                                    ;
+                                ;
+                            ;
+
+                            >>  This makes the jelly fall a little regardless
+
+                            targetBy (0, .1)
+
+                            >>  This increments the timer if an arrow key is pressed
+
+                            (key_up)(key_down)(key_left)(key_right) ?
+                                mod_increment (timer, 15)
+                                -(timer) mod_increment (frame, 2)
+                            ;
+
                         </script>
                     </div>
                 </div>

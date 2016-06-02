@@ -1248,7 +1248,7 @@ var Jelli = (function () {
             var line;
             var lines;
             var n;
-            var regex = /^\s*(?:(?:((?:-?\s*\(\s*-?\w+(?:\s*[<>=]\s*-?\w+)?\s*\)\s*)+)?\s*(?:(\w+)\s*(\(\s*-?\w+(?:\s*,\s*-?\w+)*\s*\))?|(\?))|([:;]))|>>.*)\s*$/;
+            var regex = /^\s*(?:(?:((?:-?\s*\(\s*-?\w+(?:\s*[<>=]\s*-?\w+)?\s*\)\s*)+)?\s*(?:(\w+)\s*(\(\s*-?(?:\w+|[0-9]*\.?[0-9]+)(?:\s*,\s*-?(?:\w+|[0-9]*\.?[0-9]+))*\s*\))?|(\?))|([:;]))|>>.*)\s*$/;
             var s;
 
             //  Handling arguments and error checking:
@@ -1502,8 +1502,14 @@ var Jelli = (function () {
                     dy = this.get(dy);
                     d = Math.sqrt(dx * dx + dy * dy);
                     if (!d) return;
-                    ux = dx / d;
-                    uy = dy / d;
+                    if (d > 1) {
+                        ux = dx / d;
+                        uy = dy / d;
+                    }
+                    else {
+                        ux = dx;
+                        uy = dy;
+                    }
                     if (dx > 0) {
                         for (i = 0; i < area.map$.length; i++) {
                             k = Math.floor(this.height / (area.map$[i].tile_height / 2)) + 1;
@@ -1530,11 +1536,11 @@ var Jelli = (function () {
                                 if (sx === undefined || sx < tx) sx = tx;
                             }
                         }
-                        for (i = 0; i < area.character$area.character$area.character$.length; i++) {
-                            if (this === area.character$area.character$area.character$[i]) continue;
-                            k = Math.floor(this.height / area.character$area.character$area.character$[i].height) + 1;
+                        for (i = 0; i < area.character$.length; i++) {
+                            if (this === area.character$[i]) continue;
+                            k = Math.floor(this.height / area.character$[i].height) + 1;
                             for (j = 0; j <= k; j++) {
-                                tx = area.character$area.character$area.character$[i].getCollision$Edge("right", this.get("x") + ux - this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
+                                tx = area.character$[i].getCollision$Edge("right", this.get("x") + ux - this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
                                 if (sx === undefined || sx < tx) sx = tx;
                             }
                         }
@@ -1548,11 +1554,11 @@ var Jelli = (function () {
                                 if (sy === undefined || sy > ty) sy = ty;
                             }
                         }
-                        for (i = 0; i < area.character$area.character$.length; i++) {
-                            if (this === area.character$area.character$[i]) continue;
-                            k = Math.floor(this.width / area.character$area.character$[i].width) + 1;
+                        for (i = 0; i < area.character$.length; i++) {
+                            if (this === area.character$[i]) continue;
+                            k = Math.floor(this.width / area.character$[i].width) + 1;
                             for (j = 0; j <= k; j++) {
-                                ty = area.character$area.character$[i].getCollision$Edge("top", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy + this.height / 2);
+                                ty = area.character$[i].getCollision$Edge("top", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy + this.height / 2);
                                 if (sy === undefined || sy > ty) sy = ty;
                             }
                         }
@@ -2065,7 +2071,7 @@ var Jelli = (function () {
 
         window.addEventListener("load", init, false);
 
-        return true;
+        return Jelli;
 
     })();
 

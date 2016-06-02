@@ -1,0 +1,4 @@
+*.collisions binary
+*.tilemap binary
+*.png binary
+*.gif binary
