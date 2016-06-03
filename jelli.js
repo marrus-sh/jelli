@@ -345,14 +345,14 @@ var Jelli = (function () {
 
             //  Handling arguments and error checking:
 
-            if (!(sheet instanceof Sheet)) throw new Error("(sheet.js) Cannot draw sprite – no sheet provided.");
-            if (!(typeof start_index === "number" || start_index instanceof Number)) throw new Error("(sheet.js) Cannot draw sprite – index must be a number.");
-            else if (start_index > sheet.size) throw new Error("(sheet.js) Cannot draw sprite – index out of range.");
-            if (!(context instanceof CanvasRenderingContext2D)) throw new Error("(sheet.js) Cannot draw sprite – rendering context must be 2d.");
-            if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("(sheet.js) Cannot draw sprite – coordinates must be numbers.");
+            if (!(sheet instanceof Sheet)) throw new Error("[Sheet] Cannot draw sprite – no sheet provided.");
+            if (!(typeof start_index === "number" || start_index instanceof Number)) throw new Error("[Sheet] Cannot draw sprite – index must be a number.");
+            else if (start_index > sheet.size) throw new Error("[Sheet] Cannot draw sprite – index out of range.");
+            if (!(context instanceof CanvasRenderingContext2D)) throw new Error("[Sheet] Cannot draw sprite – rendering context must be 2d.");
+            if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Sheet] Cannot draw sprite – coordinates must be numbers.");
             if (arguments.length >= 6) {
-                if (!(typeof arguments[5] === "number" || arguments[5] instanceof Number)) throw new Error("(sheet.js) Cannot draw sprite – frame must be a number.");
-                else if (start_index + arguments[5] > sheet.size) throw new Error("(sheet.js) Cannot draw sprite – frame out of range.");
+                if (!(typeof arguments[5] === "number" || arguments[5] instanceof Number)) throw new Error("[Sheet] Cannot draw sprite – frame must be a number.");
+                else if (start_index + arguments[5] > sheet.size) throw new Error("[Sheet] Cannot draw sprite – frame out of range.");
                 index = start_index + arguments[5];
             }
             else index = start_index;
@@ -375,12 +375,12 @@ var Jelli = (function () {
 
             //  Handling arguments and error checking:
 
-            if (!(sheet instanceof Sheet)) throw new Error("(sheet.js) Cannot create sprite – no sheet provided.");
-            if (!(typeof index === "number" || index instanceof Number)) throw new Error("(sheet.js) Cannot create sprite – index must be a number.");
-            else if (index > sheet.size) throw new Error("(sheet.js) Cannot create sprite – index out of range.");
+            if (!(sheet instanceof Sheet)) throw new Error("[Sheet] Cannot create sprite – no sheet provided.");
+            if (!(typeof index === "number" || index instanceof Number)) throw new Error("[Sheet] Cannot create sprite – index must be a number.");
+            else if (index > sheet.size) throw new Error("[Sheet] Cannot create sprite – index out of range.");
             if (arguments.length >= 3) {
-                if (!(typeof arguments[2] === "number" || arguments[2] instanceof Number)) throw new Error("(sheet.js) Cannot create sprite – length must be a number.");
-                else if (index + arguments[2] - 1 >= sheet.size) throw new Error("(sheet.js) Cannot create sprite – length out of range.");
+                if (!(typeof arguments[2] === "number" || arguments[2] instanceof Number)) throw new Error("[Sheet] Cannot create sprite – length must be a number.");
+                else if (index + arguments[2] - 1 >= sheet.size) throw new Error("[Sheet] Cannot create sprite – length out of range.");
                 length = arguments[2];
             }
             else length = 1;
@@ -427,9 +427,9 @@ var Jelli = (function () {
 
             //  Handling arguments and error checking:
 
-            if (!(source instanceof HTMLImageElement || source instanceof SVGImageElement || source instanceof HTMLCanvasElement || (typeof createImageBitmap !== "undefined" && source instanceof ImageBitmap))) throw new Error("(sheet.js) Rendering source must be an image.")
-            if (source instanceof HTMLImageElement && !source.complete) throw new Error("(sheet.js) Rendering source has not finished loading.");
-            if (!(typeof sprite_width === "number" || sprite_width instanceof Number) || !(typeof sprite_height === "number" || sprite_height instanceof Number)) throw new Error("(sheet.js) Widths and heights must be numbers.");
+            if (!(source instanceof HTMLImageElement || source instanceof SVGImageElement || source instanceof HTMLCanvasElement || (typeof createImageBitmap !== "undefined" && source instanceof ImageBitmap))) throw new Error("[Sheet] Rendering source must be an image.")
+            if (source instanceof HTMLImageElement && !source.complete) throw new Error("[Sheet] Rendering source has not finished loading.");
+            if (!(typeof sprite_width === "number" || sprite_width instanceof Number) || !(typeof sprite_height === "number" || sprite_height instanceof Number)) throw new Error("[Sheet] Widths and heights must be numbers.");
 
             //  Getting width and height:
 
@@ -440,8 +440,8 @@ var Jelli = (function () {
 
             //  Error-checking width and height:
 
-            if (!Number.isInteger(source_width / sprite_width)) throw new Error("(sheet.js) Provided width does not perfectly divide source.");
-            if (!Number.isInteger(source_height / sprite_height)) throw new Error("(sheet.js) Provided height does not perfectly divide source.");
+            if (!Number.isInteger(source_width / sprite_width)) throw new Error("[Sheet] Provided width does not perfectly divide source.");
+            if (!Number.isInteger(source_height / sprite_height)) throw new Error("[Sheet] Provided height does not perfectly divide source.");
 
             //  Adding properties:
 
@@ -473,19 +473,19 @@ var Jelli = (function () {
         Sheet.prototype = Object.create(Object.prototype, {
             drawIndex: {
                 value: function(context, index, x, y) {
-                    if (!(context instanceof CanvasRenderingContext2D)) throw new Error("(sheet.js) Cannot draw sprite at index – rendering context must be 2d.");
-                    if (!(typeof index === "number" || index instanceof Number)) throw new Error("(sheet.js) Cannot draw sprite at index – none provided.");
-                    else if (index >= this.size) throw new Error("(sheet.js) Cannot draw sprite at index – index out of range.");
-                    if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("(sheet.js) Cannot draw sprite at index – coordinates must be numbers.");
+                    if (!(context instanceof CanvasRenderingContext2D)) throw new Error("[Sheet] Cannot draw sprite at index – rendering context must be 2d.");
+                    if (!(typeof index === "number" || index instanceof Number)) throw new Error("[Sheet] Cannot draw sprite at index – none provided.");
+                    else if (index >= this.size) throw new Error("[Sheet] Cannot draw sprite at index – index out of range.");
+                    if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Sheet] Cannot draw sprite at index – coordinates must be numbers.");
                     return drawSprite(this, index, context, x, y);
                 }
             },
             getSprite: {
                 value: function (index /*  Optional length  */) {
                     var length;
-                    if (!(typeof index === "number" || index instanceof Number)) throw new Error("(sheet.js) Cannot get sprite – index must be a number.");
+                    if (!(typeof index === "number" || index instanceof Number)) throw new Error("[Sheet] Cannot get sprite – index must be a number.");
                     if (arguments.length >= 2) {
-                        if (!(typeof arguments[1] === "number" || arguments[1] instanceof Number)) throw new Error("(sheet.js) Cannot get sprite – length must be a number.");
+                        if (!(typeof arguments[1] === "number" || arguments[1] instanceof Number)) throw new Error("[Sheet] Cannot get sprite – length must be a number.");
                         length = arguments[1];
                     }
                     else length = 1;
@@ -498,20 +498,20 @@ var Jelli = (function () {
 
         Sheet.draw = function(context, sprite, x, y /*  Optional frame  */) {
             if (!(sprite instanceof Sprite)) throw new Error("(sprite.js) Cannot draw sprite – none provided.");
-            if (!(context instanceof CanvasRenderingContext2D)) throw new Error("(sheet.js) Cannot draw sprite – rendering context must be 2d.");
-            if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("(sheet.js) Cannot draw sprite – coordinates must be numbers.");
+            if (!(context instanceof CanvasRenderingContext2D)) throw new Error("[Sheet] Cannot draw sprite – rendering context must be 2d.");
+            if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Sheet] Cannot draw sprite – coordinates must be numbers.");
             if (arguments.length >= 5) {
-                if (!(typeof arguments[4] === "number" || arguments[4] instanceof Number)) throw new Error("(sheet.js) Cannot draw sprite – frame must be a number.");
+                if (!(typeof arguments[4] === "number" || arguments[4] instanceof Number)) throw new Error("[Sheet] Cannot draw sprite – frame must be a number.");
                 return sprite.draw(context, x, y, arguments[4])
             }
             return sprite.draw(context, x, y)
         }
         Sheet.drawSheetAtIndex = function(context, sheet, index, x, y) {
-            if (!(context instanceof CanvasRenderingContext2D)) throw new Error("(sheet.js) Cannot draw sprite at index – rendering context must be 2d.");
+            if (!(context instanceof CanvasRenderingContext2D)) throw new Error("[Sheet] Cannot draw sprite at index – rendering context must be 2d.");
             if (!(sheet instanceof Sheet)) throw new Error("(sprite.js) Cannot draw sprite – no sheet provided.");
-            if (!(typeof index === "number" || index instanceof Number)) throw new Error("(sheet.js) Cannot draw sprite at index – none provided.");
-            else if (index >= this.size) throw new Error("(sheet.js) Cannot draw sprite at index – index out of range.");
-            if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("(sheet.js) Cannot draw sprite at index – coordinates must be numbers.");
+            if (!(typeof index === "number" || index instanceof Number)) throw new Error("[Sheet] Cannot draw sprite at index – none provided.");
+            else if (index >= this.size) throw new Error("[Sheet] Cannot draw sprite at index – index out of range.");
+            if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Sheet] Cannot draw sprite at index – coordinates must be numbers.");
             return sheet.drawIndex(context, index, x, y);
         }
 
@@ -913,15 +913,12 @@ var Jelli = (function () {
             if (!(typeof tiles_wide === "number" || tiles_wide instanceof Number)) throw new Error("[Tileset] Cannot create map – width of map not specified.");
             decoded_map = decode64(map);
             if (decoded_map.length % tiles_wide !== 0) throw new Error("[Tileset] Cannot create map – provided map not evenly divided by its width.");
-            if (arguments.length >= 6) {
-                if (!(typeof arguments[4] === "number" || arguments[4] instanceof Number) || !(typeof arguments[5] === "number" || arguments[5] instanceof Number)) throw new Error("[Tileset] Cannot create map – starting coordinates must be numbers.");
-                x = arguments[4];
-                y = arguments[5];
-            }
-            else {
-                x = Math.floor((context.canvas.width - tileset.tile_width * tiles_wide) / 2);
-                y = Math.floor((context.canvas.height - tileset.tile_height * (decoded_map.length / tiles_wide)) / 2);
-            }
+            if (arguments[4] !== undefined && !(typeof arguments[4] === "number" || arguments[4] instanceof Number)) throw new Error("[Tileset] Cannot create map – starting coordinates must be numbers.");
+            else x = arguments[4];
+            if (arguments[5] !== undefined && !(typeof arguments[5] === "number" || arguments[5] instanceof Number)) throw new Error("[Tileset] Cannot create map – starting coordinates must be numbers.");
+            else y = arguments[5];
+            if (x === undefined) x = Math.floor((context.canvas.width - tileset.tile_width * tiles_wide) / 2);
+            if (y === undefined) y = Math.floor((context.canvas.height - tileset.tile_height * (decoded_map.length / tiles_wide)) / 2);
             tiles_tall = decoded_map.length / tiles_wide;
 
             //  Making the map:
@@ -950,10 +947,12 @@ var Jelli = (function () {
                     value: tileset
                 },
                 x: {
-                    value: x
+                    value: x,
+                    writable: true
                 },
                 y: {
-                    value: y
+                    value: y,
+                    writable: true
                 }
             });
 
@@ -1092,8 +1091,9 @@ var Jelli = (function () {
                 }
             },
             getMap: {
-                value: function (context, map, tiles_wide) {
-                    return new Map(this, context, map, tiles_wide);
+                value: function (context, map, tiles_wide /*  x, y (if not provided, the map will be centred on the screen)  */) {
+                    var args = [undefined, this].concat(Array.of.apply(undefined, arguments));
+                    return new (Map.bind.apply(Map, args))();
                 }
             },
             getCollision: {
@@ -1371,9 +1371,162 @@ var Jelli = (function () {
         var game;
         var area;
 
+        function Area(game, index) {
+
+            //  Setting up variables:
+
+            var collection;
+            var collection2;
+            var elt;
+            var i;
+            var j;
+            var item;
+            var item2;
+            var init_script;
+            var m;
+            var n;
+            var props;
+            var step_script;
+            var x;
+            var y;
+
+            //  Handling arguments and error checking:
+
+            elt = datadoc.getElementsByClassName("area").item(game.get(index));
+            if (!(elt instanceof Element)) throw new Error("[Jelli] Could not load area – no element found at the specified index.");
+            props = (elt.dataset.vars ? elt.dataset.vars.split(/\s+/) : []);
+
+            //  Getting scripts:
+
+            for (i = 0; i < elt.getElementsByClassName("init").length; i++) {
+                if (!elementMatches(elt.getElementsByClassName("init").item(i), "*.character *")) init_script = elt.getElementsByClassName("init").item(0).text || elt.getElementsByClassName("init").item(0).textContent;
+            }
+            for (i = 0; i < elt.getElementsByClassName("step").length; i++) {
+                if (!elementMatches(elt.getElementsByClassName("step").item(i), "*.character *")) step_script = elt.getElementsByClassName("step").item(0).text || elt.getElementsByClassName("step").item(0).textContent;
+            }
+
+            //  Defining properties:
+
+            Object.defineProperties(this, {  //  Note that $ is not valid in JelliScript variable names
+                character$: {
+                    value: []
+                },
+                elt$: {
+                    value: function () {return elt;}
+                },
+                init$cript: {
+                    value: init_script ? init_script : ""
+                },
+                map$: {
+                    value: []
+                },
+                parent$: {
+                    value: game
+                },
+                step$cript: {
+                    value: step_script ? step_script : ""
+                },
+                x: {
+                    get: function () {return x;},
+                    set: function (value) {
+                        var i;
+                        if (!(typeof value === "number" || value instanceof Number)) throw new Error("[Jelli] Cannot load area – x-coordinate must be a number.");
+                        x = value;
+                        for (i = 0; i < this.map$.length; i++) {
+                            this.map$[i].x = value;
+                        }
+                    }
+                },
+                y: {
+                    get: function () {return y;},
+                    set: function (value) {
+                        var i;
+                        if (!(typeof value === "number" || value instanceof Number)) throw new Error("[Jelli] Cannot load area – y-coordinate must be a number.");
+                        y = value;
+                        for (i = 0; i < this.map$.length; i++) {
+                            this.map$[i].y = value;
+                        }
+                    }
+                }
+            });
+
+            this.declare("clear");
+            this.set("clear", 1);
+            this.declare("index");
+            this.set("index", game.get(index));
+            this.x = 0; //  This initializes the x value (so you can use this.set())
+            this.y = 0; //  This initializes the y value (so you can use this.set())
+
+            for (i = 0; i < props.length; i++) {
+                this.declare(props[i]);
+            }
+
+            //  Loading maps:
+
+            for (collection = elt.getElementsByClassName("map"), i = 0; i < collection.length; i++) {
+                item = collection.item(i);
+                this.map$[i] = tilesets[item.dataset.tileset].getMap(screens[item.dataset.screen].context, item.textContent.trim(), Number(item.dataset.mapwidth), this.get("x"), this.get("y"));
+            }
+
+            //  Loading characters:
+
+            for (collection = elt.getElementsByClassName("character"), i = 0; i < collection.length; i++) {
+                item = collection.item(i);
+                m = {};
+                n = [];
+                if (!datadoc.getElementById(item.dataset.sprites) || datadoc.getElementById(item.dataset.sprites).className !== "sprites") throw new Error("[Jelli] Cannot load character – No sprites provided.");
+                else item2 = datadoc.getElementById(item.dataset.sprites);
+                for (collection2 = item2.getElementsByClassName("sprite"), j = 0; j < collection2.length; j++) {
+                    n.push(sheets[item2.dataset.sheet].getSprite(Number(collection2.item(j).dataset.index), Number(collection2.item(j).dataset.length ? collection2.item(j).dataset.length : 1)));
+                    if (collection2.item(j).hasAttribute("title")) m[collection2.item(j).getAttribute("title")] = j;
+                }
+                this.character$[i] = new Character(this, n, Number(item2.dataset.boxX || n[0].width / 2), Number(item2.dataset.boxY || n[0].height / 2), Number(item2.dataset.boxWidth || n[0].width), Number(item2.dataset.boxHeight || n[0].height), item.dataset.vars ? item.dataset.vars.split(/\s+/) : [], item.getElementsByClassName("init").item(0) ? item.getElementsByClassName("init").item(0).text || item.getElementsByClassName("init").item(0).textContent : "", item.getElementsByClassName("step").item(0) ? item.getElementsByClassName("step").item(0).text || item.getElementsByClassName("step").item(0).textContent : "");
+                for (j in m) {
+                    Object.defineProperty(this.character$[i], j, {value: m[j]});
+                }
+                this.character$[i].init$();
+            }
+
+            //  Initialization:
+
+            this.init$();
+
+        }
+
+        Area.prototype = Object.create(Jelli.prototype, {
+            draw$: {
+                value: function (context) {
+                    var i;
+                    if (this.get("clear")) {
+                        for (i = 0; i < this.map$.length; i++) {
+                            this.map$[i].draw();
+                        }
+                    }
+                    for (i = 0; i < this.character$.length; i++) {
+                        this.character$[i].draw$(screens.mainground.context)
+                    }
+                    this.set("clear", 0);
+                }
+            },
+            init$: {
+                value: function () {
+                    return Jelli.parseScript(this.init$cript, this);
+                }
+            },
+            step$: {
+                value: function () {
+                    var i;
+                    Jelli.parseScript(this.step$cript, this);
+                    for (i = 0; i < area.character$.length; i++) {
+                        area.character$[i].step$()
+                    }
+                }
+            },
+        });
+
         //  Character constructor:
 
-        function Character(sprites, box_x, box_y, box_width, box_height, props, initScript, stepScript) {
+        function Character(area, sprites, box_x, box_y, box_width, box_height, props, initScript, stepScript) {
 
             //  Setting up variables:
 
@@ -1640,6 +1793,21 @@ var Jelli = (function () {
 
         }
 
+        //  Element.matches polyfill:
+
+        function elementMatches(elt, sel) {
+            var i;
+            var matches;
+            if (elt.matches) return elt.matches(sel);
+            else if (elt.msMatchesSelector) return elt.msMatchesSelector(sel);
+            else if (elt.mozMatchesSelector) return elt.mozMatchesSelector(sel);
+            else if (elt.webkitMatchesSelector) return elt.webkitMatchesSelector(sel);
+            matches = (elt.document || elt.ownerDocument).querySelectorAll(sel);
+            i = matches.length;
+            while (--i >= 0 && matches.item(i) !== elt) {}
+            return i > -1;
+        }
+
         //  Event handling:
 
         function handleEvent(e) {
@@ -1726,7 +1894,7 @@ var Jelli = (function () {
                 "resized"
             ].concat(document.documentElement.dataset.vars ? document.documentElement.dataset.vars.split(/\s+/) : []));
             game.set("resized", 1); //  This triggers initial layout
-            Object.defineProperty(game, "loadArea", {value: function (prop) {return loadArea(game.get(prop));}});
+            Object.defineProperty(game, "loadArea", {value: function (prop) {area = new Area(game, prop);}});
 
             //  Screen setup:
 
@@ -1929,89 +2097,17 @@ var Jelli = (function () {
 
         }
 
-        //  Area loading:
-
-        function loadArea(index) {
-
-            //  Setting up variables:
-
-            var collection;
-            var collection2;
-            var elt;
-            var i;
-            var j;
-            var item;
-            var item2;
-            var m;
-            var n;
-
-            //  Handling arguments and error checking:
-
-            if (!(typeof index === "number" || index instanceof Number)) throw new Error("[Jelli] Could not load area – index must be a number.");
-            elt = datadoc.getElementsByClassName("area").item(index);
-            if (!(elt instanceof Element)) throw new Error("[Jelli] Could not load area – no element found at the specified index.");
-
-            //  Area setup:
-
-            area = new Jelli([
-                "clear",
-                "index"
-            ].concat(elt.dataset.vars ? elt.dataset.vars.split(/\s+/) : []), game);
-            area.set("clear", 1);
-            area.set("index", index);
-            Object.defineProperty(area, "elt$", function () {return elt;});
-
-            //  Loading maps:
-
-            area.map$ = [];
-            for (collection = elt.getElementsByClassName("map"), i = 0; i < collection.length; i++) {
-                item = collection.item(i);
-                area.map$[i] = tilesets[item.dataset.tileset].getMap(screens[item.dataset.screen].context, item.textContent.trim(), Number(item.dataset.mapwidth));
-            }
-
-            //  Loading characters:
-
-            area.character$ = [];
-            for (collection = elt.getElementsByClassName("character"), i = 0; i < collection.length; i++) {
-                item = collection.item(i);
-                m = {};
-                n = [];
-                if (!datadoc.getElementById(item.dataset.sprites) || datadoc.getElementById(item.dataset.sprites).className !== "sprites") throw new Error("[Jelli] Cannot load character – No sprites provided.");
-                else item2 = datadoc.getElementById(item.dataset.sprites);
-                for (collection2 = item2.getElementsByClassName("sprite"), j = 0; j < collection2.length; j++) {
-                    n.push(sheets[item2.dataset.sheet].getSprite(Number(collection2.item(j).dataset.index), Number(collection2.item(j).dataset.length ? collection2.item(j).dataset.length : 1)));
-                    if (collection2.item(j).hasAttribute("title")) m[collection2.item(j).getAttribute("title")] = j;
-                }
-                area.character$[i] = new Character(n, Number(item2.dataset.boxX || n[0].width / 2), Number(item2.dataset.boxY || n[0].height / 2), Number(item2.dataset.boxWidth || n[0].width), Number(item2.dataset.boxHeight || n[0].height), item.dataset.vars ? item.dataset.vars.split(/\s+/) : [], item.getElementsByClassName("init").item(0) ? item.getElementsByClassName("init").item(0).text || item.getElementsByClassName("init").item(0).textContent : "", item.getElementsByClassName("step").item(0) ? item.getElementsByClassName("step").item(0).text || item.getElementsByClassName("step").item(0).textContent : "");
-                for (j in m) {
-                    Object.defineProperty(area.character$[i], j, {value: m[j]});
-                }
-                area.character$[i].init$();
-            }
-
-        }
-
         //  Logic function:
 
         function logic() {
-
-            //  Setting up variables:
-
-            var i;
 
             //  Game stepping:
 
             if (document.head.getElementsByClassName("step").item(0)) Jelli.parseScript(document.head.getElementsByClassName("step").item(0).text || document.head.getElementsByClassName("step").item(0).textContent, game);
 
-            //  If no area is loaded:
+            //  Area stepping:
 
-            if (!(area instanceof Jelli)) return;
-
-            //  Stepping the characters:
-
-            for (i = 0; i < area.character$.length; i++) {
-                area.character$[i].step$()
-            }
+            if (area instanceof Jelli) area.step$();
 
             //  setTimeout for that logic:
 
@@ -2023,10 +2119,6 @@ var Jelli = (function () {
 
         function render() {
 
-            //  Setting up variables:
-
-            var i;
-
             //  Managing layout:
 
             if (game.get("resized")) layout();
@@ -2035,23 +2127,9 @@ var Jelli = (function () {
 
             clearScreens();
 
-            //  If no area is loaded:
-
-            if (!(area instanceof Jelli)) return;
-
             //  Drawing the area:
 
-            if (area.get("clear")) {
-                for (i = 0; i < area.map$.length; i++) {
-                    area.map$[i].draw();
-                }
-            }
-
-            //  Drawing the characters:
-
-            for (i = 0; i < area.character$.length; i++) {
-                area.character$[i].draw$(screens.mainground.context)
-            }
+            if (area instanceof Jelli) area.draw$();
 
             //  Drawing the text:
 
@@ -2059,7 +2137,7 @@ var Jelli = (function () {
 
             //  Reset various flags:
 
-            area.set("clear", game.set("resized", 0));
+            game.set("resized", 0);
 
             //  Request new frame:
 
