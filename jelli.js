@@ -1153,13 +1153,18 @@ var Jelli = (function () {
         //  Getting values:
 
         function value(dataobj, prop) {
+            var s;
             if (!(dataobj instanceof Jelli)) throw new Error("[JelliScript] Error: No Jelli object provided.");
             if (!isNaN(Number(prop))) return Number(prop);
+            else if ((typeof prop === "string" || prop instanceof String) && prop.indexOf(".") !== -1) {
+                s = prop.split(".", 2);
+                if (dataobj[s[0]] instanceof Jelli) return value(dataobj[s[0]], s[1]);
+                else throw new Error("[JelliScript] " + s[0] + " did not resolve into a Jelli object");
+            }
             else if ((typeof prop === "string" || prop instanceof String) && prop[0] === "-") {
                 if (typeof dataobj[prop.substr(1)] === "number" || dataobj[prop.substr(1)] instanceof Number) return -dataobj[prop.substr(1)];
             }
-            else if (typeof dataobj[prop] === "number" || dataobj[prop] instanceof Number) return dataobj[prop];
-            else if (dataobj.parent$ instanceof Jelli) return value(dataobj.parent$, prop);
+            else if (typeof dataobj[prop] === "number" || dataobj[prop] instanceof Number || dataobj[prop] instanceof Jelli) return dataobj[prop];
             else throw new Error("[JelliScript] Variable did not resolve into a number.");
         }
 
@@ -1207,10 +1212,33 @@ var Jelli = (function () {
 
             declare: {
                 value: function(prop) {
+                    var s;
                     if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
+                    if (prop.indexOf(".") !== -1) {
+                        s = prop.split(".", 2);
+                        if (this[s[0]] instanceof Jelli) return this[s[0]].declare(s[1]);
+                        else throw new Error("[JelliScript] " + s[0] + " did not resolve into a Jelli object");
+                    }
                     if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
                     if (this.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to declare an already-declared variable.");
                     this[prop] = 0;
+                }
+            },
+            delete: {
+                value: function(prop) {
+                    var s;
+                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
+                    if (prop.indexOf(".") !== -1) {
+                        s = prop.split(".", 2);
+                        if (this[s[0]] instanceof Jelli) return this[s[0]].delete(s[1]);
+                        else throw new Error("[JelliScript] " + s[0] + " did not resolve into a Jelli object");
+                    }
+                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
+                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) {
+                        if (this.parent$ instanceof Jelli) return this.parent$.delete(prop);
+                        else throw new Error("[JelliScript] Attempted to delete a non-declared value.");
+                    }
+                    delete this[prop];
                 }
             },
             get: {
@@ -1220,15 +1248,18 @@ var Jelli = (function () {
             },
             increment: {
                 value: function(prop /*  optional value  */) {
+                    var s;
                     if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
-                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
-                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) {
-                        if (this.parent$ instanceof Jelli) {
-                            if (arguments[1] !== undefined) return this.parent$.increment(prop, value(this, arguments[1]));
-                            else return this.parent$.increment(prop);
+                    if (prop.indexOf(".") !== -1) {
+                        s = prop.split(".", 2);
+                        if (this[s[0]] instanceof Jelli) {
+                            if (arguments[1] === undefined) return this[s[0]].increment(s[1]);
+                            else return this[s[0]].increment(s[1], value(this, arguments[1]));
                         }
-                        else throw new Error("[JelliScript] Attempted to increment a non-declared value.");
+                        else throw new Error("[JelliScript] " + s[0] + " did not resolve into a Jelli object");
                     }
+                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
+                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to increment a non-declared value.");
                     if (arguments[1] !== undefined) return this[prop] += value(this, arguments[1]);
                     else return this[prop]++;
                 }
@@ -1236,21 +1267,23 @@ var Jelli = (function () {
             },
             log: {
                 value: function(prop) {
-                    if ((this[prop] === undefined || !this.hasOwnProperty(prop)) && this.parent$ instanceof Jelli) this.parent$.log(prop);
-                    else console.log(value(this, prop));
+                    console.log(value(this, prop));
                 }
             },
             mod_increment: {
                 value: function(prop, mod /*  optional value  */) {
+                    var s;
                     if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
-                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
-                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) {
-                        if (this.parent$ instanceof Jelli) {
-                            if (arguments[2] !== undefined) return this.parent$.mod_increment(prop, value(this, mod), value(this, arguments[2]));
-                            else return this.parent$.mod_increment(prop, value(this, mod));
+                    if (prop.indexOf(".") !== -1) {
+                        s = prop.split(".", 2);
+                        if (this[s[0]] instanceof Jelli) {
+                            if (arguments[2] === undefined) return this[s[0]].mod_increment(s[1], value(this, mod));
+                            else return this[s[0]].mod_increment(s[1], value(this, mod), value(this, arguments[2]));
                         }
-                        else throw new Error("[JelliScript] Attempted to mod-increment a non-declared value.");
+                        else throw new Error("[JelliScript] " + s[0] + " did not resolve into a Jelli object");
                     }
+                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
+                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to mod-increment a non-declared value.");
                     if (arguments[2] !== undefined) this[prop] += value(this, arguments[2]);
                     else this[prop]++;
                     return this[prop] %= value(this, mod);
@@ -1259,23 +1292,29 @@ var Jelli = (function () {
             },
             set: {
                 value: function(prop, to) {
+                    var s;
                     if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
-                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
-                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) {
-                        if (this.parent$ instanceof Jelli) return this.parent$.set(prop, value(this, to));
-                        else throw new Error("[JelliScript] Attempted to set a non-declared value.");
+                    if (prop.indexOf(".") !== -1) {
+                        s = prop.split(".", 2);
+                        if (this[s[0]] instanceof Jelli) return this[s[0]].set(s[1], value(this, to));
+                        else throw new Error("[JelliScript] " + s[0] + " did not resolve into a Jelli object");
                     }
+                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
+                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to set a non-declared value.");
                     return (this[prop] = value(this, to));
                 }
             },
             void: {
                 value: function(prop) {
+                    var s;
                     if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
-                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
-                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) {
-                        if (this.parent$ instanceof Jelli) this.parent$.void(prop);
-                        else throw new Error("[JelliScript] Attempted to void a non-declared value.");
+                    if (prop.indexOf(".") !== -1) {
+                        s = prop.split(".", 2);
+                        if (this[s[0]] instanceof Jelli) return this[s[0]].void(s[1]);
+                        else throw new Error("[JelliScript] " + s[0] + " did not resolve into a Jelli object");
                     }
+                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
+                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to void a non-declared value.");
                     this[prop] = 0;
                 }
             }
@@ -1290,13 +1329,13 @@ var Jelli = (function () {
             var b;
             var breakdown;
             var condition;
-            var conds_regex = /(-)?\s*\(\s*(-?(?:\w+|[0-9]*\.?[0-9]+))(?:\s*([<>=])\s*(-?(?:\w+|[0-9]*\.?[0-9]+)))?\s*\)/g;
+            var conds_regex = /(-)?\s*\(\s*(-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+))(?:\s*([<>=])\s*(-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)))?\s*\)/g;
             var i;
             var j;
             var line;
             var lines;
             var n;
-            var regex = /^\s*(?:(?:((?:-?\s*\(\s*-?(?:\w+|[0-9]*\.?[0-9]+)(?:\s*[<>=]\s*-?(?:\w+|[0-9]*\.?[0-9]+))?\s*\)\s*)+)?\s*(?:(\w+)\s*(\(\s*-?(?:\w+|[0-9]*\.?[0-9]+)(?:\s*,\s*-?(?:\w+|[0-9]*\.?[0-9]+))*\s*\))?|(\?))|([:;]))|>>.*)\s*$/;
+            var regex = /^\s*(?:(?:((?:-?\s*\(\s*-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)(?:\s*[<>=]\s*-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+))?\s*\)\s*)+)?\s*(?:(\w+(?:\.\w+)*)\s*(\(\s*-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)(?:\s*,\s*-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+))*\s*\))?|(\?))|([:;]))|>>.*)\s*$/;
             var s;
 
             //  Handling arguments and error checking:
@@ -1462,14 +1501,14 @@ var Jelli = (function () {
                 elt$: {
                     value: function () {return elt;}
                 },
+                game: {
+                    value: game
+                },
                 init$cript: {
                     value: init_script ? init_script : ""
                 },
                 map$: {
                     value: []
-                },
-                parent$: {
-                    value: game
                 },
                 step$cript: {
                     value: step_script ? step_script : ""
@@ -1541,8 +1580,6 @@ var Jelli = (function () {
 
             this.init$();
 
-            console.log(this);
-
         }
 
         Area.prototype = Object.create(Jelli.prototype, {
@@ -1597,14 +1634,21 @@ var Jelli = (function () {
 
             //  Handling arguments and error checking:
 
-            if (!(typeof sprites === "object" && sprites instanceof Array)) throw new Error("[Jelli] Cannot create character – sprites must be provided in an array.");
-            if (!(typeof props === "object" && props instanceof Array)) throw new Error("[Jelli] Cannot create character – variables must be provided in an array.");
+            if (!(area instanceof Area)) throw new Error("[Jelli] Cannot create character – no area provided.");
+            if (!(sprites instanceof Array)) throw new Error("[Jelli] Cannot create character – sprites must be provided in an array.");
+            if (!(props instanceof Array)) throw new Error("[Jelli] Cannot create character – variables must be provided in an array.");
             if (!(typeof initScript === "string" || initScript instanceof String)) throw new Error("[Jelli] Cannot create character – No init function provided.");
             if (!(typeof stepScript === "string" || stepScript instanceof String)) throw new Error("[Jelli] Cannot create character – No step function provided.");
 
             //  Defining properties:
 
             Object.defineProperties(this, {  //  Note that $ is not valid in JelliScript variable names
+                area: {
+                    value: area
+                },
+                game: {
+                    value: area.game
+                },
                 height: {
                     value: box_height
                 },
@@ -1616,9 +1660,6 @@ var Jelli = (function () {
                 },
                 origin_y: {
                     value: box_y
-                },
-                parent$: {
-                    value: area
                 },
                 sprite$: {
                     value: sprites
@@ -1680,7 +1721,7 @@ var Jelli = (function () {
             },
             draw$: {
                 value: function (context) {
-                    return this.sprite$[this.get("dir")].draw(context, Math.floor(this.get("x") - this.origin_x + this.parent$.get("x")), Math.floor(this.get("y") - this.origin_y + this.parent$.get("y")), this.get("frame"));
+                    return this.sprite$[this.get("dir")].draw(context, Math.floor(this.get("x") - this.origin_x + this.area.get("x")), Math.floor(this.get("y") - this.origin_y + this.area.get("y")), this.get("frame"));
                 }
             },
             init$: {
@@ -1727,72 +1768,72 @@ var Jelli = (function () {
                         uy = dy;
                     }
                     if (dx > 0) {
-                        for (i = 0; i < area.map$.length; i++) {
-                            k = Math.floor(this.height / (area.map$[i].tile_height / 2)) + 1;
+                        for (i = 0; i < this.area.map$.length; i++) {
+                            k = Math.floor(this.height / (this.area.map$[i].tile_height / 2)) + 1;
                             for (j = 0; j <= k; j++) {
-                                tx = area.map$[i].getCollisionEdge("left", this.get("x") + ux + this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
+                                tx = this.area.map$[i].getCollisionEdge("left", this.get("x") + ux + this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
                                 if (sx === undefined || sx > tx) sx = tx;
                             }
                         }
-                        for (i = 0; i < area.character$.length; i++) {
-                            if (this === area.character$[i]) continue;
-                            k = Math.floor(this.height / area.character$[i].height) + 1;
+                        for (i = 0; i < this.area.character$.length; i++) {
+                            if (this === this.area.character$[i]) continue;
+                            k = Math.floor(this.height / this.area.character$[i].height) + 1;
                             for (j = 0; j <= k; j++) {
-                                tx = area.character$[i].getCollision$Edge("left", this.get("x") + ux + this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
+                                tx = this.area.character$[i].getCollision$Edge("left", this.get("x") + ux + this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
                                 if (sx === undefined || sx > tx) sx = tx;
                             }
                         }
                         if (sx !== undefined) this.set("x", sx - this.width / 2);
                     }
                     else if (dx < 0) {
-                        for (i = 0; i < area.map$.length; i++) {
+                        for (i = 0; i < this.area.map$.length; i++) {
                             k = Math.floor(this.height / (area.map$[i].tile_height / 2)) + 1;
                             for (j = 0; j <= k; j++) {
-                                tx = area.map$[i].getCollisionEdge("right", this.get("x") + ux - this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
+                                tx = this.area.map$[i].getCollisionEdge("right", this.get("x") + ux - this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
                                 if (sx === undefined || sx < tx) sx = tx;
                             }
                         }
-                        for (i = 0; i < area.character$.length; i++) {
-                            if (this === area.character$[i]) continue;
-                            k = Math.floor(this.height / area.character$[i].height) + 1;
+                        for (i = 0; i < this.area.character$.length; i++) {
+                            if (this === this.area.character$[i]) continue;
+                            k = Math.floor(this.height / this.area.character$[i].height) + 1;
                             for (j = 0; j <= k; j++) {
-                                tx = area.character$[i].getCollision$Edge("right", this.get("x") + ux - this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
+                                tx = this.area.character$[i].getCollision$Edge("right", this.get("x") + ux - this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
                                 if (sx === undefined || sx < tx) sx = tx;
                             }
                         }
                         if (sx !== undefined) this.set("x", sx + this.width / 2);
                     }
                     if (dy > 0) {
-                        for (i = 0; i < area.map$.length; i++) {
-                            k = Math.floor(this.width / (area.map$[i].tile_width / 2)) + 1;
+                        for (i = 0; i < this.area.map$.length; i++) {
+                            k = Math.floor(this.width / (this.area.map$[i].tile_width / 2)) + 1;
                             for (j = 0; j <= k; j++) {
-                                ty = area.map$[i].getCollisionEdge("top", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy + this.height / 2);
+                                ty = this.area.map$[i].getCollisionEdge("top", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy + this.height / 2);
                                 if (sy === undefined || sy > ty) sy = ty;
                             }
                         }
-                        for (i = 0; i < area.character$.length; i++) {
-                            if (this === area.character$[i]) continue;
-                            k = Math.floor(this.width / area.character$[i].width) + 1;
+                        for (i = 0; i < this.area.character$.length; i++) {
+                            if (this === this.area.character$[i]) continue;
+                            k = Math.floor(this.width / this.area.character$[i].width) + 1;
                             for (j = 0; j <= k; j++) {
-                                ty = area.character$[i].getCollision$Edge("top", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy + this.height / 2);
+                                ty = this.area.character$[i].getCollision$Edge("top", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy + this.height / 2);
                                 if (sy === undefined || sy > ty) sy = ty;
                             }
                         }
                         if (sy !== undefined) this.set("y", sy - this.height / 2);
                     }
                     else if (dy < 0) {
-                        for (i = 0; i < area.map$.length; i++) {
-                            k = Math.floor(this.width / (area.map$[i].tile_width / 2)) + 1;
+                        for (i = 0; i < this.area.map$.length; i++) {
+                            k = Math.floor(this.width / (this.area.map$[i].tile_width / 2)) + 1;
                             for (j = 0; j <= k; j++) {
-                                ty = area.map$[i].getCollisionEdge("bottom", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy - this.height / 2);
+                                ty = this.area.map$[i].getCollisionEdge("bottom", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy - this.height / 2);
                                 if (sy === undefined || sy < ty) sy = ty;
                             }
                         }
-                        for (i = 0; i < area.character$.length; i++) {
-                            if (this === area.character$[i]) continue;
-                            k = Math.floor(this.width / area.character$[i].width) + 1;
+                        for (i = 0; i < this.area.character$.length; i++) {
+                            if (this === this.area.character$[i]) continue;
+                            k = Math.floor(this.width / this.area.character$[i].width) + 1;
                             for (j = 0; j <= k; j++) {
-                                ty = area.character$[i].getCollision$Edge("bottom", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy - this.height / 2);
+                                ty = this.area.character$[i].getCollision$Edge("bottom", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy - this.height / 2);
                                 if (sy === undefined || sy < ty) sy = ty;
                             }
                         }
