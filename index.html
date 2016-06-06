@@ -141,7 +141,7 @@
                 <img id="tiles" class="tileset" alt="Tiles" src="tilesets/tiles.png"
                      data-sprite-width="16"
                      data-sprite-height="16"
-                     data-collisions="AADAPw=="
+                     data-collisions="///APw=="
                      >
             </section>
             <section>
@@ -253,18 +253,54 @@
                         </script>
                     </div>
                 </div>
-                <div class="area" title="The Sea">
+                <div class="area" title="The Sea"
+                     data-vars="scroll_left scroll_right px tx map0x map1x"
+                     >
                     <span class="map"
                           data-tileset="tiles"
                           data-mapwidth="16"
                           data-screen="background"
-                          >BwcHBwcHBwcHBwcHBwcHBwYGBgYGBgYGBgYGBgYGBgYFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBAQEBAQEBAQEBAQEBAQEBA==</span>
+                          >BwcHBwcHBwcHBwcHBwcHBwYGBgYGBgYGBgYGBgYGBgYFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUBBQUFBQUFBQUFBQUFBQUFBAQEBAQEBAQEBAQEBAQEBA==</span>
+                    <span class="map"
+                          data-tileset="tiles"
+                          data-mapwidth="16"
+                          data-dx="256"
+                          data-screen="background"
+                          >BwcHBwcHBwcHBwcHBwcHBwYGBgYGBgYGBgYGBgYGBgYFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUBBQUFBQUFBQUFBQUFBQUFBAQEBAQEBAQEBAQEBAQEBA==</span>
+                    <script type="text/plain" class="init">
+                        set (map0x, 0)
+                        set (map1x, 256)
+                    </script>
+                    <script type="text/plain" class="step">
+                        set (tx, px)
+                        increment (tx, x)
+                        (tx < 8) set (scroll_left, 1)
+                        (tx > 248) set (scroll_right, 1)
+                        (scroll_left) increment (x, 1)
+                        (scroll_right) increment (x, -1)
+                        set (tx, -x)
+                        (tx < map0x) ?
+                            increment (map0x, -256)
+                            increment (map1x, -256)
+                            setMapOffset (0, map0x)
+                            setMapOffset (1, map1x)
+                        ;
+                        -(tx < map1x) ?
+                            increment (map0x, 256)
+                            increment (map1x, 256)
+                            setMapOffset (0, map0x)
+                            setMapOffset (1, map1x)
+                        ;
+                        set (scroll_left, 0)
+                        set (scroll_right, 0)
+                    </script>
                     <div class="character"
                          data-sprites="jelly"
                          data-vars="timer"
                          >
                         <script type="text/plain" class="init">
                             set (x, 16)
+                            set (px, 16)
                             set (y, 80)
                             set (dir, rt)
                         </script>
@@ -345,6 +381,10 @@
                             >>  This makes the jelly fall a little regardless:
 
                             targetBy (0, .1)
+
+                            >>  This provides the area script with access to the character position:
+
+                            set (px, x)
 
                             >>  This increments the timer if an arrow key is pressed:
 

@@ -1,4 +1,4 @@
-/* jshint asi:true, browser:true */
+/* jshint asi:true, browser:true, devel:true */
 /* globals ImageBitmap */
 
 /*
@@ -896,12 +896,14 @@ var Jelli = (function () {
 
         //  Map constructor:
 
-        function Map(tileset, context, map, tiles_wide /*  x, y (if not provided, the map will be centred on the screen)  */) {
+        function Map(tileset, context, map, tiles_wide /*  x, y (if not provided, the map will be centred on the screen), origin_x, origin_y (if not provided, initialized to (0,0))  */) {
 
             //  Setting up variables:
 
             var decoded_map;
             var tiles_tall;
+            var origin_x;
+            var origin_y;
             var x;
             var y;
 
@@ -917,8 +919,14 @@ var Jelli = (function () {
             else x = arguments[4];
             if (arguments[5] !== undefined && !(typeof arguments[5] === "number" || arguments[5] instanceof Number)) throw new Error("[Tileset] Cannot create map – starting coordinates must be numbers.");
             else y = arguments[5];
+            if (arguments[6] !== undefined && !(typeof arguments[6] === "number" || arguments[6] instanceof Number)) throw new Error("[Tileset] Cannot create map – origin coordinates must be numbers.");
+            else x = arguments[6];
+            if (arguments[7] !== undefined && !(typeof arguments[7] === "number" || arguments[7] instanceof Number)) throw new Error("[Tileset] Cannot create map – origin coordinates must be numbers.");
+            else y = arguments[7];
             if (x === undefined) x = Math.floor((context.canvas.width - tileset.tile_width * tiles_wide) / 2);
             if (y === undefined) y = Math.floor((context.canvas.height - tileset.tile_height * (decoded_map.length / tiles_wide)) / 2);
+            if (origin_x === undefined) origin_x = 0;
+            if (origin_y === undefined) origin_y = 0;
             tiles_tall = decoded_map.length / tiles_wide;
 
             //  Making the map:
@@ -930,6 +938,14 @@ var Jelli = (function () {
                 },
                 map: {
                     value: decoded_map
+                },
+                origin_x: {
+                    value: origin_x,
+                    writable: true
+                },
+                origin_y: {
+                    value: origin_y,
+                    writable: true
                 },
                 tile_height: {
                     value: tileset.tile_height
@@ -962,11 +978,15 @@ var Jelli = (function () {
 
         Map.prototype = Object.create(Object.prototype, {
             collides: {
-                value: function (x, y) {
+                value: function (sx, sy) {
                     var collision;
-                    if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Tileset] Cannot find collision – coordinates must be numbers.");
-                    if (x < this.x || x >= this.x + this.tile_width * this.tiles_wide || y < this.y || y >= this.y + this.tile_height * this.tiles_tall) return 0xF;
-                    collision = this.tileset.getCollision(this.map[Math.floor((x - this.x) / this.tile_width) + Math.floor((y - this.y) / this.tile_height) * this.tiles_wide]);
+                    var x;
+                    var y;
+                    if (!(typeof sx === "number" || sx instanceof Number) || !(typeof sy === "number" || sy instanceof Number)) throw new Error("[Tileset] Cannot find collision – coordinates must be numbers.");
+                    x = sx - this.x;
+                    y = sy - this.y;
+                    if (x < 0 || x >= this.tile_width * this.tiles_wide || y < 0 || y >= this.tile_height * this.tiles_tall) return 0x0;
+                    collision = this.tileset.getCollision(this.map[Math.floor(x / this.tile_width) + Math.floor(y / this.tile_height) * this.tiles_wide]);
                     if ((0 <= x && x % this.tile_width <= this.tile_width / 2) || (0 > x && x % this.tile_width <= -this.tile_width / 2)) {
                         if ((0 <= y && y % this.tile_height <= this.tile_height / 2) || (0 > y && y % this.tile_height <= -this.tile_height / 2)) return collision & 0x1;
                         else return collision & 0x4;
@@ -978,61 +998,65 @@ var Jelli = (function () {
                 }
             },
             getCollisionEdge: {
-                value: function (dir, x, y) {
+                value: function (dir, sx, sy) {
                     var collision;
                     var corner;
                     var i;
                     var ix;
                     var iy;
+                    var x;
+                    var y;
                     if (!(dir == "left" || dir == "top" || dir == "right" || dir == "bottom")) throw new Error("[Tileset] Cannot get collision edge – No proper directional keyword provided.");
-                    if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Tileset] Cannot find collision – coordinates must be numbers.");
-                    if ((x - this.x) % (this.tile_width / 2) === 0 || (y - this.y) % (this.tile_height / 2) === 0) {
+                    if (!(typeof sx === "number" || sx instanceof Number) || !(typeof sy === "number" || sy instanceof Number)) throw new Error("[Tileset] Cannot find collision – coordinates must be numbers.");
+                    x = sx - this.x;
+                    y = sy - this.y;
+                    if (x % (this.tile_width / 2) === 0 || y % (this.tile_height / 2) === 0) {
                         switch (dir) {
                             case "left":
                             case "right":
-                                return x;
+                                return sx;
                             case "top":
                             case "bottom":
-                                return y;
+                                return sy;
                         }
                     }
-                    ix = Math.floor((x - this.x) / this.tile_width);
-                    iy = Math.floor((y - this.y) / this.tile_height);
+                    ix = Math.floor(x / this.tile_width);
+                    iy = Math.floor(y / this.tile_height);
                     i = ix + iy * this.tiles_wide;
-                    if (x < this.x || x >= this.x + this.tile_width * this.tiles_wide || y < this.y || y >= this.y + this.tile_height * this.tiles_tall) {
-                        collision = 0xF;
-                        corner = 0xF;
+                    if (x < 0 || x >= this.tile_width * this.tiles_wide || y < 0 || y >= this.tile_height * this.tiles_tall) {
+                        collision = 0x0;
+                        corner = 0x0;
                     }
                     else {
                         collision = this.tileset.getCollision(this.map[i]);
-                        corner = this.collides(x, y);
+                        corner = this.collides(sx, sy);
                     }
-                    if (!corner && (dir == "left" || dir == "right")) return x;
-                    else if (!corner && (dir == "top" || dir == "bottom")) return y;
+                    if (!corner && (dir == "left" || dir == "right")) return sx;
+                    else if (!corner && (dir == "top" || dir == "bottom")) return sy;
                     switch (dir) {
                         case "left":
-                            if (x > this.x + this.tile_width * this.tiles_wide) return this.x + this.tile_width * this.tiles_wide;
-                            else if (y < this.y || y >= this.y + this.tile_height * this.tiles_tall) return x;
-                            if ((corner == 0x2 && !(collision & 0x1)) || (corner == 0x8 && !(collision & 0x4))) return ix * this.tile_width + this.tile_width / 2;
-                            else return ix * this.tile_width;
+                            if (x > this.tile_width * this.tiles_wide) return this.tile_width * this.tiles_wide + this.x;
+                            else if (y < 0 || y >= this.tile_height * this.tiles_tall) return sx;
+                            if ((corner == 0x2 && !(collision & 0x1)) || (corner == 0x8 && !(collision & 0x4))) return ix * this.tile_width + this.tile_width / 2 + this.x;
+                            else return ix * this.tile_width + this.x;
                             break;
                         case "right":
-                            if (x < this.x) return this.x;
-                            else if (y < this.y || y >= this.y + this.tile_height * this.tiles_tall) return x;
-                            if ((corner == 0x1 && !(collision & 0x2)) || (corner == 0x4 && !(collision & 0x8))) return ix * this.tile_width + this.tile_width / 2;
-                            else return ix * this.tile_width + this.tile_width;
+                            if (x < 0) return this.x;
+                            else if (y < 0 || y >= this.tile_height * this.tiles_tall) return sx;
+                            if ((corner == 0x1 && !(collision & 0x2)) || (corner == 0x4 && !(collision & 0x8))) return ix * this.tile_width + this.tile_width / 2 + this.x;
+                            else return ix * this.tile_width + this.tile_width + this.x;
                             break;
                         case "top":
-                            if (y > this.y + this.tile_height * this.tiles_tall) return this.y + this.tile_height * this.tiles_tall;
-                            else if (x < this.x || x >= this.x + this.tile_width * this.tiles_wide) return y;
-                            if ((corner == 0x4 && !(collision & 0x1)) || (corner == 0x8 && !(collision & 0x2))) return iy * this.tile_height + this.tile_height / 2;
-                            else return iy * this.tile_height;
+                            if (y > this.tile_height * this.tiles_tall) return this.tile_height * this.tiles_tall + this.y;
+                            else if (x < 0 || x >= this.tile_width * this.tiles_wide) return sy;
+                            if ((corner == 0x4 && !(collision & 0x1)) || (corner == 0x8 && !(collision & 0x2))) return iy * this.tile_height + this.tile_height / 2 + this.y;
+                            else return iy * this.tile_height + this.y;
                             break;
                         case "bottom":
-                            if (y < this.y) return this.y;
-                            else if (x < this.x || x >= this.x + this.tile_width * this.tiles_wide) return y;
-                            if ((corner == 0x1 && !(collision & 0x4)) || (corner == 0x2 && !(collision & 0x8))) return iy * this.tile_height + this.tile_height / 2;
-                            else return iy * this.tile_height + this.tile_height;
+                            if (y < 0) return this.y;
+                            else if (x < 0 || x >= this.tile_width * this.tiles_wide) return sy;
+                            if ((corner == 0x1 && !(collision & 0x4)) || (corner == 0x2 && !(collision & 0x8))) return iy * this.tile_height + this.tile_height / 2 + this.y;
+                            else return iy * this.tile_height + this.tile_height + this.y;
                             break;
                     }
                 }
@@ -1041,7 +1065,7 @@ var Jelli = (function () {
                 value: function () {
                     var i;
                     for (i = 0; i < this.map.length; i++) {
-                        this.tileset.draw(this.context, this.map[i], this.x + (i % this.tiles_wide) * this.tile_width, this.y + Math.floor(i / this.tiles_wide) * this.tile_height);
+                        this.tileset.draw(this.context, this.map[i], this.origin_x + this.x + (i % this.tiles_wide) * this.tile_width, this.origin_y + this.y + Math.floor(i / this.tiles_wide) * this.tile_height);
                     }
                 }
             }
@@ -1129,13 +1153,13 @@ var Jelli = (function () {
         //  Getting values:
 
         function value(dataobj, prop) {
-            if (typeof dataobj !== "object") throw new Error("[JelliScript] Error: No data object provided.");
+            if (!(dataobj instanceof Jelli)) throw new Error("[JelliScript] Error: No Jelli object provided.");
             if (!isNaN(Number(prop))) return Number(prop);
             else if ((typeof prop === "string" || prop instanceof String) && prop[0] === "-") {
-                if (typeof dataobj[prop.substr(1)] === "number" || dataobj[prop.substr(1)] instanceof Number) return -dataobj[prop];
+                if (typeof dataobj[prop.substr(1)] === "number" || dataobj[prop.substr(1)] instanceof Number) return -dataobj[prop.substr(1)];
             }
             else if (typeof dataobj[prop] === "number" || dataobj[prop] instanceof Number) return dataobj[prop];
-            else if (typeof dataobj.parent$ === "object") return value(dataobj.parent$, prop);
+            else if (dataobj.parent$ instanceof Jelli) return value(dataobj.parent$, prop);
             else throw new Error("[JelliScript] Variable did not resolve into a number.");
         }
 
@@ -1198,17 +1222,35 @@ var Jelli = (function () {
                 value: function(prop /*  optional value  */) {
                     if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
                     if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
-                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to increment a non-declared value.");
-                    if (arguments[1] !== undefined) this[prop] += value(this, arguments[1]);
+                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) {
+                        if (this.parent$ instanceof Jelli) {
+                            if (arguments[1] !== undefined) return this.parent$.increment(prop, value(this, arguments[1]));
+                            else return this.parent$.increment(prop);
+                        }
+                        else throw new Error("[JelliScript] Attempted to increment a non-declared value.");
+                    }
+                    if (arguments[1] !== undefined) return this[prop] += value(this, arguments[1]);
                     else return this[prop]++;
                 }
 
+            },
+            log: {
+                value: function(prop) {
+                    if ((this[prop] === undefined || !this.hasOwnProperty(prop)) && this.parent$ instanceof Jelli) this.parent$.log(prop);
+                    else console.log(value(this, prop));
+                }
             },
             mod_increment: {
                 value: function(prop, mod /*  optional value  */) {
                     if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
                     if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
-                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to increment a non-declared value.");
+                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) {
+                        if (this.parent$ instanceof Jelli) {
+                            if (arguments[2] !== undefined) return this.parent$.mod_increment(prop, value(this, mod), value(this, arguments[2]));
+                            else return this.parent$.mod_increment(prop, value(this, mod));
+                        }
+                        else throw new Error("[JelliScript] Attempted to mod-increment a non-declared value.");
+                    }
                     if (arguments[2] !== undefined) this[prop] += value(this, arguments[2]);
                     else this[prop]++;
                     return this[prop] %= value(this, mod);
@@ -1219,7 +1261,10 @@ var Jelli = (function () {
                 value: function(prop, to) {
                     if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
                     if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
-                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to set a non-declared value.");
+                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) {
+                        if (this.parent$ instanceof Jelli) return this.parent$.set(prop, value(this, to));
+                        else throw new Error("[JelliScript] Attempted to set a non-declared value.");
+                    }
                     return (this[prop] = value(this, to));
                 }
             },
@@ -1227,7 +1272,10 @@ var Jelli = (function () {
                 value: function(prop) {
                     if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
                     if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
-                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to void a non-declared value.");
+                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) {
+                        if (this.parent$ instanceof Jelli) this.parent$.void(prop);
+                        else throw new Error("[JelliScript] Attempted to void a non-declared value.");
+                    }
                     this[prop] = 0;
                 }
             }
@@ -1282,7 +1330,7 @@ var Jelli = (function () {
                                 b = n ? value(dataobj, condition[2]) >= value(dataobj, condition[4]) : value(dataobj, condition[2]) < value(dataobj, condition[4]);
                                 break;
                             case ">":
-                                b = n ? value(dataobj, condition[2]) <= value(dataobj, condition[4]) : value(dataobj, condition[2] > value(dataobj, condition[4]));
+                                b = n ? value(dataobj, condition[2]) <= value(dataobj, condition[4]) : value(dataobj, condition[2]) > value(dataobj, condition[4]);
                                 break;
                             default:
                                 b = n ? !value(dataobj, condition[2]) : !!value(dataobj, condition[2]);
@@ -1433,8 +1481,9 @@ var Jelli = (function () {
                         if (!(typeof value === "number" || value instanceof Number)) throw new Error("[Jelli] Cannot load area – x-coordinate must be a number.");
                         x = value;
                         for (i = 0; i < this.map$.length; i++) {
-                            this.map$[i].x = value;
+                            this.map$[i].origin_x = value;
                         }
+                        this.set("clear", 1);
                     }
                 },
                 y: {
@@ -1444,8 +1493,9 @@ var Jelli = (function () {
                         if (!(typeof value === "number" || value instanceof Number)) throw new Error("[Jelli] Cannot load area – y-coordinate must be a number.");
                         y = value;
                         for (i = 0; i < this.map$.length; i++) {
-                            this.map$[i].y = value;
+                            this.map$[i].origin_y = value;
                         }
+                        this.set("clear", 1);
                     }
                 }
             });
@@ -1465,7 +1515,7 @@ var Jelli = (function () {
 
             for (collection = elt.getElementsByClassName("map"), i = 0; i < collection.length; i++) {
                 item = collection.item(i);
-                this.map$[i] = tilesets[item.dataset.tileset].getMap(screens[item.dataset.screen].context, item.textContent.trim(), Number(item.dataset.mapwidth), this.get("x"), this.get("y"));
+                this.map$[i] = tilesets[item.dataset.tileset].getMap(screens[item.dataset.screen].context, item.textContent.trim(), Number(item.dataset.mapwidth), isNaN(Number(item.dataset.dx)) ? 0 : Number(item.dataset.dx), isNaN(Number(item.dataset.dy)) ? 0 : Number(item.dataset.dy), this.get("x"), this.get("y"));
             }
 
             //  Loading characters:
@@ -1491,6 +1541,8 @@ var Jelli = (function () {
 
             this.init$();
 
+            console.log(this);
+
         }
 
         Area.prototype = Object.create(Jelli.prototype, {
@@ -1510,7 +1562,18 @@ var Jelli = (function () {
             },
             init$: {
                 value: function () {
+                    if (this.index === 1) window.area = this;
                     return Jelli.parseScript(this.init$cript, this);
+                }
+            },
+            setMapOffset: {
+                value: function (index /*  x, y  */) {
+                    if (arguments[1] !== undefined) {
+                        this.map$[this.get(index)].x = this.get(arguments[1]);
+                    }
+                    if (arguments[2] !== undefined) {
+                        this.map$[this.get(index)].y = this.get(arguments[2]);
+                    }
                 }
             },
             step$: {
@@ -1617,7 +1680,7 @@ var Jelli = (function () {
             },
             draw$: {
                 value: function (context) {
-                    return this.sprite$[this.get("dir")].draw(context, Math.floor(this.get("x") - this.origin_x), Math.floor(this.get("y") - this.origin_y), this.get("frame"));
+                    return this.sprite$[this.get("dir")].draw(context, Math.floor(this.get("x") - this.origin_x + this.parent$.get("x")), Math.floor(this.get("y") - this.origin_y + this.parent$.get("y")), this.get("frame"));
                 }
             },
             init$: {
