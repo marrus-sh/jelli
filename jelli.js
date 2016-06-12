@@ -1008,8 +1008,8 @@ var Jelli = (function () {
                     var y;
                     if (!(dir == "left" || dir == "top" || dir == "right" || dir == "bottom")) throw new Error("[Tileset] Cannot get collision edge – No proper directional keyword provided.");
                     if (!(typeof sx === "number" || sx instanceof Number) || !(typeof sy === "number" || sy instanceof Number)) throw new Error("[Tileset] Cannot find collision – coordinates must be numbers.");
-                    x = sx - this.x;
-                    y = sy - this.y;
+                    x = Math.round(sx - this.x);
+                    y = Math.round(sy - this.y);
                     if (x % (this.tile_width / 2) === 0 || y % (this.tile_height / 2) === 0) {
                         switch (dir) {
                             case "left":
@@ -1711,7 +1711,7 @@ var Jelli = (function () {
                 value: function (dir, x, y) {
                     if (!(dir == "left" || dir == "top" || dir == "right" || dir == "bottom")) throw new Error("[Jelli] Cannot get collision edge – No proper directional keyword provided.");
                     if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Jelli] Cannot find collision – coordinates must be numbers.");
-                    if (x <= this.get("x") - this.width / 2 || x >= this.get("x") + this.width / 2 || y <= this.get("y") - this.height / 2 || y >= this.get("y") + this.height / 2) {
+                    if (x <= Math.round(this.get("x") - this.width / 2) || x >= Math.round(this.get("x") + this.width / 2) || y <= Math.round(this.get("y") - this.height / 2) || y >= Math.round(this.get("y") + this.height / 2)) {
                         switch (dir) {
                             case "left":
                             case "right":
@@ -1723,19 +1723,19 @@ var Jelli = (function () {
                     }
                     switch (dir) {
                         case "left":
-                            return this.get("x") - this.width / 2;
+                            return Math.round(this.get("x") - this.width / 2);
                         case "right":
-                            return this.get("x") + this.width / 2;
+                            return Math.round(this.get("x") + this.width / 2);
                         case "top":
-                            return this.get("y") - this.height / 2;
+                            return Math.round(this.get("y") - this.height / 2);
                         case "bottom":
-                            return this.get("y") + this.height / 2;
+                            return Math.round(this.get("y") + this.height / 2);
                     }
                 }
             },
             draw$: {
                 value: function (context) {
-                    return this.sprite$[this.get("dir")].draw(context, Math.floor(this.get("x") - this.origin_x + this.area.get("x")), Math.floor(this.get("y") - this.origin_y + this.area.get("y")), this.get("frame"));
+                    return this.sprite$[this.get("dir")].draw(context, Math.round(this.get("x") - this.origin_x + this.area.get("x")), Math.round(this.get("y") - this.origin_y + this.area.get("y")), this.get("frame"));
                 }
             },
             init$: {
