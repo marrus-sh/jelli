@@ -1175,11 +1175,14 @@ var Jelli = (function () {
             if (!(dataobj instanceof Jelli)) throw new Error("[JelliScript] Error: No Jelli object provided.");
             if ((typeof prop === "string" || prop instanceof String) && prop.indexOf(".") !== -1) {
                 s = prop.split(".", 2);
-                if (dataobj[s[0]] instanceof Jelli) return run(dataobj[s[0]], s[1]);
+                if (dataobj[s[0]] instanceof Jelli) {
+                    if (arguments[2] instanceof Array) return run(dataobj[s[0]], s[1], arguments[2].map(value.bind(undefined, dataobj)));
+                    else return run(dataobj[s[0]], s[1]);
+                }
                 else throw new Error("[JelliScript] " + s[0] + " did not resolve into a Jelli object");
             }
             else if (dataobj[prop] instanceof Function) {
-                    return arguments[2] ? dataobj[prop].apply(dataobj, arguments[2]) : dataobj[prop]();
+                    return arguments[2] instanceof Array ? dataobj[prop].apply(dataobj, arguments[2]) : dataobj[prop]();
             }
             else throw new Error("[JelliScript] Function name did not resolve into a function.");
         }
