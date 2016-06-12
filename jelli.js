@@ -1168,6 +1168,22 @@ var Jelli = (function () {
             else throw new Error("[JelliScript] Variable did not resolve into a number.");
         }
 
+        //  Running functions:
+
+        function run(dataobj, prop /*  arguments  */) {
+            var s;
+            if (!(dataobj instanceof Jelli)) throw new Error("[JelliScript] Error: No Jelli object provided.");
+            if ((typeof prop === "string" || prop instanceof String) && prop.indexOf(".") !== -1) {
+                s = prop.split(".", 2);
+                if (dataobj[s[0]] instanceof Jelli) return run(dataobj[s[0]], s[1]);
+                else throw new Error("[JelliScript] " + s[0] + " did not resolve into a Jelli object");
+            }
+            else if (dataobj[prop] instanceof Function) {
+                    return arguments[2] ? dataobj[prop].apply(dataobj, arguments[2]) : dataobj[prop]();
+            }
+            else throw new Error("[JelliScript] Function name did not resolve into a function.");
+        }
+
         //  Jelli object constructor:
 
         function Jelli(props /*  Optional parent  */) {
@@ -1423,10 +1439,8 @@ var Jelli = (function () {
                 }
 
                 else if (b && breakdown[2]) {
-                    if (breakdown[3]) {
-                        dataobj[breakdown[2]].apply(dataobj, breakdown[3].substring(1, breakdown[3].length - 1).trim().split(/\s*,\s*/));
-                    }
-                    else dataobj[breakdown[2]].apply(dataobj);
+                    if (breakdown[3]) run(dataobj, breakdown[2], breakdown[3].substring(1, breakdown[3].length - 1).trim().split(/\s*,\s*/))
+                    else run(dataobj, breakdown[2]);
                 }
 
             }
