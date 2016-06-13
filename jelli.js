@@ -1150,195 +1150,201 @@ var Jelli = (function () {
 
     var Jelli = (function () {
 
-        //  Getting values:
+        //  The global JelliScript object
 
-        function value(dataobj, prop) {
-            var s;
-            if (!(dataobj instanceof Jelli)) throw new Error("[JelliScript] Error: No Jelli object provided.");
-            if (!isNaN(Number(prop))) return Number(prop);
-            else if ((typeof prop === "string" || prop instanceof String) && prop.indexOf(".") !== -1) {
-                s = prop.split(".", 2);
-                if (dataobj[s[0]] instanceof Jelli) return value(dataobj[s[0]], s[1]);
-                else throw new Error("[JelliScript] " + s[0] + " did not resolve into a Jelli object");
+        var global = null;
+        var globals = [];
+        var functions = Object.create(Object.prototype, {
+            declare: {
+                value: function(prop) {return modifiers.declare.call(this, value(global ? global : this, prop));}
+            },
+            delete: {
+                value: function(prop) {return modifiers.delete.call(this, value(global ? global : this, prop));}
+            },
+            get: {
+                value: function(prop) {return modifiers.get.call(this, value(global ? global : this, prop));}
+            },
+            increment: {
+                value: function(prop /*  optional value  */) {return arguments[1] !== undefined ? modifiers.increment.call(this, value(global ? global : this, prop), arguments[1]) : modifiers.increment.call(this, value(global ? global : this, prop));}
+            },
+            log: {
+                value: function(prop) {console.log(value(global ? global : this, prop));}
+            },
+            mod_increment: {
+                value: function(prop, mod /*  optional value  */) {return arguments[2] !== undefined ? modifiers.mod_increment.call(this, value(global ? global : this, prop), mod, arguments[2]) : modifiers.mod_increment.call(this, value(global ? global : this, prop), mod);}
+            },
+            set: {
+                value: function(prop, to) {return modifiers.set.call(this, value(global ? global : this, prop), to);}
             }
-            else if ((typeof prop === "string" || prop instanceof String) && prop[0] === "-") {
-                if (typeof dataobj[prop.substr(1)] === "number" || dataobj[prop.substr(1)] instanceof Number) return -dataobj[prop.substr(1)];
-            }
-            else if (typeof dataobj[prop] === "number" || dataobj[prop] instanceof Number || dataobj[prop] instanceof Jelli) return dataobj[prop];
-            else throw new Error("[JelliScript] Variable did not resolve into a number.");
-        }
-
-        //  Running functions:
-
-        function run(dataobj, prop /*  arguments  */) {
-            var s;
-            if (!(dataobj instanceof Jelli)) throw new Error("[JelliScript] Error: No Jelli object provided.");
-            if ((typeof prop === "string" || prop instanceof String) && prop.indexOf(".") !== -1) {
-                s = prop.split(".", 2);
-                if (dataobj[s[0]] instanceof Jelli) {
-                    if (arguments[2] instanceof Array) return run(dataobj[s[0]], s[1], arguments[2].map(value.bind(undefined, dataobj)));
-                    else return run(dataobj[s[0]], s[1]);
-                }
-                else throw new Error("[JelliScript] " + s[0] + " did not resolve into a Jelli object");
-            }
-            else if (dataobj[prop] instanceof Function) {
-                    return arguments[2] instanceof Array ? dataobj[prop].apply(dataobj, arguments[2]) : dataobj[prop]();
-            }
-            else throw new Error("[JelliScript] Function name did not resolve into a function.");
-        }
-
-        //  Jelli object constructor:
-
-        function Jelli(props /*  Optional parent  */) {
-
-            //  Setting up variables:
-
-            var i;
-
-            //  Handling arguments and error checking:
-
-            if (typeof props === undefined) return;
-            if (typeof props === "string" || props instanceof String) {
-                this.declare(props);
-                return;
-            }
-            if (typeof props !== "object") throw new Error("[JelliScript] Data object property names must be provided in an object or an array.");
-
-            //  Declaring properties:
-
-            if (props instanceof Array) {
-                for (i = 0; i < props.length; i++) {
-                    if (!(typeof props[i] === "string" || props[i] instanceof String)) throw new Error("[JelliScript] Data object property names must be provided as strings.");
-                    this.declare(props[i]);
-                }
-            }
-            else {
-                for (i in props) {
-                    this.declare(i);
-                    this.set(i, props[i]);
-                }
-            }
-
-            //  Setting up parent:
-
-            if (arguments[1] instanceof Jelli) this.parent$ = arguments[1];
-
-        }
-
-        //  Jelli object prototyping:
-
-        Jelli.prototype = Object.create(Object.prototype, {
-
+        });
+        var modifiers = Object.create(Object.prototype, {
             declare: {
                 value: function(prop) {
-                    var s;
                     if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
-                    if (prop.indexOf(".") !== -1) {
-                        s = prop.split(".", 2);
-                        if (this[s[0]] instanceof Jelli) return this[s[0]].declare(s[1]);
-                        else throw new Error("[JelliScript] " + s[0] + " did not resolve into a Jelli object");
-                    }
-                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
-                    if (this.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to declare an already-declared variable.");
-                    this[prop] = 0;
+                    if (!/^\w+$/.test(prop)) throw new Error("[JelliScript] Syntax error: Disallowed characters used in a variable name.");
+                    if (this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to declare an already-declared variable.");
+                    this.__properties__[prop] = 0;
                 }
             },
             delete: {
                 value: function(prop) {
-                    var s;
                     if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
-                    if (prop.indexOf(".") !== -1) {
-                        s = prop.split(".", 2);
-                        if (this[s[0]] instanceof Jelli) return this[s[0]].delete(s[1]);
-                        else throw new Error("[JelliScript] " + s[0] + " did not resolve into a Jelli object");
-                    }
-                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
-                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) {
-                        if (this.parent$ instanceof Jelli) return this.parent$.delete(prop);
-                        else throw new Error("[JelliScript] Attempted to delete a non-declared value.");
-                    }
-                    delete this[prop];
+                    if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) delete this.__properties__[prop];
                 }
             },
             get: {
-                value: function(prop) {
-                    return value(this, prop);
-                }
+                value: function(prop) {return value(this, prop);}
             },
             increment: {
                 value: function(prop /*  optional value  */) {
                     var s;
                     if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
-                    if (prop.indexOf(".") !== -1) {
-                        s = prop.split(".", 2);
-                        if (this[s[0]] instanceof Jelli) {
-                            if (arguments[1] === undefined) return this[s[0]].increment(s[1]);
-                            else return this[s[0]].increment(s[1], value(this, arguments[1]));
-                        }
-                        else throw new Error("[JelliScript] " + s[0] + " did not resolve into a Jelli object");
-                    }
                     if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
-                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to increment a non-declared value.");
-                    if (arguments[1] !== undefined) return this[prop] += value(this, arguments[1]);
-                    else return this[prop]++;
-                }
-
-            },
-            log: {
-                value: function(prop) {
-                    console.log(value(this, prop));
+                    if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to increment a non-declared value.");
+                    if (arguments[1] !== undefined) return this.__properties__[prop] += value(global ? global : this, arguments[1]);
+                    else return this.__properties__[prop]++;
                 }
             },
             mod_increment: {
                 value: function(prop, mod /*  optional value  */) {
                     var s;
                     if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
-                    if (prop.indexOf(".") !== -1) {
-                        s = prop.split(".", 2);
-                        if (this[s[0]] instanceof Jelli) {
-                            if (arguments[2] === undefined) return this[s[0]].mod_increment(s[1], value(this, mod));
-                            else return this[s[0]].mod_increment(s[1], value(this, mod), value(this, arguments[2]));
-                        }
-                        else throw new Error("[JelliScript] " + s[0] + " did not resolve into a Jelli object");
-                    }
                     if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
-                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to mod-increment a non-declared value.");
-                    if (arguments[2] !== undefined) this[prop] += value(this, arguments[2]);
-                    else this[prop]++;
-                    return this[prop] %= value(this, mod);
+                    if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to mod-increment a non-declared value.");
+                    if (arguments[2] !== undefined) this.__properties__[prop] += value(global ? global : this, arguments[2]);
+                    else this.__properties__[prop]++;
+                    return this.__properties__[prop] %= value(global ? global : this, mod);
                 }
-
             },
             set: {
                 value: function(prop, to) {
                     var s;
                     if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
-                    if (prop.indexOf(".") !== -1) {
-                        s = prop.split(".", 2);
-                        if (this[s[0]] instanceof Jelli) return this[s[0]].set(s[1], value(this, to));
-                        else throw new Error("[JelliScript] " + s[0] + " did not resolve into a Jelli object");
-                    }
                     if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
-                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to set a non-declared value.");
-                    return (this[prop] = value(this, to));
-                }
-            },
-            void: {
-                value: function(prop) {
-                    var s;
-                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
-                    if (prop.indexOf(".") !== -1) {
-                        s = prop.split(".", 2);
-                        if (this[s[0]] instanceof Jelli) return this[s[0]].void(s[1]);
-                        else throw new Error("[JelliScript] " + s[0] + " did not resolve into a Jelli object");
-                    }
-                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
-                    if (this[prop] === undefined || !this.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to void a non-declared value.");
-                    this[prop] = 0;
+                    if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to set a non-declared value.");
+                    return (this.__properties__[prop] = value(global ? global : this, to));
                 }
             }
-
         });
+
+        //  Copying object properties:
+
+        function copyOnto(from, to) {
+            var collection;
+            var i;
+            for (collection = Object.getOwnPropertyNames(from), i = 0; i < collection.length; i++) {
+                Object.defineProperty(to, collection[i], Object.getOwnPropertyDescriptor(from, collection[i]));
+            }
+        }
+
+        //  Running functions:
+
+        function run(dataobj, fn /*  arguments list  */) {
+            var s;
+            if (!(dataobj instanceof Jelli)) throw new Error("[JelliScript] Error: No Jelli object provided.");
+            if ((typeof fn === "string" || fn instanceof String) && fn.indexOf(".") !== -1) {
+                s = fn.indexOf(".");
+                if (dataobj.__properties__[fn.substr(0, s)] instanceof Jelli) return arguments[2] instanceof Array ? run(dataobj.__properties__[fn.substr(0, s)], fn.substr(s + 1), arguments[2]) : run(dataobj.__properties__[fn.substr(0, s)], fn.substr(s + 1));
+                else if (dataobj.__modifiers__[fn.substr(s + 1)] instanceof Function) return arguments[2] instanceof Array ? dataobj.__modifiers__[fn.substr(s + 1)].apply(dataobj, [fn.substr(0, s)].concat(arguments[2])) : dataobj.__modifiers__[fn.substr(s + 1)].call(dataobj, fn.substr(0, s));
+                else throw new Error("[JelliScript] Function name did not resolve into a function.");
+            }
+            else if (dataobj.__functions__[fn] instanceof Function) return arguments[2] instanceof Array ? dataobj.__functions__[fn].apply(dataobj, arguments[2]) : dataobj.__functions__[fn].call(dataobj);
+            else throw new Error("[JelliScript] Function name did not resolve into a function.");
+        }
+
+        //  Getting values:
+
+        function value(dataobj, prop) {
+            var s;
+            if (!(dataobj instanceof Jelli)) throw new Error("[JelliScript] Error: No Jelli object provided.");
+            if (prop instanceof Jelli) return prop;
+            else if (!isNaN(Number(prop))) return Number(prop);
+            else if ((typeof prop === "string" || prop instanceof String) && prop[0] === '"' && prop[prop.length - 1] === '"' && !/^"|[^\\]"/.test(prop.substring(1, prop.length - 1))) {
+                return prop.substring(1, prop.length - 1);
+            }
+            else if ((typeof prop === "string" || prop instanceof String) && prop[0] === "-") {
+                s = value(dataobj, prop.substr(1));
+                if (typeof s === "number" || s instanceof Number) return -s;
+            }
+            else if ((typeof prop === "string" || prop instanceof String) && prop.indexOf(".") !== -1) {
+                s = prop.indexOf(".");
+                if (dataobj.__properties__[prop.substr(0, s)] instanceof Jelli) return value(dataobj.__properties__[prop.substr(0, s)], prop.substr(s + 1));
+                else throw new Error("[JelliScript] " + prop.substr(0, s) + " did not resolve into a Jelli object");
+            }
+            else if (typeof dataobj.__properties__[prop] === "number" || dataobj.__properties__[prop] instanceof Number || dataobj.__properties__[prop] instanceof Jelli) return dataobj.__properties__[prop];
+            else if (dataobj.__properties__[prop] === undefined) throw new Error("[JelliScript] Variable is undefined.");
+            else return String(dataobj.__properties__[prop]);
+        }
+
+        //  Jelli object constructor:
+
+        function Jelli(props, fns, mods) {
+
+            //  Setting up variables:
+
+            var i;
+
+            //  Setting up the properties object:
+
+            Object.defineProperties(this, {
+                __functions__: {value: {}},
+                __modifiers__: {value: {}},
+                __properties__: {value: {}}
+            });
+
+            //  Declaring properties:
+
+            if (props) this.defineProperties(props);
+            copyOnto(functions, this.__functions__);
+            if (fns) this.defineFunctions(fns);
+            copyOnto(modifiers, this.__modifiers__);
+            if (mods) this.defineModifiers(mods);
+
+        }
+
+        //  Jelli object prototyping:
+
+        Jelli.prototype = Object.create(Object.prototype, {
+            declare: {value: modifiers.declare},
+            defineFunction: {value: function(name, fn) {
+                if (typeof fns !== "object") throw new Error("[JelliScript] Functions must be provided in a properties object.");
+                Object.defineProperty(this.__functions__, name, fn);
+            }},
+            defineFunctions: {value: function (fns) {
+                if (typeof fns !== "object") throw new Error("[JelliScript] Functions must be provided in a properties object.");
+                Object.defineProperties(this.__functions__, fns);
+            }},
+            defineModifier: {value: function(name, mod) {
+                if (typeof mods !== "object") throw new Error("[JelliScript] Modifiers must be provided in a properties object.");
+                Object.defineProperty(this.__modifiers__, name, mod);
+            }},
+            defineModifiers: {value: function (mods) {
+                if (typeof mods !== "object") throw new Error("[JelliScript] Modifiers must be provided in a properties object.");
+                Object.defineProperties(this.__modifiers__, mods);
+            }},
+            defineProperty: {value: function(name, prop) {
+                if (typeof props !== "object") throw new Error("[JelliScript] Properties must be provided in a properties object.");
+                Object.defineProperty(this.__property__, name, prop);
+            }},
+            defineProperties: {value: function (props) {
+                if (typeof props !== "object") throw new Error("[JelliScript] Properties must be provided in a properties object.");
+                Object.defineProperties(this.__properties__, props);
+            }},
+            delete: {value: modifiers.delete},
+            get: {value: modifiers.get},
+            increment: {value: modifiers.increment},
+            log: {value: functions.log},
+            mod_increment: {value: modifiers.mod_increment},
+            set: {value: modifiers.set}
+        });
+
+        //  The global Jelli object:
+
+        Object.defineProperty(Jelli, "global", {
+            get: function () {return global;}
+        });
+
+        //  JelliScript parsing:
 
         Jelli.parseScript = function (script, dataobj) {
 
@@ -1348,19 +1354,23 @@ var Jelli = (function () {
             var b;
             var breakdown;
             var condition;
-            var conds_regex = /(-)?\s*\(\s*(-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+))(?:\s*([<>=])\s*(-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)))?\s*\)/g;
+            var conds_regex = /(-)?\s*\(\s*(-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)|"(?:\\"|[^"])*?")(?:\s*([<>=])\s*(-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+))|"(?:\\"|[^"])*?")?\s*\)/g;
+            var unset_global;
             var i;
             var j;
             var line;
             var lines;
             var n;
-            var regex = /^\s*(?:(?:((?:-?\s*\(\s*-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)(?:\s*[<>=]\s*-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+))?\s*\)\s*)+)?\s*(?:(\w+(?:\.\w+)*)\s*(\(\s*-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)(?:\s*,\s*-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+))*\s*\))?|(\?))|([:;]))|>>.*)\s*$/;
+            var regex = /^\s*(?:(?:((?:-?\s*\(\s*(?:-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)|"(?:\\"|[^"])*?")(?:\s*[<>=]\s*(?:-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)|"(?:\\"|[^"])*?"))?\s*\)\s*?)+)?\s*(?:(\w+(?:\.\w+)*)\s*(\(\s*(?:-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)|"(?:\\"|[^"])*?")(?:\s*,\s*(?:-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)|"(?:\\"|[^"])*?"))*\s*\))?|(\?))|([:;]))|>>.*)\s*$/;
             var s;
 
             //  Handling arguments and error checking:
 
             if (!(typeof script === "string" || script instanceof String)) throw new Error("[JelliScript] Error: Script is not a string.");
             if (typeof dataobj !== "object") throw new Error("[JelliScript] Error: No data object provided.");
+
+            globals.push(global);
+            global = dataobj;
 
             //  Parsing the lines:
 
@@ -1442,11 +1452,13 @@ var Jelli = (function () {
                 }
 
                 else if (b && breakdown[2]) {
-                    if (breakdown[3]) run(dataobj, breakdown[2], breakdown[3].substring(1, breakdown[3].length - 1).trim().split(/\s*,\s*/))
+                    if (breakdown[3]) run(dataobj, breakdown[2], breakdown[3].substring(1, breakdown[3].length - 1).trim().split(/\s*,\s*/));
                     else run(dataobj, breakdown[2]);
                 }
 
             }
+
+            global = globals.pop();
 
         }
 
@@ -1473,24 +1485,18 @@ var Jelli = (function () {
         var tilesets = Object.create(null);
 
         var game;
-        var area;
+
+        //  Area constructor:
 
         function Area(game, index) {
 
             //  Setting up variables:
 
             var collection;
-            var collection2;
             var elt;
             var i;
-            var j;
             var item;
-            var item2;
-            var init_script;
-            var m;
-            var n;
             var props;
-            var step_script;
             var x;
             var y;
 
@@ -1498,63 +1504,69 @@ var Jelli = (function () {
 
             elt = datadoc.getElementsByClassName("area").item(game.get(index));
             if (!(elt instanceof Element)) throw new Error("[Jelli] Could not load area – no element found at the specified index.");
-            props = (elt.dataset.vars ? elt.dataset.vars.split(/\s+/) : []);
 
-            //  Getting scripts:
+            //  Sets up the area as a Jelli:
 
-            for (i = 0; i < elt.getElementsByClassName("init").length; i++) {
-                if (!elementMatches(elt.getElementsByClassName("init").item(i), "*.character *")) init_script = elt.getElementsByClassName("init").item(0).text || elt.getElementsByClassName("init").item(0).textContent;
-            }
-            for (i = 0; i < elt.getElementsByClassName("step").length; i++) {
-                if (!elementMatches(elt.getElementsByClassName("step").item(i), "*.character *")) step_script = elt.getElementsByClassName("step").item(0).text || elt.getElementsByClassName("step").item(0).textContent;
-            }
+            Jelli.call(this, {
+                characters: {value: new Characters(this)},
+                game: {value: game},
+                x: {
+                    get: function () {return x;},
+                    set: (function (value) {
+                        var i;
+                        if (!(typeof value === "number" || value instanceof Number)) throw new Error("[Jelli] Cannot load area – x-coordinate must be a number.");
+                        x = value;
+                        for (i = 0; i < this.maps.length; i++) {
+                            this.maps[i].origin_x = value;
+                        }
+                        this.set("clear", 1);
+                    }).bind(this)
+                },
+                y: {
+                    get: function () {return y;},
+                    set: (function (value) {
+                        var i;
+                        if (!(typeof value === "number" || value instanceof Number)) throw new Error("[Jelli] Cannot load area – y-coordinate must be a number.");
+                        y = value;
+                        for (i = 0; i < this.maps.length; i++) {
+                            this.maps[i].origin_y = value;
+                        }
+                        this.set("clear", 1);
+                    }).bind(this)
+                }
+            }, {
+                setMapOffset: {value: this.setMapOffset}
+            });
 
             //  Defining properties:
 
-            Object.defineProperties(this, {  //  Note that $ is not valid in JelliScript variable names
-                character$: {
-                    value: []
-                },
-                elt$: {
-                    value: function () {return elt;}
+            Object.defineProperties(this, {
+                characters: {
+                    value: this.__properties__.characters
                 },
                 game: {
                     value: game
                 },
-                init$cript: {
-                    value: init_script ? init_script : ""
+                initScript: {
+                    value: elt.getElementsByClassName("init").item(0) ? elt.getElementsByClassName("init").item(0).text || elt.getElementsByClassName("init").item(0).textContent : ""
                 },
-                map$: {
+                maps: {
                     value: []
                 },
-                step$cript: {
-                    value: step_script ? step_script : ""
+                stepScript: {
+                    value: elt.getElementsByClassName("step").item(0) ? elt.getElementsByClassName("step").item(0).text || elt.getElementsByClassName("step").item(0).textContent : ""
                 },
                 x: {
-                    get: function () {return x;},
-                    set: function (value) {
-                        var i;
-                        if (!(typeof value === "number" || value instanceof Number)) throw new Error("[Jelli] Cannot load area – x-coordinate must be a number.");
-                        x = value;
-                        for (i = 0; i < this.map$.length; i++) {
-                            this.map$[i].origin_x = value;
-                        }
-                        this.set("clear", 1);
-                    }
+                    get: function () {return this.__properties__.x;},
+                    set: function (n) {this.__properties__.x = n;}
                 },
                 y: {
-                    get: function () {return y;},
-                    set: function (value) {
-                        var i;
-                        if (!(typeof value === "number" || value instanceof Number)) throw new Error("[Jelli] Cannot load area – y-coordinate must be a number.");
-                        y = value;
-                        for (i = 0; i < this.map$.length; i++) {
-                            this.map$[i].origin_y = value;
-                        }
-                        this.set("clear", 1);
-                    }
+                    get: function () {return this.__properties__.y;},
+                    set: function (n) {this.__properties__.y = n;}
                 }
             });
+
+            //  Initializing properties:
 
             this.declare("clear");
             this.set("clear", 1);
@@ -1563,79 +1575,75 @@ var Jelli = (function () {
             this.x = 0; //  This initializes the x value (so you can use this.set())
             this.y = 0; //  This initializes the y value (so you can use this.set())
 
-            for (i = 0; i < props.length; i++) {
-                this.declare(props[i]);
+            //   Adding dataset variables:
+
+            for (collection = (elt.dataset.vars ? elt.dataset.vars.split(/\s+/) : []), i = 0; i < collection.length; i++) {
+                this.declare(collection[i]);
             }
 
             //  Loading maps:
 
             for (collection = elt.getElementsByClassName("map"), i = 0; i < collection.length; i++) {
                 item = collection.item(i);
-                this.map$[i] = tilesets[item.dataset.tileset].getMap(screens[item.dataset.screen].context, item.textContent.trim(), Number(item.dataset.mapwidth), isNaN(Number(item.dataset.dx)) ? 0 : Number(item.dataset.dx), isNaN(Number(item.dataset.dy)) ? 0 : Number(item.dataset.dy), this.get("x"), this.get("y"));
+                this.maps[i] = tilesets[item.dataset.tileset].getMap(screens[item.dataset.screen].context, item.textContent.trim(), Number(item.dataset.mapwidth), isNaN(Number(item.dataset.dx)) ? 0 : Number(item.dataset.dx), isNaN(Number(item.dataset.dy)) ? 0 : Number(item.dataset.dy), this.get("x"), this.get("y"));
             }
+
 
             //  Loading characters:
 
-            for (collection = elt.getElementsByClassName("character"), i = 0; i < collection.length; i++) {
-                item = collection.item(i);
-                m = {};
-                n = [];
-                if (!datadoc.getElementById(item.dataset.sprites) || datadoc.getElementById(item.dataset.sprites).className !== "sprites") throw new Error("[Jelli] Cannot load character – No sprites provided.");
-                else item2 = datadoc.getElementById(item.dataset.sprites);
-                for (collection2 = item2.getElementsByClassName("sprite"), j = 0; j < collection2.length; j++) {
-                    n.push(sheets[item2.dataset.sheet].getSprite(Number(collection2.item(j).dataset.index), Number(collection2.item(j).dataset.length ? collection2.item(j).dataset.length : 1)));
-                    if (collection2.item(j).hasAttribute("title")) m[collection2.item(j).getAttribute("title")] = j;
-                }
-                this.character$[i] = new Character(this, n, Number(item2.dataset.boxX || n[0].width / 2), Number(item2.dataset.boxY || n[0].height / 2), Number(item2.dataset.boxWidth || n[0].width), Number(item2.dataset.boxHeight || n[0].height), item.dataset.vars ? item.dataset.vars.split(/\s+/) : [], item.getElementsByClassName("init").item(0) ? item.getElementsByClassName("init").item(0).text || item.getElementsByClassName("init").item(0).textContent : "", item.getElementsByClassName("step").item(0) ? item.getElementsByClassName("step").item(0).text || item.getElementsByClassName("step").item(0).textContent : "");
-                for (j in m) {
-                    Object.defineProperty(this.character$[i], j, {value: m[j]});
-                }
-                this.character$[i].init$();
+            for (collection = (elt.dataset.characters ? elt.dataset.characters.split(/\s+/) : []), i = 0; i < collection.length; i++) {
+                this.characters.loadCharacter(collection[i]);
             }
+
+            //  Area freezing:
+
+            Object.freeze(this);
 
             //  Initialization:
 
-            this.init$();
+            this.init();
 
         }
 
+        //  Area prototyping:
+
         Area.prototype = Object.create(Jelli.prototype, {
-            draw$: {
+            draw: {
                 value: function (context) {
                     var i;
                     if (this.get("clear")) {
-                        for (i = 0; i < this.map$.length; i++) {
-                            this.map$[i].draw();
+                        for (i = 0; i < this.maps.length; i++) {
+                            this.maps[i].draw();
                         }
                     }
-                    for (i = 0; i < this.character$.length; i++) {
-                        this.character$[i].draw$(screens.mainground.context)
+                    for (i in this.characters.__properties__) {
+                        this.characters.__properties__[i].draw(screens.mainground.context)
                     }
                     this.set("clear", 0);
                 }
             },
-            init$: {
+            init: {
                 value: function () {
                     if (this.index === 1) window.area = this;
-                    return Jelli.parseScript(this.init$cript, this);
+                    return Jelli.parseScript(this.initScript, this);
                 }
             },
             setMapOffset: {
                 value: function (index /*  x, y  */) {
                     if (arguments[1] !== undefined) {
-                        this.map$[this.get(index)].x = this.get(arguments[1]);
+                        this.maps[this.get(index)].x = this.get(arguments[1]);
                     }
                     if (arguments[2] !== undefined) {
-                        this.map$[this.get(index)].y = this.get(arguments[2]);
+                        this.maps[this.get(index)].y = this.get(arguments[2]);
                     }
                 }
             },
-            step$: {
+            step: {
                 value: function () {
                     var i;
-                    Jelli.parseScript(this.step$cript, this);
-                    for (i = 0; i < area.character$.length; i++) {
-                        area.character$[i].step$()
+                    Jelli.parseScript(this.stepScript, this);
+                    for (i in this.characters.__properties__) {
+                        this.characters.__properties__[i].step();
                     }
                 }
             },
@@ -1657,42 +1665,36 @@ var Jelli = (function () {
             if (!(typeof initScript === "string" || initScript instanceof String)) throw new Error("[Jelli] Cannot create character – No init function provided.");
             if (!(typeof stepScript === "string" || stepScript instanceof String)) throw new Error("[Jelli] Cannot create character – No step function provided.");
 
+            //  Sets up the character as a Jelli:
+
+            Jelli.call(this, {
+                area: {value: area},
+                game: {value: area.game},
+                height: {value: box_height},
+                origin_x: {value: box_x},
+                origin_y: {value: box_y},
+                sprite_height: {value: sprites[0].height},
+                sprite_width: {value: sprites[0].width},
+                width: {value: box_width}
+            }, {
+                target: {value: this.target},
+                targetBy: {value: this.targetBy}
+            });
+
             //  Defining properties:
 
-            Object.defineProperties(this, {  //  Note that $ is not valid in JelliScript variable names
-                area: {
-                    value: area
-                },
-                game: {
-                    value: area.game
-                },
-                height: {
-                    value: box_height
-                },
-                init$cript: {
-                    value: initScript
-                },
-                origin_x: {
-                    value: box_x
-                },
-                origin_y: {
-                    value: box_y
-                },
-                sprite$: {
-                    value: sprites
-                },
-                sprite_height: {
-                    value: sprites[0].height
-                },
-                sprite_width: {
-                    value: sprites[0].width
-                },
-                step$cript: {
-                    value: stepScript
-                },
-                width: {
-                    value: box_width
-                }
+            Object.defineProperties(this, {  //  None of the above are writable, so I can just re-use their sources below
+                area: {value: area},
+                game: {value: area.game},
+                height: {value: box_height},
+                initScript: {value: initScript},
+                origin_x: {value: box_x},
+                origin_y: {value: box_y},
+                sprites: {value: sprites},
+                sprite_height: {value: sprites[0].height},
+                sprite_width: {value: sprites[0].width},
+                stepScript: {value: stepScript},
+                width: {value: box_width}
             });
 
             this.declare("x");
@@ -1707,10 +1709,21 @@ var Jelli = (function () {
                 this.declare(props[i]);
             }
 
+            //  Character freezing:
+
+            Object.freeze(this);
+
         }
 
+        //  Character prototyping:
+
         Character.prototype = Object.create(Jelli.prototype, {
-            getCollision$Edge: {
+            draw: {
+                value: function (context) {
+                    return this.sprites[this.get("dir")].draw(context, Math.round(this.get("x") - this.origin_x + this.area.get("x")), Math.round(this.get("y") - this.origin_y + this.area.get("y")), this.get("frame"));
+                }
+            },
+            getCollisionEdge: {
                 value: function (dir, x, y) {
                     if (!(dir == "left" || dir == "top" || dir == "right" || dir == "bottom")) throw new Error("[Jelli] Cannot get collision edge – No proper directional keyword provided.");
                     if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Jelli] Cannot find collision – coordinates must be numbers.");
@@ -1736,19 +1749,14 @@ var Jelli = (function () {
                     }
                 }
             },
-            draw$: {
-                value: function (context) {
-                    return this.sprite$[this.get("dir")].draw(context, Math.round(this.get("x") - this.origin_x + this.area.get("x")), Math.round(this.get("y") - this.origin_y + this.area.get("y")), this.get("frame"));
+            init: {
+                value: function () {
+                    return Jelli.parseScript(this.initScript, this);
                 }
             },
-            init$: {
+            step: {
                 value: function () {
-                    return Jelli.parseScript(this.init$cript, this);
-                }
-            },
-            step$: {
-                value: function () {
-                    return Jelli.parseScript(this.step$cript, this);
+                    return Jelli.parseScript(this.stepScript, this);
                 }
             },
             target: {
@@ -1771,7 +1779,7 @@ var Jelli = (function () {
                     var sy;
                     var tx;
                     var ty;
-                    if (!(area instanceof Jelli)) throw new Error("[Jelli] Could not target character – No area has been loaded");
+                    if (!(this.area instanceof Area)) throw new Error("[Jelli] Could not target character – character is not associated with an area.");
                     dx = this.get(dx);
                     dy = this.get(dy);
                     d = Math.sqrt(dx * dx + dy * dy);
@@ -1785,72 +1793,72 @@ var Jelli = (function () {
                         uy = dy;
                     }
                     if (dx > 0) {
-                        for (i = 0; i < this.area.map$.length; i++) {
-                            k = Math.floor(this.height / (this.area.map$[i].tile_height / 2)) + 1;
+                        for (i = 0; i < this.area.maps.length; i++) {
+                            k = Math.floor(this.height / (this.area.maps[i].tile_height / 2)) + 1;
                             for (j = 0; j <= k; j++) {
-                                tx = this.area.map$[i].getCollisionEdge("left", this.get("x") + ux + this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
+                                tx = this.area.maps[i].getCollisionEdge("left", this.get("x") + ux + this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
                                 if (sx === undefined || sx > tx) sx = tx;
                             }
                         }
-                        for (i = 0; i < this.area.character$.length; i++) {
-                            if (this === this.area.character$[i]) continue;
-                            k = Math.floor(this.height / this.area.character$[i].height) + 1;
+                        for (i in this.area.characters.__properties__) {
+                            if (this === this.area.characters.__properties__[i]) continue;
+                            k = Math.floor(this.height / this.area.characters.__properties__[i].height) + 1;
                             for (j = 0; j <= k; j++) {
-                                tx = this.area.character$[i].getCollision$Edge("left", this.get("x") + ux + this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
+                                tx = this.area.characters.__properties__[i].getCollisionEdge("left", this.get("x") + ux + this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
                                 if (sx === undefined || sx > tx) sx = tx;
                             }
                         }
                         if (sx !== undefined) this.set("x", sx - this.width / 2);
                     }
                     else if (dx < 0) {
-                        for (i = 0; i < this.area.map$.length; i++) {
-                            k = Math.floor(this.height / (area.map$[i].tile_height / 2)) + 1;
+                        for (i = 0; i < this.area.maps.length; i++) {
+                            k = Math.floor(this.height / (this.area.maps[i].tile_height / 2)) + 1;
                             for (j = 0; j <= k; j++) {
-                                tx = this.area.map$[i].getCollisionEdge("right", this.get("x") + ux - this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
+                                tx = this.area.maps[i].getCollisionEdge("right", this.get("x") + ux - this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
                                 if (sx === undefined || sx < tx) sx = tx;
                             }
                         }
-                        for (i = 0; i < this.area.character$.length; i++) {
-                            if (this === this.area.character$[i]) continue;
-                            k = Math.floor(this.height / this.area.character$[i].height) + 1;
+                        for (i in this.area.characters.__properties__) {
+                            if (this === this.area.characters.__properties__[i]) continue;
+                            k = Math.floor(this.height / this.area.characters.__properties__[i].height) + 1;
                             for (j = 0; j <= k; j++) {
-                                tx = this.area.character$[i].getCollision$Edge("right", this.get("x") + ux - this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
+                                tx = this.area.characters.__properties__[i].getCollisionEdge("right", this.get("x") + ux - this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
                                 if (sx === undefined || sx < tx) sx = tx;
                             }
                         }
                         if (sx !== undefined) this.set("x", sx + this.width / 2);
                     }
                     if (dy > 0) {
-                        for (i = 0; i < this.area.map$.length; i++) {
-                            k = Math.floor(this.width / (this.area.map$[i].tile_width / 2)) + 1;
+                        for (i = 0; i < this.area.maps.length; i++) {
+                            k = Math.floor(this.width / (this.area.maps[i].tile_width / 2)) + 1;
                             for (j = 0; j <= k; j++) {
-                                ty = this.area.map$[i].getCollisionEdge("top", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy + this.height / 2);
+                                ty = this.area.maps[i].getCollisionEdge("top", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy + this.height / 2);
                                 if (sy === undefined || sy > ty) sy = ty;
                             }
                         }
-                        for (i = 0; i < this.area.character$.length; i++) {
-                            if (this === this.area.character$[i]) continue;
-                            k = Math.floor(this.width / this.area.character$[i].width) + 1;
+                        for (i in this.area.characters.__properties__) {
+                            if (this === this.area.characters.__properties__[i]) continue;
+                            k = Math.floor(this.width / this.area.characters.__properties__[i].width) + 1;
                             for (j = 0; j <= k; j++) {
-                                ty = this.area.character$[i].getCollision$Edge("top", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy + this.height / 2);
+                                ty = this.area.characters.__properties__[i].getCollisionEdge("top", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy + this.height / 2);
                                 if (sy === undefined || sy > ty) sy = ty;
                             }
                         }
                         if (sy !== undefined) this.set("y", sy - this.height / 2);
                     }
                     else if (dy < 0) {
-                        for (i = 0; i < this.area.map$.length; i++) {
-                            k = Math.floor(this.width / (this.area.map$[i].tile_width / 2)) + 1;
+                        for (i = 0; i < this.area.maps.length; i++) {
+                            k = Math.floor(this.width / (this.area.maps[i].tile_width / 2)) + 1;
                             for (j = 0; j <= k; j++) {
-                                ty = this.area.map$[i].getCollisionEdge("bottom", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy - this.height / 2);
+                                ty = this.area.maps[i].getCollisionEdge("bottom", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy - this.height / 2);
                                 if (sy === undefined || sy < ty) sy = ty;
                             }
                         }
-                        for (i = 0; i < this.area.character$.length; i++) {
-                            if (this === this.area.character$[i]) continue;
-                            k = Math.floor(this.width / this.area.character$[i].width) + 1;
+                        for (i in this.area.characters.__properties__) {
+                            if (this === this.area.characters.__properties__[i]) continue;
+                            k = Math.floor(this.width / this.area.characters.__properties__[i].width) + 1;
                             for (j = 0; j <= k; j++) {
-                                ty = this.area.character$[i].getCollision$Edge("bottom", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy - this.height / 2);
+                                ty = this.area.characters.__properties__[i].getCollisionEdge("bottom", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy - this.height / 2);
                                 if (sy === undefined || sy < ty) sy = ty;
                             }
                         }
@@ -1858,6 +1866,108 @@ var Jelli = (function () {
                     }
                 }
             }
+        });
+
+        //  Characters constructor:
+
+        function Characters(area) {
+
+            Jelli.call(this, {
+                area: {value: area}
+            }, {
+                loadCharacter: {value: function (prop) {return this.area.loadCharacter.call(this, this.get(prop));}}
+            }, {
+                loadCharacter: {value: this.loadCharacter}
+            });
+
+            //  Characters freezing:
+
+            Object.freeze(this);
+
+        }
+
+        //  Characters prototyping:
+
+        Characters.prototype = Object.create(Jelli.prototype, {
+            loadCharacter: {
+                value: function (name) {
+                    var character;
+                    var collection;
+                    var elt;
+                    var i;
+                    var item;
+                    var m;
+                    var n;
+                    elt = datadoc.getElementById(name);
+                    if (!elt) return;
+                    if (!datadoc.getElementById(elt.dataset.sprites) || datadoc.getElementById(elt.dataset.sprites).className !== "sprites") throw new Error("[Jelli] Cannot load character – No sprites provided.");
+                    else item = datadoc.getElementById(elt.dataset.sprites);
+                    m = {};
+                    n = [];
+                    for (collection = item.getElementsByClassName("sprite"), i = 0; i < collection.length; i++) {
+                        n.push(sheets[item.dataset.sheet].getSprite(Number(collection.item(i).dataset.index), Number(collection.item(i).dataset.length ? collection.item(i).dataset.length : 1)));
+                        if (collection.item(i).hasAttribute("title")) m[collection.item(i).getAttribute("title")] = i;
+                    }
+                    this.declare(name);
+                    this.set(name, character = new Character(this.get("area"), n, Number(item.dataset.boxX || n[0].width / 2), Number(item.dataset.boxY || n[0].height / 2), Number(item.dataset.boxWidth || n[0].width), Number(item.dataset.boxHeight || n[0].height), elt.dataset.vars ? elt.dataset.vars.split(/\s+/) : [], elt.getElementsByClassName("init").item(0) ? elt.getElementsByClassName("init").item(0).text || elt.getElementsByClassName("init").item(0).textContent : "", elt.getElementsByClassName("step").item(0) ? elt.getElementsByClassName("step").item(0).text || elt.getElementsByClassName("step").item(0).textContent : ""));
+                    for (i in m) {
+                        Object.defineProperty(character.__properties__, i, {value: m[i]});
+                    }
+                    character.init();
+                }
+            }
+        });
+
+        //  Game constructor:
+
+        function Game() {
+
+            //  Setting up variables:
+
+            var collection;
+            var i;
+            var Key;
+
+            //  Sets up the game as a Jelli:
+
+            Jelli.call(this, {
+                key_start: {get: function() {return Number(control.isActive("start"));}},
+                key_select: {get: function() {return Number(control.isActive("select"));}},
+                key_menu: {get: function() {return Number(control.isActive("menu"));}},
+                key_look: {get: function() {return Number(control.isActive("look"));}},
+                key_exit: {get: function() {return Number(control.isActive("exit"));}},
+                key_action: {get: function() {return Number(control.isActive("action"));}},
+                key_up: {get: function() {return Number(control.isActive("up"));}},
+                key_down: {get: function() {return Number(control.isActive("down"));}},
+                key_left: {get: function() {return Number(control.isActive("left"));}},
+                key_right: {get: function() {return Number(control.isActive("right"));}},
+                touch: {get: function() {return 0;}}
+            }, {
+                loadArea: {value: this.loadArea}
+            });
+
+            //  Setting properties:
+
+            this.declare("area");
+            this.declare("resized");
+            this.set("resized", 1);
+
+            //   Adding dataset variables:
+
+            for (collection = (document.documentElement.dataset.vars ? document.documentElement.dataset.vars.split(/\s+/) : []), i = 0; i < collection.length; i++) {
+                this.declare(collection[i]);
+            }
+
+            //  Game freezing:
+
+            Object.freeze(this);
+
+        }
+
+        //  Game prototyping:
+
+        Game.prototype = Object.create(Jelli.prototype, {
+            loadArea: {value: function (prop) {this.set("area", new Area(game, prop));}}
         });
 
         //  Clear the screens:
@@ -1873,7 +1983,7 @@ var Jelli = (function () {
             for (i in screens) {
                 switch (screens[i].canvas.dataset.type) {
                     case "area":
-                        if (area.get("clear")) screens[i].clear();
+                        if (game.area instanceof Area && game.area.get("clear")) screens[i].clear();
                         break;
                     case "animation":
                         screens[i].clear();
@@ -1912,21 +2022,6 @@ var Jelli = (function () {
                 "\xF0\xF1\xF2\xF3\xF4\xF5\xF6\xF7\xF8\xF9\x49\xFA\xFB\xFC\xFD\xFE\xFF"
             )//.draw(screens.textground.context, 0, 0);
 
-        }
-
-        //  Element.matches polyfill:
-
-        function elementMatches(elt, sel) {
-            var i;
-            var matches;
-            if (elt.matches) return elt.matches(sel);
-            else if (elt.msMatchesSelector) return elt.msMatchesSelector(sel);
-            else if (elt.mozMatchesSelector) return elt.mozMatchesSelector(sel);
-            else if (elt.webkitMatchesSelector) return elt.webkitMatchesSelector(sel);
-            matches = (elt.document || elt.ownerDocument).querySelectorAll(sel);
-            i = matches.length;
-            while (--i >= 0 && matches.item(i) !== elt) {}
-            return i > -1;
         }
 
         //  Event handling:
@@ -2009,14 +2104,6 @@ var Jelli = (function () {
             document.body = document.createElement("body");
             document.body.style.visibility = "hidden";
 
-            //  JelliScript setup:
-
-            game = new Jelli([
-                "resized"
-            ].concat(document.documentElement.dataset.vars ? document.documentElement.dataset.vars.split(/\s+/) : []));
-            game.set("resized", 1); //  This triggers initial layout
-            Object.defineProperty(game, "loadArea", {value: function (prop) {area = new Area(game, prop);}});
-
             //  Screen setup:
 
             for (collection = datadoc.getElementsByTagName("canvas"), i = 0; i < collection.length; i++) {
@@ -2041,19 +2128,9 @@ var Jelli = (function () {
             control.add("start").addKeys("start", 0x51, "U+0051", "KeyQ", "Q", "q").linkElement("start", "jo-ctrl-strt");
             control.add("up").addKeys("up", 0x26, "ArrowUp", "Up").linkElement("up", "jo-ctrl-uprw");
 
-            Object.defineProperties(game, {
-                "key_start": {get: function() {return Number(control.isActive("start"));}},
-                "key_select": {get: function() {return Number(control.isActive("select"));}},
-                "key_menu": {get: function() {return Number(control.isActive("menu"));}},
-                "key_look": {get: function() {return Number(control.isActive("look"));}},
-                "key_exit": {get: function() {return Number(control.isActive("exit"));}},
-                "key_action": {get: function() {return Number(control.isActive("action"));}},
-                "key_up": {get: function() {return Number(control.isActive("up"));}},
-                "key_down": {get: function() {return Number(control.isActive("down"));}},
-                "key_left": {get: function() {return Number(control.isActive("left"));}},
-                "key_right": {get: function() {return Number(control.isActive("right"));}},
-                "touch": {get: function() {return 0;}}
-            });
+            //  Game creation:
+
+            game = new Game();
 
             //  Sprite sheet setup:
 
@@ -2228,7 +2305,7 @@ var Jelli = (function () {
 
             //  Area stepping:
 
-            if (area instanceof Jelli) area.step$();
+            if (game.get("area") instanceof Area) game.get("area").step();
 
             //  setTimeout for that logic:
 
@@ -2250,7 +2327,7 @@ var Jelli = (function () {
 
             //  Drawing the area:
 
-            if (area instanceof Jelli) area.draw$();
+            if (game.get("area") instanceof Area) game.get("area").draw();
 
             //  Drawing the text:
 

@@ -12,7 +12,7 @@
             >>  Area 0 is the splash screen (see below)
 
             loadArea (0)
-            set (splashing, 1)
+            splashing.set (1)
 
         </script>
         <script type="text/plain" class="step">
@@ -22,7 +22,7 @@
             (splashing) ?
                 (key_start)(key_action)(touch) ?
                     loadArea (1)
-                    set (splashing, 0)
+                    splashing.set (0)
                 ;
             ;
 
@@ -192,21 +192,7 @@
             </section>
         </section>
         <section>
-            <h2>Areas</h2>
-            <p>
-                Areas are used to generate a static background and/or foreground on which a section of the game takes place.
-                Areas are given the class <code>area</code>, and should contain maps of the class <code>map</code> and characters of the class <code>character</code>.
-                Areas are referred to by index:
-                The first area you define will have index 0, and the numbers will increase from there.
-                (It makes sense to have area 0 be a splash screen).
-            </p>
-            <p>
-                Maps tell the game how to render tiles on the screen.
-                They are Base64-encoded strings, which should decode into 8-bit binary data.
-                Each byte provides the index of the appropriate tile for that square in the map grid.
-                The <code>data-tileset</code> attribute identifies the tileset from which to draw the tile, and the <code>data-mapwidth</code> attribute should tell how many tiles the map is wide.
-                The <code>data-canvas</code> attribute should identify the canvas on which the map should be drawn.
-            </p>
+            <h2>Characters</h2>
             <p>
                 Characters are used to insert any interactive element&mdash;including NPCs and player characters, but also potentially other elements, like doors&mdash;into the game.
                 They have the class <code>character</code>, and should a couple of scripts.
@@ -224,87 +210,22 @@
                 Characters are destroyed when an area is unloaded, and the values of their variables are not stored.
             </p>
             <section>
-                <h3>Some areas:</h3>
-                <div class="area" title="Splash screen">
-                    <span class="map"
-                          data-tileset="tiles"
-                          data-mapwidth="16"
-                          data-screen="background"
-                          >AAEAAQABAAEAAQABAAEAAQIDAgMCAwIDAgMCAwIDAgMAAQABAAEAAQABAAEAAQABAgMCAwIDAgMCAwIDAgMCAwABAAEAAQABAAEAAQABAAECAwIDAgMCAwIDAgMCAwIDAAEAAQABAAEAAQABAAEAAQIDAgMCAwIDAgMCAwIDAgMAAQABAAEAAQABAAEAAQABAgMCAwIDAgMCAwIDAgMCAw==</span>
-                    <div class="character"
-                         data-sprites="jelly"
-                         data-vars="timer"
-                         >
-                        <script type="text/plain" class="init">
-                            set (x, 88)
-                            set (y, 120)
-                            set (dir, lf)
-                        </script>
-                        <script type="text/plain" class="step">
-                            (game.key_down) set (y, 136)
-                            (game.key_up) set (y, 120)
-                            (game.key_action) ?
-                                set (dir, rt)
-                            :
-                                set (dir, lf)
-                            ;
-                            mod_increment (timer, 10)
-                            -(timer) mod_increment (frame, 2)
-                        </script>
-                    </div>
-                </div>
-                <div class="area" title="The Sea"
-                     data-vars="scroll_left scroll_right px tx map0x map1x"
+                <h3>Some characters:</h3>
+                <div id="pointer" class="character"
+                     data-sprites="jelly"
+                     data-vars="timer"
                      >
-                    <span class="map"
-                          data-tileset="tiles"
-                          data-mapwidth="16"
-                          data-screen="background"
-                          >BwcHBwcHBwcHBwcHBwcHBwYGBgYGBgYGBgYGBgYGBgYFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUBBQUFBQUFBQUFBQUFBQUFBAQEBAQEBAQEBAQEBAQEBA==</span>
-                    <span class="map"
-                          data-tileset="tiles"
-                          data-mapwidth="16"
-                          data-dx="256"
-                          data-screen="background"
-                          >BwcHBwcHBwcHBwcHBwcHBwYGBgYGBgYGBgYGBgYGBgYFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUBBQUFBQUFBQUFBQUFBQUFBAQEBAQEBAQEBAQEBAQEBA==</span>
+                </div>
+                <div id="player" class="character"
+                     data-sprites="jelly"
+                     data-vars="timer"
+                     >
                     <script type="text/plain" class="init">
-                        set (map0x, 0)
-                        set (map1x, 256)
+                            x.set (16)
+                            y.set (80)
+                            dir.set (rt)
                     </script>
                     <script type="text/plain" class="step">
-                        set (tx, px)
-                        increment (tx, x)
-                        (tx < 8) set (scroll_left, 1)
-                        (tx > 248) set (scroll_right, 1)
-                        (scroll_left) increment (x, 1)
-                        (scroll_right) increment (x, -1)
-                        set (tx, -x)
-                        (tx < map0x) ?
-                            increment (map0x, -256)
-                            increment (map1x, -256)
-                            setMapOffset (0, map0x)
-                            setMapOffset (1, map1x)
-                        ;
-                        -(tx < map1x) ?
-                            increment (map0x, 256)
-                            increment (map1x, 256)
-                            setMapOffset (0, map0x)
-                            setMapOffset (1, map1x)
-                        ;
-                        set (scroll_left, 0)
-                        set (scroll_right, 0)
-                    </script>
-                    <div class="character"
-                         data-sprites="jelly"
-                         data-vars="timer"
-                         >
-                        <script type="text/plain" class="init">
-                            set (x, 16)
-                            set (area.px, 16)
-                            set (y, 80)
-                            set (dir, rt)
-                        </script>
-                        <script type="text/plain" class="step">
 
                             >>  This controls jelly movement:
 
@@ -373,28 +294,119 @@
                             >>  This controls the direction the jelly is facing:
 
                             (game.key_left) ?
-                                -(game.key_right) set (dir, lf)
+                                -(game.key_right) dir.set (lf)
                             :
-                                (game.key_right) set (dir, rt)
+                                (game.key_right) dir.set (rt)
                             ;
 
                             >>  This makes the jelly fall a little regardless:
 
                             targetBy (0, .1)
 
-                            >>  This provides the area script with access to the character position:
-
-                            set (area.px, x)
-
                             >>  This increments the timer if an arrow key is pressed:
 
                             (game.key_up)(game.key_down)(game.key_left)(game.key_right) ?
-                                mod_increment (timer, 15)
-                                -(timer) mod_increment (frame, 2)
+                                timer.mod_increment (15)
+                                -(timer) frame.mod_increment (2)
                             ;
 
-                        </script>
-                    </div>
+                    </script>
+                </div>
+            </section>
+        </section>
+        <section>
+            <h2>Areas</h2>
+            <p>
+                Areas are used to generate a static background and/or foreground on which a section of the game takes place.
+                Areas are given the class <code>area</code>, and should contain maps of the class <code>map</code>.
+                Areas are referred to by index:
+                The first area you define will have index 0, and the numbers will increase from there.
+                (It makes sense to have area 0 be a splash screen).
+            </p>
+            <p>
+                Maps tell the game how to render tiles on the screen.
+                They are Base64-encoded strings, which should decode into 8-bit binary data.
+                Each byte provides the index of the appropriate tile for that square in the map grid.
+                The <code>data-tileset</code> attribute identifies the tileset from which to draw the tile, and the <code>data-mapwidth</code> attribute should tell how many tiles the map is wide.
+                The <code>data-canvas</code> attribute should identify the canvas on which the map should be drawn.
+            </p>
+            <p>
+                Characters can be loaded by referencing their <code>id</code>s in the <code>data-characters</code> attribute, or by passing a string to the <code>loadCharacters</code> function.
+                This creates a new JelliScript object at <code>characters.character_id</code>.
+                Characters can be deleted with the <code>characters.delete</code> function.
+            </p>
+            <section>
+                <h3>Some areas:</h3>
+                <div class="area" title="Splash screen"
+                     >
+                    I have used this area to demonstrate programmatic character loading and managing.
+                    <span class="map"
+                          data-tileset="tiles"
+                          data-mapwidth="16"
+                          data-screen="background"
+                          >AAEAAQABAAEAAQABAAEAAQIDAgMCAwIDAgMCAwIDAgMAAQABAAEAAQABAAEAAQABAgMCAwIDAgMCAwIDAgMCAwABAAEAAQABAAEAAQABAAECAwIDAgMCAwIDAgMCAwIDAAEAAQABAAEAAQABAAEAAQIDAgMCAwIDAgMCAwIDAgMAAQABAAEAAQABAAEAAQABAgMCAwIDAgMCAwIDAgMCAw==</span>
+                    <script type="text/plain" class="init">
+                        characters.pointer.loadCharacter
+                        characters.pointer.x.set (88)
+                        characters.pointer.y.set (120)
+                        characters.pointer.dir.set (characters.pointer.lf)
+                    </script>
+                    <script type="text/plain" class="step">
+                        (game.key_down) characters.pointer.y.set (136)
+                        (game.key_up) characters.pointer.y.set (120)
+                        (game.key_action) ?
+                            characters.pointer.dir.set (characters.pointer.rt)
+                        :
+                            characters.pointer.dir.set (characters.pointer.lf)
+                        ;
+                        characters.pointer.timer.mod_increment (10)
+                        -(characters.pointer.timer) characters.pointer.frame.mod_increment (2)
+                    </script>
+                </div>
+                <div class="area" title="The Sea"
+                     data-characters="player"
+                     data-vars="scroll_left scroll_right tx map0x map1x"
+                     >
+                    It is often way easier to define character code in their own init and step functions, however, as demonstrated here.
+                    Then you can load the characters with the <code>data-characters</code> attribute.
+                    <span class="map"
+                          data-tileset="tiles"
+                          data-mapwidth="16"
+                          data-screen="background"
+                          >BwcHBwcHBwcHBwcHBwcHBwYGBgYGBgYGBgYGBgYGBgYFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUBBQUFBQUFBQUFBQUFBQUFBAQEBAQEBAQEBAQEBAQEBA==</span>
+                    <span class="map"
+                          data-tileset="tiles"
+                          data-mapwidth="16"
+                          data-dx="256"
+                          data-screen="background"
+                          >BwcHBwcHBwcHBwcHBwcHBwYGBgYGBgYGBgYGBgYGBgYFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUBBQUFBQUFBQUFBQUFBQUFBAQEBAQEBAQEBAQEBAQEBA==</span>
+                    <script type="text/plain" class="init">
+                        map0x.set (0)
+                        map1x.set (256)
+                    </script>
+                    <script type="text/plain" class="step">
+                        tx.set (characters.player.x)
+                        tx.increment (x)
+                        (tx < 8) scroll_left.set (1)
+                        (tx > 248) scroll_right.set (1)
+                        (scroll_left) x.increment (1)
+                        (scroll_right) x.increment (-1)
+                        tx.set (-x)
+                        (tx < map0x) ?
+                            map0x.increment (-256)
+                            map1x.increment (-256)
+                            setMapOffset (0, map0x)
+                            setMapOffset (1, map1x)
+                        ;
+                        -(tx < map1x) ?
+                            map0x.increment (256)
+                            map1x.increment (256)
+                            setMapOffset (0, map0x)
+                            setMapOffset (1, map1x)
+                        ;
+                        scroll_left.set (0)
+                        scroll_right.set (0)
+                    </script>
                 </div>
             </section>
         </section>
