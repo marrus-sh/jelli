@@ -624,7 +624,7 @@ var Game = (function () {
                     get: function () {
                         var i;
                         var n;
-                        for (n = 0, i = 0; this[i].delIndex === this[i].length; i++) {
+                        for (n = 0, i = 0; i < this.height && this[i].delIndex === this[i].length; i++) {
                             n += this[i].length;
                         }
                         if (i < this.height) return n + this[i].delIndex;
@@ -645,7 +645,7 @@ var Game = (function () {
                     get: function () {
                         var i;
                         var n;
-                        for (n = 0, i = 0; this[i].drawIndex === this[i].length; i++) {
+                        for (n = 0, i = 0; i < this.height && this[i].drawIndex === this[i].length; i++) {
                             n += this[i].length;
                         }
                         if (i < this.height) return n + this[i].drawIndex;
@@ -669,7 +669,7 @@ var Game = (function () {
                     get: function () {
                         var i;
                         var n;
-                        for (n = 0, i = 0; this[i].index === this[i].length; i++) {
+                        for (n = 0, i = 0; i < this.height && this[i].index === this[i].length; i++) {
                             n += this[i].length;
                         }
                         if (i < this.height) return n + this[i].index;
@@ -723,8 +723,10 @@ var Game = (function () {
             advance: {
                 value: function (/*  Optional amount  */) {
                     if (arguments[0]) this.index += arguments[0];
-                    if (this.index < this.delIndex) this.delIndex = this.index;
                     else this.index++;
+                    if (this.index < 0) this.index = this.length;
+                    if (this.index > this.length) this.index = this.length;
+                    if (this.delIndex > this.index) this.delIndex = this.index;
                 }
             },
             clear: {
@@ -818,8 +820,10 @@ var Game = (function () {
             advance: {
                 value: function (/*  Optional amount  */) {
                     if (arguments[0]) this.index += arguments[0];
-                    if (this.index < this.delIndex) this.delIndex = this.index;
                     else this.index++;
+                    if (this.index < 0) this.index = this.length;
+                    if (this.index > this.length) this.index = this.length;
+                    if (this.delIndex > this.index) this.delIndex = this.index;
                 }
             },
             clear: {
@@ -830,22 +834,22 @@ var Game = (function () {
             },
             draw: {
                 value: function (context, x, y) {
-                    var i;
                     if (!(context instanceof CanvasRenderingContext2D)) throw new Error("(letters.js) Cannot draw string – provided context must be 2d.");
                     if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("(letters.js) Cannot draw string – coordinates must be numbers.");
                     if (this.drawIndex > this.length) this.drawIndex = this.length;
-                    if (this.index < this.delIndex) this.delIndex = this.index;
+                    if (this.drawIndex < 0) this.drawIndex = 0;
+                    if (this.delIndex > this.index) this.delIndex = this.index;
+                    if (this.delIndex < 0) this.delIndex = 0;
                     if (this.drawIndex > this.delIndex) {
                         context.clearRect(x + this.delIndex * (this.letters.letter_width + 1), y, (this.drawIndex - this.delIndex) * (this.letters.letter_width + 1), this.letters.letter_height + 1);
                         this.drawIndex = this.delIndex;
                     }
-                    for (i = this.drawIndex; i < this.length && i < this.index; i++) {
-                        if (!(this.item(i) instanceof Letter)) throw new Error("(letters.js) String index did not resolve to a letter.");
-                        this.item(i).draw(context, x, y);
-                        x += this.letters.letter_width + 1;
+                    while (this.drawIndex < this.length && this.drawIndex < this.index) {
+                        if (!(this.item(this.drawIndex) instanceof Letter)) throw new Error("(letters.js) String index did not resolve to a letter.");
+                        this.item(this.drawIndex).draw(context, x + this.drawIndex * (this.letters.letter_width + 1), y);
+                        this.drawIndex++;
                     }
-                    this.drawIndex = i;
-                    this.delIndex = i;
+                    this.delIndex = this.drawIndex;
                 }
             },
             fill: {

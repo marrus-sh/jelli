@@ -119,8 +119,9 @@
                 <img id="letters" class="letters" alt="Letters" src="letters/letters.png"
                      data-sprite-width="3"
                      data-sprite-height="5"
-                     data-palette-black="#000000"
-                     data-palette-red="#ff0000"
+                     data-palette-black="#0c0c0c"
+                     data-palette-red="#e83f2c"
+                     data-palette-purple="#c258f2"
                      >
             </section>
             <section>
@@ -325,6 +326,7 @@
             <section>
                 <h3>Some areas:</h3>
                 <div class="area" title="Splash screen"
+                     data-vars="title_timer"
                      >
                     I have used this area to demonstrate programmatic character loading and managing.
                     <span class="map"
@@ -337,6 +339,10 @@
                         characters.pointer.x.set (88)
                         characters.pointer.y.set (120)
                         characters.pointer.dir.set (characters.pointer.lf)
+                        game.texts.title.create ("textground", "letters", "JelliScript : Demo")
+                        game.texts.title.x.set (92)
+                        game.texts.title.y.set (60)
+                        game.texts.title.color.set ("purple")
                         game.texts.menu1.create ("textground", "letters", "Use arrow keys to move")
                         game.texts.menu1.x.set (96)
                         game.texts.menu1.y.set (120)
@@ -349,6 +355,8 @@
                         game.texts.menu2.fill
                     </script>
                     <script type="text/plain" class="step">
+                        -(title_timer) game.texts.title.advance
+                        title_timer.mod_increment (30)
                         (game.key_down) ?
                             characters.pointer.y.set (136)
                             game.texts.menu1.clear
@@ -369,6 +377,7 @@
                         ;
                         (game.key_action) ?
                             characters.pointer.dir.set (characters.pointer.rt)
+                            game.texts.title.delete
                             game.texts.menu1.delete
                             game.texts.menu2.delete
                             game.clearScreen ("textground")
