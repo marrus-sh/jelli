@@ -2517,7 +2517,8 @@ var Game = (function () {
             clear: {value: function () {return this.block.clear.apply(this.block, arguments);}},
             draw: {
                 value: function () {
-                    if (this.get("color")) this.block.letters.setColor(this.get("color"));
+                    var c = this.get("color");
+                    if (c) this.block.letters.setColor(this.block.letters.source.dataset["palette" + c[0].toUpperCase() + c.substr(1)]);
                     else this.block.letters.clearColor();
                     this.block.draw.call(this.block, this.context, this.x, this.y);
                 }
