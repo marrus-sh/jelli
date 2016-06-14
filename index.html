@@ -1,30 +1,30 @@
 <!DOCTYPE html>
-<html data-vars="splashing">
+<html>
     <head>
         <title>Jelli : A Game Engine</title>
         <meta charset="utf-8">
         <meta name="viewport" content="user-scalable=no,width=device-width">
         <link rel="icon" href="icon.png">
+        <!--  `style.css` is necessary for styling the controls on mobile in this stage of development  -->
         <link rel="stylesheet" href="style.css">
         <script type="text/javascript" src="jelli.js"></script>
+        <script type="text/javascript">
+            /*
+                This creates the game on load, using this document as its source.
+                It will automatically assign itself to `document.game`.
+            */
+            window.addEventListener("load", function () {new Game(document);}, false);
+        </script>
         <script type="text/plain" class="init">
 
             >>  Area 0 is the splash screen (see below)
 
             loadArea (0)
-            splashing.set (1)
 
         </script>
         <script type="text/plain" class="step">
 
-            >>  Loads the first area on keypress:
-
-            (splashing) ?
-                (key_start)(key_action)(touch) ?
-                    loadArea (1)
-                    splashing.set (0)
-                ;
-            ;
+            >>  Step code would go here
 
         </script>
     </head>
@@ -67,6 +67,7 @@
                      data-system-background="#4f4f4f"
                      data-screen-background="#000000"
                      >
+                <!--  Right now this doesn't do anything: Control stuff is still in development, and currently is styled using `style.css` :(  -->
                 <img class="gui-buttons" alt="Buttons" src="gui/ctrl.png"
                      data-sprite-width="16"
                      data-sprite-height="16"
@@ -116,24 +117,10 @@
             <section>
                 <h3>The letters:</h3>
                 <img id="letters" class="letters" alt="Letters" src="letters/letters.png"
-                     data-sprite-width="4"
-                     data-sprite-height="7"
-                     data-palette-transparent="transparent"
+                     data-sprite-width="3"
+                     data-sprite-height="5"
                      data-palette-black="#000000"
-                     data-palette-darkgrey="#4f4f4f"
-                     data-palette-grey="#777777"
-                     data-palette-white="#ffffff"
-                     data-palette-red="#87372f"
-                     data-palette-cyan="#47979f"
-                     data-palette-purple="#8b3f97"
-                     data-palette-forest="#076323"
-                     data-palette-green="#579f47"
-                     data-palette-deepblue="#002b57"
-                     data-palette-blue="#174b77"
-                     data-palette-yellow="#cbc35f"
-                     data-palette-orange="#ab7349"
-                     data-palette-brown="#574300"
-                     data-palette-rose="#7f1f39"
+                     data-palette-red="#ff0000"
                      >
             </section>
             <section>
@@ -346,16 +333,46 @@
                           data-screen="background"
                           >AAEAAQABAAEAAQABAAEAAQIDAgMCAwIDAgMCAwIDAgMAAQABAAEAAQABAAEAAQABAgMCAwIDAgMCAwIDAgMCAwABAAEAAQABAAEAAQABAAECAwIDAgMCAwIDAgMCAwIDAAEAAQABAAEAAQABAAEAAQIDAgMCAwIDAgMCAwIDAgMAAQABAAEAAQABAAEAAQABAgMCAwIDAgMCAwIDAgMCAw==</span>
                     <script type="text/plain" class="init">
-                        characters.pointer.loadCharacter
+                        characters.pointer.load
                         characters.pointer.x.set (88)
                         characters.pointer.y.set (120)
                         characters.pointer.dir.set (characters.pointer.lf)
+                        game.texts.menu1.create ("textground", "letters", "Use arrow keys to move")
+                        game.texts.menu1.x.set (96)
+                        game.texts.menu1.y.set (120)
+                        game.texts.menu1.color.set ("red")
+                        game.texts.menu1.fill
+                        game.texts.menu2.create ("textground", "letters", "Press X to begin")
+                        game.texts.menu2.x.set (96)
+                        game.texts.menu2.y.set (136)
+                        game.texts.menu2.color.set ("black")
+                        game.texts.menu2.fill
                     </script>
                     <script type="text/plain" class="step">
-                        (game.key_down) characters.pointer.y.set (136)
-                        (game.key_up) characters.pointer.y.set (120)
+                        (game.key_down) ?
+                            characters.pointer.y.set (136)
+                            game.texts.menu1.clear
+                            game.texts.menu1.color.set ("black")
+                            game.texts.menu1.fill
+                            game.texts.menu2.clear
+                            game.texts.menu2.color.set ("red")
+                            game.texts.menu2.fill
+                        ;
+                        (game.key_up) ?
+                            characters.pointer.y.set (120)
+                            game.texts.menu1.clear
+                            game.texts.menu1.color.set ("red")
+                            game.texts.menu1.fill
+                            game.texts.menu2.clear
+                            game.texts.menu2.color.set ("black")
+                            game.texts.menu2.fill
+                        ;
                         (game.key_action) ?
                             characters.pointer.dir.set (characters.pointer.rt)
+                            game.texts.menu1.delete
+                            game.texts.menu2.delete
+                            game.clearScreen ("textground")
+                            game.loadArea (1)
                         :
                             characters.pointer.dir.set (characters.pointer.lf)
                         ;
@@ -411,7 +428,7 @@
             </section>
         </section>
 
-
+        <!--  Until control mechanisms are improved, just leave these divs as they are at the bottom of the page and pretend they don't exist XP  -->
         <div id="jo-ctls-lf">
             <!--  Left Controls  -->
             <div id="jo-ctlr-l1">

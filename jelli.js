@@ -9,7 +9,7 @@
 
 //  All inside an anonymous function for strictness and proper closure:
 
-var Jelli = (function () {
+var Game = (function () {
 
     "use strict";
 
@@ -595,7 +595,7 @@ var Jelli = (function () {
 
         //  Letter block constructor:
 
-        function LetterBlock(letters /*  Some number of strings  */) {
+        function LetterBlock(letters, context, x, y /*  Some number of strings  */) {
 
             //  Variable setup:
 
@@ -603,46 +603,165 @@ var Jelli = (function () {
 
             //  Handling arguments and error checking:
 
+            if (!(context instanceof CanvasRenderingContext2D)) throw new Error("(letters.js) Cannot create block – provided context must be 2d.");
             if (!(letters instanceof Letters)) throw new Error("(letters.js) Cannot create string – no letters provided.");
+            if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("(letters.js) Cannot create block – coordinates must be numbers.");
 
             //  Creating the block:
 
-            Object.defineProperties(this, {
-                length: {
-                    value: arguments.length - 1
-                },
-                letters: {
-                    value: letters
-                }
-            });
-
-            for (i = 1; i < arguments.length; i++) {
+            for (i = 4; i < arguments.length; i++) {
                 if (!(typeof arguments[i] === "string" || arguments[i] instanceof String)) throw new Error("(letters.js) Block arguments must be strings.");
-                Object.defineProperty(this, i - 1, {
+                Object.defineProperty(this, i - 4, {
                     value: new LetterString(letters, arguments[i])
                 });
             }
+
+            Object.defineProperties(this, {
+                context: {
+                    value: context
+                },
+                delIndex: {
+                    get: function () {
+                        var i;
+                        var n;
+                        for (n = 0, i = 0; this[i].delIndex === this[i].length; i++) {
+                            n += this[i].length;
+                        }
+                        if (i < this.height) return n + this[i].delIndex;
+                        return n;
+                    },
+                    set: function (n) {
+                        var i;
+                        for (i = 0; i < this.height && n > this[i].length; i++) {
+                            n -= this[i].length;
+                        }
+                        if (this[i]) this[i].delIndex = n;
+                        while (++i < this.height) {
+                            this[i].delIndex = 0;
+                        }
+                    }
+                },
+                drawIndex: {
+                    get: function () {
+                        var i;
+                        var n;
+                        for (n = 0, i = 0; this[i].drawIndex === this[i].length; i++) {
+                            n += this[i].length;
+                        }
+                        if (i < this.height) return n + this[i].drawIndex;
+                        return n;
+                    },
+                    set: function (n) {
+                        var i;
+                        for (i = 0; i < this.height && n > this[i].length; i++) {
+                            n -= this[i].length;
+                        }
+                        if (this[i]) this[i].drawIndex = n;
+                        while (++i < this.height) {
+                            this[i].drawIndex = 0;
+                        }
+                    }
+                },
+                height: {
+                    value: i - 4
+                },
+                index: {
+                    get: function () {
+                        var i;
+                        var n;
+                        for (n = 0, i = 0; this[i].index === this[i].length; i++) {
+                            n += this[i].length;
+                        }
+                        if (i < this.height) return n + this[i].index;
+                        return n;
+                    },
+                    set: function (n) {
+                        var i;
+                        for (i = 0; i < this.height && n > this[i].length; i++) {
+                            n -= this[i].length;
+                        }
+                        if (this[i]) this[i].index = n;
+                        while (++i < this.height) {
+                            this[i].index = 0;
+                        }
+                    }
+                },
+                length: {
+                    get: function () {
+                        var i;
+                        var n;
+                        for (n = 0, i = 0; i < this.height; i++) {
+                            n += this[i].length;
+                        }
+                        return n;
+                    }
+                },
+                letters: {
+                    value: letters
+                },
+                x: {
+                    get: function () {return x;},
+                    set: function (n) {
+                        x = n;
+                        this.clear();
+                    }
+                },
+                y: {
+                    get: function () {return y;},
+                    set: function (n) {
+                        y = n;
+                        this.clear();
+                    }
+                }
+            });
 
         }
 
         //  Letter block prototyping:
 
         LetterBlock.prototype = Object.create(Object.prototype, {
+            advance: {
+                value: function (/*  Optional amount  */) {
+                    if (arguments[0]) this.index += arguments[0];
+                    if (this.index < this.delIndex) this.delIndex = this.index;
+                    else this.index++;
+                }
+            },
+            clear: {
+                value: function () {
+                    this.delIndex = 0;
+                    this.index = 0;
+                }
+            },
             draw: {
-                value: function (context, x, y) {
+                value: function () {
                     var i;
-                    if (!(context instanceof CanvasRenderingContext2D)) throw new Error("(letters.js) Cannot draw block – provided context must be 2d.");
-                    if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("(letters.js) Cannot draw block – coordinates must be numbers.");
-                    for (i = 0; i < this.length; i++) {
-                        if (!(this.item(i) instanceof LetterString)) throw new Error("(letters.js) Block index did not resolve to a string.");
-                        this.item(i).draw(context, x, y);
+                    var y = this.y;
+                    for (i = 0; i < this.height; i++) {
+                        if (!(this.line(i) instanceof LetterString)) throw new Error("(letters.js) Block index did not resolve to a string.");
+                        this.line(i).draw(this.context, this.x, y);
                         y += this.letters.letter_height + 1;
                     }
                 }
             },
+            fill: {
+                value: function () {
+                    this.index = this.length;
+                }
+            },
             item: {
-                value: function (i) {
-                    return this[i];
+                value: function (n) {
+                    var i;
+                    for (i = 0; i < this.height && n > this[i].length; i++) {
+                        n -= this[i].length;
+                    }
+                    if (this[i]) return this[i].item(n);
+                    return null;
+                }
+            },
+            line: {
+                value: function (n) {
+                    return this[n];
                 }
             }
         });
@@ -663,6 +782,18 @@ var Jelli = (function () {
             //  Define string:
 
             Object.defineProperties(this, {
+                delIndex: {
+                    value: 0,
+                    writable: true
+                },
+                drawIndex: {
+                    value: 0,
+                    writable: true
+                },
+                index: {
+                    value: 0,
+                    writable: true
+                },
                 length: {
                     value: data.length
                 },
@@ -684,21 +815,47 @@ var Jelli = (function () {
         //  Letter string prototyping:
 
         LetterString.prototype = Object.create(Object.prototype, {
+            advance: {
+                value: function (/*  Optional amount  */) {
+                    if (arguments[0]) this.index += arguments[0];
+                    if (this.index < this.delIndex) this.delIndex = this.index;
+                    else this.index++;
+                }
+            },
+            clear: {
+                value: function () {
+                    this.delIndex = 0;
+                    this.index = 0;
+                }
+            },
             draw: {
                 value: function (context, x, y) {
                     var i;
                     if (!(context instanceof CanvasRenderingContext2D)) throw new Error("(letters.js) Cannot draw string – provided context must be 2d.");
                     if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("(letters.js) Cannot draw string – coordinates must be numbers.");
-                    for (i = 0; i < this.length; i++) {
+                    if (this.drawIndex > this.length) this.drawIndex = this.length;
+                    if (this.index < this.delIndex) this.delIndex = this.index;
+                    if (this.drawIndex > this.delIndex) {
+                        context.clearRect(x + this.delIndex * (this.letters.letter_width + 1), y, (this.drawIndex - this.delIndex) * (this.letters.letter_width + 1), this.letters.letter_height + 1);
+                        this.drawIndex = this.delIndex;
+                    }
+                    for (i = this.drawIndex; i < this.length && i < this.index; i++) {
                         if (!(this.item(i) instanceof Letter)) throw new Error("(letters.js) String index did not resolve to a letter.");
                         this.item(i).draw(context, x, y);
                         x += this.letters.letter_width + 1;
                     }
+                    this.drawIndex = i;
+                    this.delIndex = i;
+                }
+            },
+            fill: {
+                value: function () {
+                    this.index = this.length;
                 }
             },
             item: {
-                value: function (i) {
-                    return this[i];
+                value: function (n) {
+                    return this[n];
                 }
             }
         });
@@ -747,6 +904,10 @@ var Jelli = (function () {
                 canvas: {
                     value: canvas
                 },
+                color: {
+                    value: undefined,
+                    writable: true
+                },
                 context: {
                     value: context
                 },
@@ -787,12 +948,14 @@ var Jelli = (function () {
             },
             clearColor: {
                 value: function () {
+                    if (this.color === undefined) return;
                     this.context.clearRect(0, 0, this.context.canvas.width, this.context.canvas.height);
                     this.context.drawImage(this.source, 0, 0);
+                    this.color = undefined;
                 }
             },
             createBlock: {
-                value: function (/*  Some number of data strings  */) {
+                value: function (context, x, y /*  Some number of data strings  */) {
                     var args = [undefined, this].concat(Array.of.apply(undefined, arguments));
                     return new (LetterBlock.bind.apply(LetterBlock, args))();
                 }
@@ -805,10 +968,12 @@ var Jelli = (function () {
             },
             setColor: {
                 value: function (color) {
+                    if (this.color === color || color === undefined) return;
                     this.context.globalCompositeOperation = "source-in";
                     this.context.fillStyle = color;
                     this.context.fillRect(0, 0, this.context.canvas.width, this.context.canvas.height);
                     this.context.globalCompositeOperation = "source-over";
+                    this.color = color;
                 }
             }
         });
@@ -1155,26 +1320,8 @@ var Jelli = (function () {
         var global = null;
         var globals = [];
         var functions = Object.create(Object.prototype, {
-            declare: {
-                value: function(prop) {return modifiers.declare.call(this, value(global ? global : this, prop));}
-            },
-            delete: {
-                value: function(prop) {return modifiers.delete.call(this, value(global ? global : this, prop));}
-            },
-            get: {
-                value: function(prop) {return modifiers.get.call(this, value(global ? global : this, prop));}
-            },
-            increment: {
-                value: function(prop /*  optional value  */) {return arguments[1] !== undefined ? modifiers.increment.call(this, value(global ? global : this, prop), arguments[1]) : modifiers.increment.call(this, value(global ? global : this, prop));}
-            },
             log: {
                 value: function(prop) {console.log(value(global ? global : this, prop));}
-            },
-            mod_increment: {
-                value: function(prop, mod /*  optional value  */) {return arguments[2] !== undefined ? modifiers.mod_increment.call(this, value(global ? global : this, prop), mod, arguments[2]) : modifiers.mod_increment.call(this, value(global ? global : this, prop), mod);}
-            },
-            set: {
-                value: function(prop, to) {return modifiers.set.call(this, value(global ? global : this, prop), to);}
             }
         });
         var modifiers = Object.create(Object.prototype, {
@@ -1192,17 +1339,21 @@ var Jelli = (function () {
                     if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) delete this.__properties__[prop];
                 }
             },
-            get: {
-                value: function(prop) {return value(this, prop);}
-            },
+            get: {value: function(prop) {return value(this, prop);}},
             increment: {
                 value: function(prop /*  optional value  */) {
                     var s;
                     if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
                     if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
                     if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to increment a non-declared value.");
-                    if (arguments[1] !== undefined) return this.__properties__[prop] += value(global ? global : this, arguments[1]);
+                    if (arguments[1] !== undefined) return this.__properties__[prop] += arguments[1];
                     else return this.__properties__[prop]++;
+                }
+            },
+            is_defined: {
+                value: function(prop) {
+                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
+                    return this.__properties__.hasOwnProperty(prop);
                 }
             },
             mod_increment: {
@@ -1211,9 +1362,9 @@ var Jelli = (function () {
                     if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
                     if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
                     if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to mod-increment a non-declared value.");
-                    if (arguments[2] !== undefined) this.__properties__[prop] += value(global ? global : this, arguments[2]);
+                    if (arguments[2] !== undefined) this.__properties__[prop] += arguments[2];
                     else this.__properties__[prop]++;
-                    return this.__properties__[prop] %= value(global ? global : this, mod);
+                    return this.__properties__[prop] %= mod;
                 }
             },
             set: {
@@ -1222,7 +1373,7 @@ var Jelli = (function () {
                     if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
                     if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
                     if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to set a non-declared value.");
-                    return (this.__properties__[prop] = value(global ? global : this, to));
+                    return (this.__properties__[prop] = to);
                 }
             }
         });
@@ -1244,11 +1395,11 @@ var Jelli = (function () {
             if (!(dataobj instanceof Jelli)) throw new Error("[JelliScript] Error: No Jelli object provided.");
             if ((typeof fn === "string" || fn instanceof String) && fn.indexOf(".") !== -1) {
                 s = fn.indexOf(".");
-                if (dataobj.__properties__[fn.substr(0, s)] instanceof Jelli) return arguments[2] instanceof Array ? run(dataobj.__properties__[fn.substr(0, s)], fn.substr(s + 1), arguments[2]) : run(dataobj.__properties__[fn.substr(0, s)], fn.substr(s + 1));
-                else if (dataobj.__modifiers__[fn.substr(s + 1)] instanceof Function) return arguments[2] instanceof Array ? dataobj.__modifiers__[fn.substr(s + 1)].apply(dataobj, [fn.substr(0, s)].concat(arguments[2])) : dataobj.__modifiers__[fn.substr(s + 1)].call(dataobj, fn.substr(0, s));
+                if (dataobj.__modifiers__[fn.substr(s + 1)] instanceof Function) return arguments[2] instanceof Array ? dataobj.__modifiers__[fn.substr(s + 1)].apply(dataobj, [fn.substr(0, s)].concat(arguments[2].map(value.bind(undefined, global ? global : dataobj)))) : dataobj.__modifiers__[fn.substr(s + 1)].call(dataobj, fn.substr(0, s));
+                else if (dataobj.__properties__[fn.substr(0, s)] instanceof Jelli) return arguments[2] instanceof Array ? run(dataobj.__properties__[fn.substr(0, s)], fn.substr(s + 1), arguments[2]) : run(dataobj.__properties__[fn.substr(0, s)], fn.substr(s + 1));
                 else throw new Error("[JelliScript] Function name did not resolve into a function.");
             }
-            else if (dataobj.__functions__[fn] instanceof Function) return arguments[2] instanceof Array ? dataobj.__functions__[fn].apply(dataobj, arguments[2]) : dataobj.__functions__[fn].call(dataobj);
+            else if (dataobj.__functions__[fn] instanceof Function) return arguments[2] instanceof Array ? dataobj.__functions__[fn].apply(dataobj, arguments[2].map(value.bind(undefined, global ? global : dataobj))) : dataobj.__functions__[fn].call(dataobj);
             else throw new Error("[JelliScript] Function name did not resolve into a function.");
         }
 
@@ -1272,7 +1423,9 @@ var Jelli = (function () {
                 else throw new Error("[JelliScript] " + prop.substr(0, s) + " did not resolve into a Jelli object");
             }
             else if (typeof dataobj.__properties__[prop] === "number" || dataobj.__properties__[prop] instanceof Number || dataobj.__properties__[prop] instanceof Jelli) return dataobj.__properties__[prop];
-            else if (dataobj.__properties__[prop] === undefined) throw new Error("[JelliScript] Variable is undefined.");
+            else if (dataobj.__properties__[prop] === undefined) {
+                throw new Error("[JelliScript] Variable is undefined.");
+            }
             else return String(dataobj.__properties__[prop]);
         }
 
@@ -1284,15 +1437,18 @@ var Jelli = (function () {
 
             var i;
 
-            //  Setting up the properties object:
+            //  Defining core properties:
 
-            Object.defineProperties(this, {
-                __functions__: {value: {}},
-                __modifiers__: {value: {}},
-                __properties__: {value: {}}
+            Object.defineProperty(this, "__modifiers__", {value: {}});
+            Object.defineProperty(this, "__functions__", {value: Object.create(this.__modifiers__)});
+            Object.defineProperty(this, "__properties__", {
+                value: Object.create(Object.prototype, {
+                    "false": {value: 0},
+                    "true": {value: 1}
+                })
             });
 
-            //  Declaring properties:
+            //  Setting provided properties and functions:
 
             if (props) this.defineProperties(props);
             copyOnto(functions, this.__functions__);
@@ -1473,19 +1629,6 @@ var Jelli = (function () {
 
     return (function () {
 
-        //  Setting up variables:
-
-        var datadoc = document.implementation.createHTMLDocument("Jelli Data Document");
-
-        var control;
-
-        var letters = Object.create(null);
-        var screens = Object.create(null);
-        var sheets = Object.create(null);
-        var tilesets = Object.create(null);
-
-        var game;
-
         //  Area constructor:
 
         function Area(game, index) {
@@ -1502,48 +1645,12 @@ var Jelli = (function () {
 
             //  Handling arguments and error checking:
 
-            elt = datadoc.getElementsByClassName("area").item(game.get(index));
-            if (!(elt instanceof Element)) throw new Error("[Jelli] Could not load area – no element found at the specified index.");
-
-            //  Sets up the area as a Jelli:
-
-            Jelli.call(this, {
-                characters: {value: new Characters(this)},
-                game: {value: game},
-                x: {
-                    get: function () {return x;},
-                    set: (function (value) {
-                        var i;
-                        if (!(typeof value === "number" || value instanceof Number)) throw new Error("[Jelli] Cannot load area – x-coordinate must be a number.");
-                        x = value;
-                        for (i = 0; i < this.maps.length; i++) {
-                            this.maps[i].origin_x = value;
-                        }
-                        this.set("clear", 1);
-                    }).bind(this)
-                },
-                y: {
-                    get: function () {return y;},
-                    set: (function (value) {
-                        var i;
-                        if (!(typeof value === "number" || value instanceof Number)) throw new Error("[Jelli] Cannot load area – y-coordinate must be a number.");
-                        y = value;
-                        for (i = 0; i < this.maps.length; i++) {
-                            this.maps[i].origin_y = value;
-                        }
-                        this.set("clear", 1);
-                    }).bind(this)
-                }
-            }, {
-                setMapOffset: {value: this.setMapOffset}
-            });
+            elt = game.datadoc.getElementsByClassName("area").item(index);
+            if (!(elt instanceof Element)) throw new Error("[Game] Could not load area – no element found at the specified index.");
 
             //  Defining properties:
 
             Object.defineProperties(this, {
-                characters: {
-                    value: this.__properties__.characters
-                },
                 game: {
                     value: game
                 },
@@ -1555,7 +1662,46 @@ var Jelli = (function () {
                 },
                 stepScript: {
                     value: elt.getElementsByClassName("step").item(0) ? elt.getElementsByClassName("step").item(0).text || elt.getElementsByClassName("step").item(0).textContent : ""
+                }
+            });
+
+            //  Sets up the area as a Jelli:
+
+            Jelli.call(this, {
+                characters: {value: new Characters(this)},
+                game: {value: game},
+                x: {
+                    get: function () {return x;},
+                    set: (function (value) {
+                        var i;
+                        if (!(typeof value === "number" || value instanceof Number)) throw new Error("[Game] Cannot load area – x-coordinate must be a number.");
+                        x = value;
+                        for (i = 0; i < this.maps.length; i++) {
+                            this.maps[i].origin_x = value;
+                        }
+                        this.set("clear", 1);
+                    }).bind(this)
                 },
+                y: {
+                    get: function () {return y;},
+                    set: (function (value) {
+                        var i;
+                        if (!(typeof value === "number" || value instanceof Number)) throw new Error("[Game] Cannot load area – y-coordinate must be a number.");
+                        y = value;
+                        for (i = 0; i < this.maps.length; i++) {
+                            this.maps[i].origin_y = value;
+                        }
+                        this.set("clear", 1);
+                    }).bind(this)
+                }
+            }, {
+                setMapOffset: {value: this.setMapOffset}
+            });
+
+            //  Jelli aliases:
+
+            Object.defineProperties(this, {
+                characters: {value: this.__properties__.characters},
                 x: {
                     get: function () {return this.__properties__.x;},
                     set: function (n) {this.__properties__.x = n;}
@@ -1585,14 +1731,14 @@ var Jelli = (function () {
 
             for (collection = elt.getElementsByClassName("map"), i = 0; i < collection.length; i++) {
                 item = collection.item(i);
-                this.maps[i] = tilesets[item.dataset.tileset].getMap(screens[item.dataset.screen].context, item.textContent.trim(), Number(item.dataset.mapwidth), isNaN(Number(item.dataset.dx)) ? 0 : Number(item.dataset.dx), isNaN(Number(item.dataset.dy)) ? 0 : Number(item.dataset.dy), this.get("x"), this.get("y"));
+                this.maps[i] = game.tilesets[item.dataset.tileset].getMap(game.screens[item.dataset.screen].context, item.textContent.trim(), Number(item.dataset.mapwidth), isNaN(Number(item.dataset.dx)) ? 0 : Number(item.dataset.dx), isNaN(Number(item.dataset.dy)) ? 0 : Number(item.dataset.dy), this.get("x"), this.get("y"));
             }
 
 
             //  Loading characters:
 
             for (collection = (elt.dataset.characters ? elt.dataset.characters.split(/\s+/) : []), i = 0; i < collection.length; i++) {
-                this.characters.loadCharacter(collection[i]);
+                this.characters.load(collection[i]);
             }
 
             //  Area freezing:
@@ -1617,7 +1763,7 @@ var Jelli = (function () {
                         }
                     }
                     for (i in this.characters.__properties__) {
-                        this.characters.__properties__[i].draw(screens.mainground.context)
+                        this.characters.__properties__[i].draw(this.game.screens.mainground.context)
                     }
                     this.set("clear", 0);
                 }
@@ -1631,10 +1777,10 @@ var Jelli = (function () {
             setMapOffset: {
                 value: function (index /*  x, y  */) {
                     if (arguments[1] !== undefined) {
-                        this.maps[this.get(index)].x = this.get(arguments[1]);
+                        this.maps[index].x = arguments[1];
                     }
                     if (arguments[2] !== undefined) {
-                        this.maps[this.get(index)].y = this.get(arguments[2]);
+                        this.maps[index].y = arguments[2];
                     }
                 }
             },
@@ -1659,27 +1805,11 @@ var Jelli = (function () {
 
             //  Handling arguments and error checking:
 
-            if (!(area instanceof Area)) throw new Error("[Jelli] Cannot create character – no area provided.");
-            if (!(sprites instanceof Array)) throw new Error("[Jelli] Cannot create character – sprites must be provided in an array.");
-            if (!(props instanceof Array)) throw new Error("[Jelli] Cannot create character – variables must be provided in an array.");
-            if (!(typeof initScript === "string" || initScript instanceof String)) throw new Error("[Jelli] Cannot create character – No init function provided.");
-            if (!(typeof stepScript === "string" || stepScript instanceof String)) throw new Error("[Jelli] Cannot create character – No step function provided.");
-
-            //  Sets up the character as a Jelli:
-
-            Jelli.call(this, {
-                area: {value: area},
-                game: {value: area.game},
-                height: {value: box_height},
-                origin_x: {value: box_x},
-                origin_y: {value: box_y},
-                sprite_height: {value: sprites[0].height},
-                sprite_width: {value: sprites[0].width},
-                width: {value: box_width}
-            }, {
-                target: {value: this.target},
-                targetBy: {value: this.targetBy}
-            });
+            if (!(area instanceof Area)) throw new Error("[Game] Cannot create character – no area provided.");
+            if (!(sprites instanceof Array)) throw new Error("[Game] Cannot create character – sprites must be provided in an array.");
+            if (!(props instanceof Array)) throw new Error("[Game] Cannot create character – variables must be provided in an array.");
+            if (!(typeof initScript === "string" || initScript instanceof String)) throw new Error("[Game] Cannot create character – No init function provided.");
+            if (!(typeof stepScript === "string" || stepScript instanceof String)) throw new Error("[Game] Cannot create character – No step function provided.");
 
             //  Defining properties:
 
@@ -1697,6 +1827,22 @@ var Jelli = (function () {
                 width: {value: box_width}
             });
 
+            //  Sets up the character as a Jelli:
+
+            Jelli.call(this, {
+                area: {value: area},
+                game: {value: area.game},
+                height: {value: box_height},
+                origin_x: {value: box_x},
+                origin_y: {value: box_y},
+                sprite_height: {value: sprites[0].height},
+                sprite_width: {value: sprites[0].width},
+                width: {value: box_width}
+            }, {
+                target: {value: this.target},
+                targetBy: {value: this.targetBy}
+            });
+
             this.declare("x");
             this.set("x", this.sprite_width / 2);
             this.declare("y");
@@ -1705,7 +1851,7 @@ var Jelli = (function () {
             this.declare("frame");
 
             for (i = 0; i < props.length; i++) {
-                if (!(typeof props[i] === "string" || props[i] instanceof String)) throw new Error("[Jelli] Cannot create character – Property names must be strings.");
+                if (!(typeof props[i] === "string" || props[i] instanceof String)) throw new Error("[Game] Cannot create character – Property names must be strings.");
                 this.declare(props[i]);
             }
 
@@ -1725,8 +1871,8 @@ var Jelli = (function () {
             },
             getCollisionEdge: {
                 value: function (dir, x, y) {
-                    if (!(dir == "left" || dir == "top" || dir == "right" || dir == "bottom")) throw new Error("[Jelli] Cannot get collision edge – No proper directional keyword provided.");
-                    if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Jelli] Cannot find collision – coordinates must be numbers.");
+                    if (!(dir == "left" || dir == "top" || dir == "right" || dir == "bottom")) throw new Error("[Game] Cannot get collision edge – No proper directional keyword provided.");
+                    if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Game] Cannot find collision – coordinates must be numbers.");
                     if (x <= Math.round(this.get("x") - this.width / 2) || x >= Math.round(this.get("x") + this.width / 2) || y <= Math.round(this.get("y") - this.height / 2) || y >= Math.round(this.get("y") + this.height / 2)) {
                         switch (dir) {
                             case "left":
@@ -1761,8 +1907,8 @@ var Jelli = (function () {
             },
             target: {
                 value: function(cx, cy) {
-                    var dx = this.get(cx) - this.get("x");
-                    var dy = this.get(cy) - this.get("y");
+                    var dx = cx - this.get("x");
+                    var dy = cy - this.get("y");
                     return this.targetBy(dx, dy);
                 }
             },
@@ -1779,9 +1925,7 @@ var Jelli = (function () {
                     var sy;
                     var tx;
                     var ty;
-                    if (!(this.area instanceof Area)) throw new Error("[Jelli] Could not target character – character is not associated with an area.");
-                    dx = this.get(dx);
-                    dy = this.get(dy);
+                    if (!(this.area instanceof Area)) throw new Error("[Game] Could not target character – character is not associated with an area.");
                     d = Math.sqrt(dx * dx + dy * dy);
                     if (!d) return;
                     if (d > 1) {
@@ -1873,12 +2017,16 @@ var Jelli = (function () {
         function Characters(area) {
 
             Jelli.call(this, {
-                area: {value: area}
-            }, {
-                loadCharacter: {value: function (prop) {return this.area.loadCharacter.call(this, this.get(prop));}}
-            }, {
-                loadCharacter: {value: this.loadCharacter}
+                area: {value: area},
+                game: {value: area.game}
+            }, {}, {
+                load: {value: this.load}
             });
+
+            Object.defineProperties(this, {
+                area: {get: function () {return this.__properties__.area;}},
+                game: {get: function () {return this.__properties__.game;}}
+            })
 
             //  Characters freezing:
 
@@ -1889,7 +2037,7 @@ var Jelli = (function () {
         //  Characters prototyping:
 
         Characters.prototype = Object.create(Jelli.prototype, {
-            loadCharacter: {
+            load: {
                 value: function (name) {
                     var character;
                     var collection;
@@ -1898,14 +2046,14 @@ var Jelli = (function () {
                     var item;
                     var m;
                     var n;
-                    elt = datadoc.getElementById(name);
+                    elt = this.game.datadoc.getElementById(name);
                     if (!elt) return;
-                    if (!datadoc.getElementById(elt.dataset.sprites) || datadoc.getElementById(elt.dataset.sprites).className !== "sprites") throw new Error("[Jelli] Cannot load character – No sprites provided.");
-                    else item = datadoc.getElementById(elt.dataset.sprites);
+                    if (!this.game.datadoc.getElementById(elt.dataset.sprites) || this.game.datadoc.getElementById(elt.dataset.sprites).className !== "sprites") throw new Error("[Game] Cannot load character – No sprites provided.");
+                    else item = this.game.datadoc.getElementById(elt.dataset.sprites);
                     m = {};
                     n = [];
                     for (collection = item.getElementsByClassName("sprite"), i = 0; i < collection.length; i++) {
-                        n.push(sheets[item.dataset.sheet].getSprite(Number(collection.item(i).dataset.index), Number(collection.item(i).dataset.length ? collection.item(i).dataset.length : 1)));
+                        n.push(this.game.sheets[item.dataset.sheet].getSprite(Number(collection.item(i).dataset.index), Number(collection.item(i).dataset.length ? collection.item(i).dataset.length : 1)));
                         if (collection.item(i).hasAttribute("title")) m[collection.item(i).getAttribute("title")] = i;
                     }
                     this.declare(name);
@@ -1920,35 +2068,133 @@ var Jelli = (function () {
 
         //  Game constructor:
 
-        function Game() {
+        function Game(doc) {
 
             //  Setting up variables:
 
             var collection;
+            var datadoc;
             var i;
-            var Key;
+
+            //  imported() and placed() functions:
+
+            function imported(node) {
+                if (typeof node === "string" || node instanceof String) node = datadoc.getElementById(node);
+                if (!(node instanceof Node)) throw new Error("[Game] Cannot import node – none provided");
+                return doc.importNode(node, true);
+            }
+
+            function placed(node) {
+                if (typeof node === "string" || node instanceof String) node = datadoc.getElementById(node);
+                if (!(node instanceof Node)) throw new Error("[Game] Cannot place node – none provided");
+                return doc.body.appendChild(document.importNode(node, true));
+            }
+
+            //  Handling arguments and error checking:
+
+            if (!(doc instanceof Document)) return;
+            if (doc.game) return;
+            else Object.defineProperty(doc, "game", {value: this});
+
+            //  Making sure modules are loaded:
+
+            if (typeof Screen === "undefined" || !Screen) throw new Error("[Game] Screen module not loaded");
+            if (typeof Control === "undefined" || !Control) throw new Error("[Game] Control module not loaded");
+            if (typeof Sheet === "undefined" || !Sheet) throw new Error("[Game] Sheet module not loaded");
+            if (typeof Letters === "undefined" || !Letters) throw new Error("[Game] Letters module not loaded");
+            if (typeof Tileset === "undefined" || !Tileset) throw new Error("[Game] Tileset module not loaded");
+            if (typeof Jelli === "undefined" || !Tileset) throw new Error("[Game] JelliScript module not loaded");
+
+            //  Setting up the data document and clearing the body
+
+            datadoc = doc.implementation.createHTMLDocument("Jelli Data Document");
+            datadoc.body = datadoc.importNode(doc.body, true);
+            doc.body = doc.createElement("body");
+            doc.body.style.visibility = "hidden";
+
+            //  Defining properties:
+
+            Object.defineProperties(this, {
+                control: {value: new Control(true)},
+                datadoc: {value: datadoc},
+                document: {value: doc},
+                letters: {value: {}},
+                screens: {value: {}},
+                sheets: {value: {}},
+                tilesets: {value: {}},
+                window: {value: doc.defaultView ? doc.defaultView : window}
+            });
 
             //  Sets up the game as a Jelli:
 
             Jelli.call(this, {
-                key_start: {get: function() {return Number(control.isActive("start"));}},
-                key_select: {get: function() {return Number(control.isActive("select"));}},
-                key_menu: {get: function() {return Number(control.isActive("menu"));}},
-                key_look: {get: function() {return Number(control.isActive("look"));}},
-                key_exit: {get: function() {return Number(control.isActive("exit"));}},
-                key_action: {get: function() {return Number(control.isActive("action"));}},
-                key_up: {get: function() {return Number(control.isActive("up"));}},
-                key_down: {get: function() {return Number(control.isActive("down"));}},
-                key_left: {get: function() {return Number(control.isActive("left"));}},
-                key_right: {get: function() {return Number(control.isActive("right"));}},
-                touch: {get: function() {return 0;}}
+                area: {
+                    value: 0,
+                    writable: true
+                },
+                key_start: {get: (function () {return Number(this.control.isActive("start"));}).bind(this)},
+                key_select: {get: (function () {return Number(this.control.isActive("select"));}).bind(this)},
+                key_menu: {get: (function () {return Number(this.control.isActive("menu"));}).bind(this)},
+                key_look: {get: (function () {return Number(this.control.isActive("look"));}).bind(this)},
+                key_exit: {get: (function () {return Number(this.control.isActive("exit"));}).bind(this)},
+                key_action: {get: (function () {return Number(this.control.isActive("action"));}).bind(this)},
+                key_up: {get: (function () {return Number(this.control.isActive("up"));}).bind(this)},
+                key_down: {get: (function () {return Number(this.control.isActive("down"));}).bind(this)},
+                key_left: {get: (function () {return Number(this.control.isActive("left"));}).bind(this)},
+                key_right: {get: (function () {return Number(this.control.isActive("right"));}).bind(this)},
+                texts: {value: new Texts(this)},
+                touch: {get: function () {return 0;}}  //  TK
             }, {
+                clearScreen: {value: this.clearScreen},
                 loadArea: {value: this.loadArea}
             });
 
-            //  Setting properties:
+            //  Jelli aliases:
 
-            this.declare("area");
+            Object.defineProperties(this, {
+                area: {
+                    get: function () {return this.__properties__.area;},
+                    set: function (n) {this.set("area", n);}
+                },
+                texts: {value: this.__properties__.texts}
+            });
+
+            //  Control setup:
+
+            placed("jo-ctls-lf");
+            placed("jo-ctls-rt");
+
+            this.control.add("action").addKeys("action", 0x58, "U+0058", "KeyX", "X", "x").linkElement("action", "jo-ctrl-actn");
+            this.control.add("down").addKeys("down", 0x28, "ArrowDown", "Down").linkElement("down", "jo-ctrl-dnrw");
+            this.control.add("exit").addKeys("exit", 0x5A, "U+005A", "KeyZ", "Z", "z").linkElement("exit", "jo-ctrl-exit");
+            this.control.add("left").addKeys("left", 0x25, "ArrowLeft", "Left").linkElement("left", "jo-ctrl-lfrw");
+            this.control.add("look").addKeys("look", 0x53, "U+0053", "KeyS", "S", "s").linkElement("look", "jo-ctrl-look");
+            this.control.add("menu").addKeys("menu", 0x41, "U+0041", "KeyA", "A", "a").linkElement("menu", "jo-ctrl-menu");
+            this.control.add("right").addKeys("right", 0x27, "ArrowRight", "Right").linkElement("right", "jo-ctrl-rtrw");
+            this.control.add("select").addKeys("select", 0x57, "U+0057", "KeyW", "W", "w").linkElement("select", "jo-ctrl-selc");
+            this.control.add("start").addKeys("start", 0x51, "U+0051", "KeyQ", "Q", "q").linkElement("start", "jo-ctrl-strt");
+            this.control.add("up").addKeys("up", 0x26, "ArrowUp", "Up").linkElement("up", "jo-ctrl-uprw");
+
+            //  Loading screens:
+
+            for (collection = datadoc.getElementsByTagName("canvas"), i = 0; i < collection.length; i++) {
+                Object.defineProperty(this.screens, collection.item(i).id, {value: new Screen(placed(collection.item(i)), "2d"), enumerable: true});
+            }
+
+            //  Sprite sheet setup:
+
+            for (collection = datadoc.getElementsByClassName("letters"), i = 0; i < collection.length; i++) {
+                Object.defineProperty(this.letters, collection.item(i).id, {value: new Letters(imported(collection.item(i)), Number(collection.item(i).dataset.spriteWidth), Number(collection.item(i).dataset.spriteHeight))});
+            }
+            for (collection = datadoc.getElementsByClassName("sheet"), i = 0; i < collection.length; i++) {
+                Object.defineProperty(this.sheets, collection.item(i).id, {value: new Sheet(imported(collection.item(i)), Number(collection.item(i).dataset.spriteWidth), Number(collection.item(i).dataset.spriteHeight))});
+            }
+            for (collection = datadoc.getElementsByClassName("tileset"), i = 0; i < collection.length; i++) {
+                Object.defineProperty(this.tilesets, collection.item(i).id, {value: new Tileset(new Sheet(imported(collection.item(i)), Number(collection.item(i).dataset.spriteWidth), Number(collection.item(i).dataset.spriteHeight)), Number(collection.item(i).dataset.spriteWidth), Number(collection.item(i).dataset.spriteHeight), collection.item(i).dataset.collisions.trim(), Sheet.drawSheetAtIndex)});
+            }
+
+            //  Setting JelliScript properties:
+
             this.declare("resized");
             this.set("resized", 1);
 
@@ -1960,394 +2206,355 @@ var Jelli = (function () {
 
             //  Game freezing:
 
+            Object.freeze(this.screens);
+            Object.freeze(this.letters);
+            Object.freeze(this.sheets);
+            Object.freeze(this.tilesets);
             Object.freeze(this);
+
+            //  Initializing the game code:
+
+            if (doc.head.getElementsByClassName("init").item(0)) Jelli.parseScript(doc.head.getElementsByClassName("init").item(0).text || doc.head.getElementsByClassName("init").item(0).textContent, this);
+
+            //  Adding event listeners:
+
+            doc.body.addEventListener("touchmove", function (e) {e.preventDefault();}, false);
+            this.window.addEventListener("keydown", this, false);
+            this.window.addEventListener("resize", this, false);
+            this.window.addEventListener("touchstart", this, false);
+
+            //  Starting the render and logic processes:
+
+            this.window.requestAnimationFrame(this.draw.bind(this))
+            this.step();
 
         }
 
         //  Game prototyping:
 
         Game.prototype = Object.create(Jelli.prototype, {
-            loadArea: {value: function (prop) {this.set("area", new Area(game, prop));}}
-        });
-
-        //  Clear the screens:
-
-        function clearScreens() {
-
-            //  Setting up variables:
-
-            var i;
-
-            //  Clearing the screens:
-
-            for (i in screens) {
-                switch (screens[i].canvas.dataset.type) {
-                    case "area":
-                        if (game.area instanceof Area && game.area.get("clear")) screens[i].clear();
-                        break;
-                    case "animation":
-                        screens[i].clear();
-                        break;
-                    default:
-                        /*  Do nothing  */
-                        break;
+            clearScreen: {
+                value: function (screen) {
+                    if (!(screen instanceof Screen)) screen = this.screens[screen]
+                    if (!(screen instanceof Screen)) throw new Error("[Game] Could not clear screen – none provided.")
+                    screen.canvas.dataset.clear = "";
                 }
-            }
-
-        }
-
-        //  Draw functions:
-
-        function drawText() {
-            letters.letters.setColor(letters.letters.source.dataset.paletteDeepblue);
-            letters.letters.createBlock(
-                "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x49\x0A\x0B\x0C\x0D\x0E\x0F",
-                "\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x49\x1A\x1B\x1C\x1D\x1E\x1F",
-                "\x20\x21\x22\x23\x24\x25\x26\x27\x28\x29\x49\x2A\x2B\x2C\x2D\x2E\x2F",
-                "\x30\x31\x32\x33\x34\x35\x36\x37\x38\x39\x49\x3A\x3B\x3C\x3D\x3E\x3F",
-                "\x40\x41\x42\x43\x44\x45\x46\x47\x48\x49\x49\x4A\x4B\x4C\x4D\x4E\x4F",
-                "",
-                "\x50\x51\x52\x53\x54\x55\x56\x57\x58\x59\x49\x5A\x5B\x5C\x5D\x5E\x5F",
-                "\x60\x61\x62\x63\x64\x65\x66\x67\x68\x69\x49\x6A\x6B\x6C\x6D\x6E\x6F",
-                "\x70\x71\x72\x73\x74\x75\x76\x77\x78\x79\x49\x7A\x7B\x7C\x7D\x7E\x7F",
-                "\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x49\x8A\x8B\x8C\x8D\x8E\x8F",
-                "\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x49\x9A\x9B\x9C\x9D\x9E\x9F",
-                "",
-                "\xA0\xA1\xA2\xA3\xA4\xA5\xA6\xA7\xA8\xA9\x49\xAA\xAB\xAC\xAD\xAE\xAF",
-                "\xB0\xB1\xB2\xB3\xB4\xB5\xB6\xB7\xB8\xB9\x49\xBA\xBB\xBC\xBD\xBE\xBF",
-                "\xC0\xC1\xC2\xC3\xC4\xC5\xC6\xC7\xC8\xC9\x49\xCA\xCB\xCC\xCD\xCE\xCF",
-                "\xD0\xD1\xD2\xD3\xD4\xD5\xD6\xD7\xD8\xD9\x49\xDA\xDB\xDC\xDD\xDE\xDF",
-                "\xE0\xE1\xE2\xE3\xE4\xE5\xE6\xE7\xE8\xE9\x49\xEA\xEB\xEC\xED\xEE\xEF",
-                "",
-                "\xF0\xF1\xF2\xF3\xF4\xF5\xF6\xF7\xF8\xF9\x49\xFA\xFB\xFC\xFD\xFE\xFF"
-            )//.draw(screens.textground.context, 0, 0);
-
-        }
-
-        //  Event handling:
-
-        function handleEvent(e) {
-
-            var k;
-
-            switch (e.type) {
-
-                case "keydown":
-                    k = e.code || e.key || e.keyIdentifier || e.keyCode;
-                    if (document.documentElement.hasAttribute("data-touch")) {
-                        document.documentElement.removeAttribute("data-touch");
-                        game.set("resized", 1);
+            },
+            draw: {
+                value: function () {
+                    var i;
+                    if (this.get("resized")) this.layout();
+                    for (i in this.screens) {
+                        if (this.screens[i].canvas.hasAttribute("data-clear")) {
+                            this.screens[i].clear();
+                            this.screens[i].canvas.removeAttribute("data-clear");
+                            continue;
+                        }
+                        switch (this.screens[i].canvas.dataset.type) {
+                            case "area":
+                                if (this.area instanceof Area && this.area.get("clear")) this.screens[i].clear();
+                                break;
+                            case "animation":
+                                this.screens[i].clear();
+                                break;
+                            default:
+                                /*  Do nothing  */
+                                break;
+                        }
                     }
-                    if (k === "Tab" || k === "U+0009" || k === 0x09) {
-                        if (!(document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement)) {
-                            if (document.body.requestFullscreen) document.body.requestFullscreen();
-                            else if (document.body.mozRequestFullScreen) document.body.mozRequestFullScreen();
-                            else if (document.body.webkitRequestFullscreen) document.body.webkitRequestFullscreen();
-                            else if (document.body.msRequestFullscreen) document.body.msRequestFullscreen();
+                    if (this.area instanceof Area) this.area.draw();
+                    for (i in this.texts.__properties__) {
+                        this.texts.__properties__[i].draw()
+                    }
+                    this.set("resized", 0);
+                    this.window.requestAnimationFrame(this.draw.bind(this));
+                }
+            },
+            handleEvent: {
+                value: function (e) {
+                    var k;
+                    switch (e.type) {
+                        case "keydown":
+                            k = e.code || e.key || e.keyIdentifier || e.keyCode;
+                            if (this.document.documentElement.hasAttribute("data-touch")) {
+                                this.document.documentElement.removeAttribute("data-touch");
+                                this.set("resized", 1);
+                            }
+                            if (k === "Tab" || k === "U+0009" || k === 0x09) {
+                                if (!(this.document.fullscreenElement || this.document.mozFullScreenElement || this.document.webkitFullscreenElement || this.document.msFullscreenElement)) {
+                                    if (this.document.body.requestFullscreen) this.document.body.requestFullscreen();
+                                    else if (this.document.body.mozRequestFullScreen) this.document.body.mozRequestFullScreen();
+                                    else if (this.document.body.webkitRequestFullscreen) this.document.body.webkitRequestFullscreen();
+                                    else if (this.document.body.msRequestFullscreen) this.document.body.msRequestFullscreen();
+                                }
+                                else {
+                                    if (this.document.exitFullscreen) document.this.exitFullscreen();
+                                    else if (this.document.mozCancelFullScreen) this.document.mozCancelFullScreen();
+                                    else if (this.document.webkitExitFullscreen) this.document.webkitExitFullscreen();
+                                    else if (this.document.msExitFullscreen) this.document.msExitFullscreen();
+                                }
+                            }
+                            break;
+                        case "resize":
+                            this.set("resized", 1);
+                            break;
+                        case "touchstart":
+                            if (!this.document.documentElement.hasAttribute("data-touch")) {
+                                this.document.documentElement.setAttribute("data-touch", "");
+                                this.set("resized", 1);
+                            }
+                            break;
+                    }
+                }
+            },
+            layout: {
+                value: function () {
+                    var body_height;
+                    var body_width;
+                    var border_img = this.datadoc.querySelector("img.gui-border");
+                    var border_height =  Number(border_img.dataset.spriteHeight);
+                    var border_width =  Number(border_img.dataset.spriteWidth);
+                    var button_img = this.datadoc.querySelector("img.gui-buttons");
+                    var button_height;
+                    var button_width;
+                    var canvas;
+                    var horizontal;
+                    var i;
+                    var scaled_height;
+                    var scaled_width;
+                    var temporary_height;
+                    var temporary_width;
+                    if (this.document.documentElement.hasAttribute("data-touch")) {
+                        button_height = Number(button_img.dataset.buttonHeight);
+                        button_width = Number(button_img.dataset.buttonWidth);
+                    }
+                    else {
+                        button_height = 0;
+                        button_width = 0;
+                    }
+                    this.document.documentElement.style.margin = "0";
+                    this.document.documentElement.style.padding = "0";
+                    this.document.documentElement.style.background = "black";
+                    this.document.documentElement.style.imageRendering = "-webkit-optimize-contrast";
+                    this.document.documentElement.style.imageRendering = "-moz-crisp-edges";
+                    this.document.documentElement.style.imageRendering = "pixelated";
+                    this.document.documentElement.style.WebkitTouchCallout = "none";
+                    this.document.documentElement.style.webkitTouchCallout = "none";
+                    this.document.documentElement.style.WebkitUserSelect = "none";
+                    this.document.documentElement.style.webkitUserSelect = "none";
+                    this.document.documentElement.style.msUserSelect = "none";
+                    this.document.documentElement.style.MozUserSelect = "none";
+                    this.document.documentElement.style.userSelect = "none";
+                    this.document.body.style.position = "absolute";
+                    this.document.body.style.top = "0";
+                    this.document.body.style.bottom = "0";
+                    this.document.body.style.left = "0";
+                    this.document.body.style.right = "0";
+                    this.document.body.style.margin = "0";
+                    this.document.body.style.border = "none";
+                    this.document.body.style.padding = "0";
+                    this.document.body.style.background = border_img.dataset.systemBackground;
+                    body_width = this.document.body.clientWidth;
+                    body_height = this.document.body.clientHeight;
+                    canvas = this.document.getElementsByTagName("canvas").item(0)
+                    if (body_width / body_height > canvas.width / canvas.height) {
+                        horizontal = true;
+                        body_width -= 2 * button_width;
+                    }
+                    else {
+                        horizontal = false;
+                        body_height -= button_height;
+                    }
+                    for (i = 0; i < this.document.getElementsByTagName("canvas").length; i++) {
+                        canvas = this.document.getElementsByTagName("canvas").item(i);
+                        if (body_width / body_height > canvas.width / canvas.height) {
+                            if (body_height < canvas.height) scaled_height = body_height;
+                            else scaled_height = canvas.height * Math.floor(body_height / canvas.height);
+                            scaled_width = Math.floor(canvas.width * scaled_height / canvas.height);
                         }
                         else {
-                            if (document.exitFullscreen) document.exitFullscreen();
-                            else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
-                            else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-                            else if (document.msExitFullscreen) document.msExitFullscreen();
+                            if (body_width < canvas.width) scaled_width = body_width;
+                            else scaled_width = canvas.width * Math.floor(body_width / canvas.width);
+                            scaled_height = Math.floor(canvas.height * scaled_width / canvas.width);
                         }
+                        canvas.style.display = "block";
+                        canvas.style.position = "absolute";
+                        canvas.style.margin = 0;
+                        canvas.style.borderStyle = "solid";
+                        canvas.style.borderTopWidth = canvas.style.borderBottomWidth = border_height + "px";
+                        canvas.style.borderLeftWidth = canvas.style.borderRightWidth = border_width + "px";
+                        canvas.style.borderColor = "transparent";
+                        canvas.style.borderRadius = border_width + "px " + border_height + "px";
+                        canvas.style.borderImage = "url(" + border_img.src + ") " + border_width + " " + border_height + " repeat";
+                        if (!i) canvas.style.background = border_img.dataset.screenBackground;
+                        if (horizontal) canvas.style.top = "calc(50% - " + (scaled_height / 2 + border_height) + "px)";
+                        else canvas.style.top = "calc(50% - " + (scaled_height / 2 + border_height + button_height / 2) + "px)";
+                        canvas.style.left = "calc(50% - " + (scaled_width / 2 + border_width) + "px)";
+                        canvas.style.width = scaled_width + "px";
+                        canvas.style.height = scaled_height + "px";
                     }
-                    break;
-
-                case "resize":
-                    game.set("resized", 1);
-                    break;
-
-                case "touchstart":
-                    if (!document.documentElement.hasAttribute("data-touch")) {
-                        document.documentElement.setAttribute("data-touch", "");
-                        game.set("resized", 1);
+                    if (horizontal){
+                        this.document.getElementById("jo-ctls-lf").style.top = "0";
+                        this.document.getElementById("jo-ctls-rt").style.top = "0";
+                        this.document.getElementById("jo-ctls-lf").style.right = "";
+                        this.document.getElementById("jo-ctls-rt").style.left = "";
                     }
-                    break;
-
-            }
-
-        }
-
-        //  Initialization:
-
-        function init() {
-
-            //  Setting up variables:
-
-            var collection;
-            var i;
-
-            function imported(node) {
-                if (typeof node === "string" || node instanceof String) node = datadoc.getElementById(node);
-                if (!(node instanceof Node)) throw new Error("[Jelli] Cannot import node – none provided");
-                return document.importNode(node, true);
-            }
-            function placed(node) {
-                if (typeof node === "string" || node instanceof String) node = datadoc.getElementById(node);
-                if (!(node instanceof Node)) throw new Error("[Jelli] Cannot place node – none provided");
-                return document.body.appendChild(document.importNode(node, true));
-            }
-
-            //  Making sure modules are loaded:
-
-            if (typeof Screen === "undefined" || !Screen) throw new Error("[Jelli] Screen module not loaded");
-            if (typeof Control === "undefined" || !Control) throw new Error("[Jelli] Control module not loaded");
-            if (typeof Sheet === "undefined" || !Sheet) throw new Error("[Jelli] Sheet module not loaded");
-            if (typeof Letters === "undefined" || !Letters) throw new Error("[Jelli] Letters module not loaded");
-            if (typeof Tileset === "undefined" || !Tileset) throw new Error("[Jelli] Tileset module not loaded");
-            if (typeof Jelli === "undefined" || !Tileset) throw new Error("[Jelli] JelliScript module not loaded");
-
-            //  Setting up datadoc and clearing the body:
-
-            datadoc.body = datadoc.importNode(document.body, true);
-            document.body = document.createElement("body");
-            document.body.style.visibility = "hidden";
-
-            //  Screen setup:
-
-            for (collection = datadoc.getElementsByTagName("canvas"), i = 0; i < collection.length; i++) {
-                Object.defineProperty(screens, collection.item(i).id, {value: new Screen(placed(collection.item(i)), "2d"), enumerable: true});
-            }
-
-            //  Control setup:
-
-            placed("jo-ctls-lf");
-            placed("jo-ctls-rt");
-
-            control = new Control(true);
-
-            control.add("action").addKeys("action", 0x58, "U+0058", "KeyX", "X", "x").linkElement("action", "jo-ctrl-actn");
-            control.add("down").addKeys("down", 0x28, "ArrowDown", "Down").linkElement("down", "jo-ctrl-dnrw");
-            control.add("exit").addKeys("exit", 0x5A, "U+005A", "KeyZ", "Z", "z").linkElement("exit", "jo-ctrl-exit");
-            control.add("left").addKeys("left", 0x25, "ArrowLeft", "Left").linkElement("left", "jo-ctrl-lfrw");
-            control.add("look").addKeys("look", 0x53, "U+0053", "KeyS", "S", "s").linkElement("look", "jo-ctrl-look");
-            control.add("menu").addKeys("menu", 0x41, "U+0041", "KeyA", "A", "a").linkElement("menu", "jo-ctrl-menu");
-            control.add("right").addKeys("right", 0x27, "ArrowRight", "Right").linkElement("right", "jo-ctrl-rtrw");
-            control.add("select").addKeys("select", 0x57, "U+0057", "KeyW", "W", "w").linkElement("select", "jo-ctrl-selc");
-            control.add("start").addKeys("start", 0x51, "U+0051", "KeyQ", "Q", "q").linkElement("start", "jo-ctrl-strt");
-            control.add("up").addKeys("up", 0x26, "ArrowUp", "Up").linkElement("up", "jo-ctrl-uprw");
-
-            //  Game creation:
-
-            game = new Game();
-
-            //  Sprite sheet setup:
-
-            for (collection = datadoc.getElementsByClassName("letters"), i = 0; i < collection.length; i++) {
-                Object.defineProperty(letters, collection.item(i).id, {value: new Letters(imported(collection.item(i)), Number(collection.item(i).dataset.spriteWidth), Number(collection.item(i).dataset.spriteHeight))});
-            }
-            for (collection = datadoc.getElementsByClassName("tileset"), i = 0; i < collection.length; i++) {
-                Object.defineProperty(tilesets, collection.item(i).id, {value: new Tileset(new Sheet(imported(collection.item(i)), Number(collection.item(i).dataset.spriteWidth), Number(collection.item(i).dataset.spriteHeight)), Number(collection.item(i).dataset.spriteWidth), Number(collection.item(i).dataset.spriteHeight), collection.item(i).dataset.collisions.trim(), Sheet.drawSheetAtIndex)});
-            }
-            for (collection = datadoc.getElementsByClassName("sheet"), i = 0; i < collection.length; i++) {
-                Object.defineProperty(sheets, collection.item(i).id, {value: new Sheet(imported(collection.item(i)), Number(collection.item(i).dataset.spriteWidth), Number(collection.item(i).dataset.spriteHeight))});
-            }
-
-            //  Adding event listeners:
-
-            document.body.addEventListener("touchmove", function (e) {e.preventDefault();}, false);
-            window.addEventListener("keydown", handleEvent, false);
-            window.addEventListener("resize", handleEvent, false);
-            window.addEventListener("touchstart", handleEvent, false);
-
-            //  Initializing the game code:
-
-            if (document.head.getElementsByClassName("init").item(0)) Jelli.parseScript(document.head.getElementsByClassName("init").item(0).text || document.head.getElementsByClassName("init").item(0).textContent, game);
-
-            //  Starting the render and logic processes:
-
-            window.requestAnimationFrame(render)
-            logic();
-
-        }
-
-        //  Layout:
-
-        function layout() {
-
-            //  Variable setup:
-
-            var body_height;
-            var body_width;
-            var border_img = datadoc.querySelector("img.gui-border");
-            var border_height =  Number(border_img.dataset.spriteHeight);
-            var border_width =  Number(border_img.dataset.spriteWidth);
-            var button_img = datadoc.querySelector("img.gui-buttons");
-            var button_height;
-            var button_width;
-            var canvas;
-            var horizontal;
-            var i;
-            var scaled_height;
-            var scaled_width;
-            var temporary_height;
-            var temporary_width;
-
-            //  Accommodating buttons for touch:
-
-            if (document.documentElement.hasAttribute("data-touch")) {
-                button_height = Number(button_img.dataset.buttonHeight);
-                button_width = Number(button_img.dataset.buttonWidth);
-            }
-            else {
-                button_height = 0;
-                button_width = 0;
-            }
-
-            //  Styling the root:
-
-            document.documentElement.style.margin = "0";
-            document.documentElement.style.padding = "0";
-            document.documentElement.style.background = "black";
-            document.documentElement.style.imageRendering = "-webkit-optimize-contrast";
-            document.documentElement.style.imageRendering = "-moz-crisp-edges";
-            document.documentElement.style.imageRendering = "pixelated";
-            document.documentElement.style.WebkitTouchCallout = "none";
-            document.documentElement.style.webkitTouchCallout = "none";
-            document.documentElement.style.WebkitUserSelect = "none";
-            document.documentElement.style.webkitUserSelect = "none";
-            document.documentElement.style.msUserSelect = "none";
-            document.documentElement.style.MozUserSelect = "none";
-            document.documentElement.style.userSelect = "none";
-
-            //  Styling the body:
-
-            document.body.style.position = "absolute";
-            document.body.style.top = "0";
-            document.body.style.bottom = "0";
-            document.body.style.left = "0";
-            document.body.style.right = "0";
-            document.body.style.margin = "0";
-            document.body.style.border = "none";
-            document.body.style.padding = "0";
-            document.body.style.background = border_img.dataset.systemBackground;
-
-            //  Setting up body width/height:
-
-            body_width = document.body.clientWidth;
-            body_height = document.body.clientHeight;
-
-            //  Layout choice is dictated by the first canvas element:
-
-            canvas = document.getElementsByTagName("canvas").item(0)
-            if (body_width / body_height > canvas.width / canvas.height) {
-                horizontal = true;
-                body_width -= 2 * button_width;
-            }
-            else {
-                horizontal = false;
-                body_height -= button_height;
-            }
-
-            //  Sizing each canvas:
-
-            for (i = 0; i < document.getElementsByTagName("canvas").length; i++) {
-
-                canvas = document.getElementsByTagName("canvas").item(i);
-
-                if (body_width / body_height > canvas.width / canvas.height) {
-                    if (body_height < canvas.height) scaled_height = body_height;
-                    else scaled_height = canvas.height * Math.floor(body_height / canvas.height);
-                    scaled_width = Math.floor(canvas.width * scaled_height / canvas.height);
+                    else {
+                        this.document.getElementById("jo-ctls-lf").style.top = "";
+                        this.document.getElementById("jo-ctls-rt").style.top = "";
+                        this.document.getElementById("jo-ctls-lf").style.right = "50%";
+                        this.document.getElementById("jo-ctls-rt").style.left = "50%";
+                    }
+                    this.document.body.style.visibility = "";
                 }
-                else {
-                    if (body_width < canvas.width) scaled_width = body_width;
-                    else scaled_width = canvas.width * Math.floor(body_width / canvas.width);
-                    scaled_height = Math.floor(canvas.height * scaled_width / canvas.width);
+            },
+            loadArea: {value: function (index) {this.area = new Area(this, index);}},
+            step: {
+                value: function () {
+
+                    //  Game stepping:
+
+                    if (document.head.getElementsByClassName("step").item(0)) Jelli.parseScript(document.head.getElementsByClassName("step").item(0).text || document.head.getElementsByClassName("step").item(0).textContent, this);
+
+                    //  Area stepping:
+
+                    if (this.area instanceof Area) this.area.step();
+
+                    //  setTimeout for that logic:
+
+                    this.window.setTimeout(this.step.bind(this), 1000/60);
+
                 }
-
-                canvas.style.display = "block";
-                canvas.style.position = "absolute";
-                canvas.style.margin = 0;
-                canvas.style.borderStyle = "solid";
-                canvas.style.borderTopWidth = canvas.style.borderBottomWidth = border_height + "px";
-                canvas.style.borderLeftWidth = canvas.style.borderRightWidth = border_width + "px";
-                canvas.style.borderColor = "transparent";
-                canvas.style.borderRadius = border_width + "px " + border_height + "px";
-                canvas.style.borderImage = "url(" + border_img.src + ") " + border_width + " " + border_height + " repeat";
-                if (!i) canvas.style.background = border_img.dataset.screenBackground;
-                if (horizontal) canvas.style.top = "calc(50% - " + (scaled_height / 2 + border_height) + "px)";
-                else canvas.style.top = "calc(50% - " + (scaled_height / 2 + border_height + button_height / 2) + "px)";
-                canvas.style.left = "calc(50% - " + (scaled_width / 2 + border_width) + "px)";
-                canvas.style.width = scaled_width + "px";
-                canvas.style.height = scaled_height + "px";
             }
+        });
 
-            //  Styling controls:
+        //  Text constructor:
 
-            if (horizontal){
-                document.getElementById("jo-ctls-lf").style.top = "0";
-                document.getElementById("jo-ctls-rt").style.top = "0";
-                document.getElementById("jo-ctls-lf").style.right = "";
-                document.getElementById("jo-ctls-rt").style.left = "";
-            }
-            else {
-                document.getElementById("jo-ctls-lf").style.top = "";
-                document.getElementById("jo-ctls-rt").style.top = "";
-                document.getElementById("jo-ctls-lf").style.right = "50%";
-                document.getElementById("jo-ctls-rt").style.left = "50%";
-            }
+        function Text(game, context, letters, text, isBase64) {
 
-            //  Making it visible:
+            if (isBase64) text = game.window.atob(text);
 
-            document.body.style.visibility = "";
+            //  Defining properties:
+
+            Object.defineProperties(this, {
+                block: {value: letters.createBlock.apply(letters, [context, 0, 0].concat(text.split(letters.source.dataset.linefeed)))},
+                context: {value: context},
+                delIndex: {
+                    get: function () {return this.block.delIndex},
+                    set: function (n) {this.block.delIndex = n;}
+                },
+                drawIndex: {
+                    get: function () {return this.block.drawIndex},
+                    set: function (n) {this.block.drawIndex = n;}
+                },
+                index: {
+                    get: function () {return this.block.index},
+                    set: function (n) {this.block.index = n;}
+                },
+                x: {
+                    get: function () {return this.block.x;},
+                    set: function (n) {this.block.x = n;}
+                },
+                y: {
+                    get: function () {return this.block.y;},
+                    set: function (n) {this.block.y = n;}
+                }
+            });
+
+            //  Creating text as a Jelli:
+
+            Jelli.call(this, {
+                color: {
+                    value: 0,
+                    writable: true
+                },
+                context: {
+                    value: context
+                },
+                delIndex: {
+                    get: (function () {return this.block.delIndex;}).bind(this),
+                    set: (function (n) {this.block.delIndex = n;}).bind(this)
+                },
+                drawIndex: {
+                    get: (function () {return this.block.drawIndex;}).bind(this),
+                    set: (function (n) {this.block.drawIndex = n;}).bind(this)
+                },
+                height: {get: function () {return this.block.height;}},
+                index: {
+                    get: (function () {return this.block.index;}).bind(this),
+                    set: (function (n) {this.block.index = n;}).bind(this)
+                },
+                length: {get: function () {return this.block.length;}},
+                text: {value: text},
+                x: {
+                    get: (function () {return this.block.x;}).bind(this),
+                    set: (function (n) {this.block.x = n;}).bind(this)
+                },
+                y: {
+                    get: (function () {return this.block.y;}).bind(this),
+                    set: (function (n) {this.block.y = n;}).bind(this)
+                },
+            }, {
+                advance: {value: this.advance},
+                clear: {value: this.clear},
+                fill: {value: this.fill}
+            });
+
+            //  Text freezing:
+
+            Object.freeze(this);
 
         }
 
-        //  Logic function:
+        //  Text prototyping:
 
-        function logic() {
+        Text.prototype = Object.create(Jelli.prototype, {
+            advance: {value: function (/*  Optional amount  */) {return this.block.advance.apply(this.block, arguments);}},
+            clear: {value: function () {return this.block.clear.apply(this.block, arguments);}},
+            draw: {
+                value: function () {
+                    if (this.get("color")) this.block.letters.setColor(this.get("color"));
+                    else this.block.letters.clearColor();
+                    this.block.draw.call(this.block, this.context, this.x, this.y);
+                }
+            },
+            fill: {value: function () {return this.block.fill.apply(this.block, arguments);}},
+            item: {value: function (n) {return this.block.item.apply(this.block, arguments);}},
+            line: {value: function (n) {return this.block.line.apply(this.block, arguments);}}
+        });
 
-            //  Game stepping:
+        //  Texts constructor:
 
-            if (document.head.getElementsByClassName("step").item(0)) Jelli.parseScript(document.head.getElementsByClassName("step").item(0).text || document.head.getElementsByClassName("step").item(0).textContent, game);
+        function Texts(game) {
 
-            //  Area stepping:
+            Jelli.call(this, {
+                game: {value: game}
+            }, {}, {
+                create: {value: this.create}
+            });
 
-            if (game.get("area") instanceof Area) game.get("area").step();
+            Object.defineProperties(this, {
+                game: {get: function () {return this.__properties__.game;}}
+            })
 
-            //  setTimeout for that logic:
+            //  Texts freezing:
 
-            window.setTimeout(logic, 1000/60);
-
-        }
-
-        //  Rendering function:
-
-        function render() {
-
-            //  Managing layout:
-
-            if (game.get("resized")) layout();
-
-            //  Clearing the screens, if needed:
-
-            clearScreens();
-
-            //  Drawing the area:
-
-            if (game.get("area") instanceof Area) game.get("area").draw();
-
-            //  Drawing the text:
-
-            drawText();
-
-            //  Reset various flags:
-
-            game.set("resized", 0);
-
-            //  Request new frame:
-
-            window.requestAnimationFrame(render);
+            Object.freeze(this);
 
         }
 
-        //  Add load listener:
+        //  Texts prototyping:
 
-        window.addEventListener("load", init, false);
+        Texts.prototype = Object.create(Jelli.prototype, {
+            create: {
+                value: function (name, screen, letters, text, isBase64) {
+                    this.declare(name);
+                    this.set(name, new Text(this.game, this.game.screens[screen].context, this.game.letters[letters], text, isBase64 ? !!isBase64 : false));
+                }
+            }
+        });
 
-        return Jelli;
+        return Game;
 
     })();
 

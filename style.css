@@ -1,5 +1,7 @@
 @charset "UTF-8";
 
+/*  This file will eventually be phased out but right now is needed for control styling  */
+
 /*  Controls:  */
 
 *[id^="jo-ctls"] {
