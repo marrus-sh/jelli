@@ -99,6 +99,22 @@
             </section>
         </section>
         <section>
+            <h2>Images</h2>
+            <p>
+                When you don't need sprite-based rendering but just want to paste a whole image to the canvas, elements with class <code>image</code> is how you do that.
+                The <code>id</code> of these elements <strong>must</strong> be specified (and unique)&mdash;this is used as an identifier within the game's script.
+            </p>
+            <p>
+                Images are screen-specific, and you can specify which screen you want to draw them to with the <code>data-screen</code> attribute.
+            </p>
+            <section>
+                <h3>An image:</h3>
+                <img id="ctrlimg" class="image" alt="This is just used as a sample, lol" src="gui/ctrl.png"
+                     data-screen="menuground"
+                     >
+            </section>
+        </section>
+        <section>
             <h2>Sprite sheets</h2>
             <p>
                 These elements contain the sprites used throughout the game.
@@ -202,11 +218,13 @@
                 <h3>Some characters:</h3>
                 <div id="pointer" class="character"
                      data-sprites="jelly"
+                     data-screen="mainground"
                      data-vars="timer"
                      >
                 </div>
                 <div id="player" class="character"
                      data-sprites="jelly"
+                     data-screen="mainground"
                      data-vars="timer"
                      >
                     <script type="text/plain" class="init">
@@ -336,6 +354,8 @@
                           data-screen="background"
                           >AAEAAQABAAEAAQABAAEAAQIDAgMCAwIDAgMCAwIDAgMAAQABAAEAAQABAAEAAQABAgMCAwIDAgMCAwIDAgMCAwABAAEAAQABAAEAAQABAAECAwIDAgMCAwIDAgMCAwIDAAEAAQABAAEAAQABAAEAAQIDAgMCAwIDAgMCAwIDAgMAAQABAAEAAQABAAEAAQABAgMCAwIDAgMCAwIDAgMCAw==</span>
                     <script type="text/plain" class="init">
+                        images.ctrlimg.load
+                        images.ctrlimg.setPosition (80, 32)
                         characters.pointer.load
                         characters.pointer.x.set (88)
                         characters.pointer.y.set (120)
@@ -385,6 +405,12 @@
                             game.loadArea (1)
                         :
                             characters.pointer.dir.set (characters.pointer.lf)
+                        ;
+                        (game.key_menu) ?
+                            images.ctrlimg.placed.set (true)
+                        :
+                            images.ctrlimg.placed.set (false)
+                            game.clearScreen ("menuground")
                         ;
                         characters.pointer.timer.mod_increment (10)
                         -(characters.pointer.timer) characters.pointer.frame.mod_increment (2)

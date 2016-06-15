@@ -329,6 +329,91 @@ var Game = (function () {
 
     })();
 
+    //  Placement image:
+
+    var PlacementImage = (function () {
+
+        //  Placement image constructor
+
+        function PlacementImage(source, context, x, y /*  Optional placed  */) {
+
+            //  Variable setup:
+
+            var source_width;
+            var source_height;
+            var placed = !!arguments[4];
+
+            //  Handling arguments and error checking:
+
+            if (!(context instanceof CanvasRenderingContext2D)) throw new Error("[Image] Cannot create image – rendering context must be 2d.");
+            if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Image] Cannot create image – coordinates must be numbers.");
+            if (!(source instanceof HTMLImageElement || source instanceof SVGImageElement || source instanceof HTMLCanvasElement || (typeof createImageBitmap !== "undefined" && source instanceof ImageBitmap))) throw new Error("[Image] Rendering source must be an image.")
+            if (source instanceof HTMLImageElement && !source.complete) throw new Error("[Image] Rendering source has not finished loading.");
+
+            //  Getting width and height:
+
+            if (source.naturalWidth) source_width = source.naturalWidth;
+            else source_width = source.width;
+            if (source.naturalHeight) source_height = source.naturalHeight;
+            else source_height = source.height;
+
+            //  Adding properties:
+
+            Object.defineProperties(this, {
+                context: {
+                    value: context
+                },
+                height: {
+                    value: source_height
+                },
+                placed: {
+                    get: function () {return placed;},
+                    set: function (n) {placed = !!n;}
+                },
+                source: {
+                    value: source
+                },
+                width: {
+                    value: source_width
+                },
+                x: {
+                    value: x,
+                    writable: true
+                },
+                y: {
+                    value: y,
+                    writable: true
+                }
+            });
+
+        }
+
+        //  Placement image prototyping:
+
+        PlacementImage.prototype = Object.create(Object.prototype, {
+            draw: {
+                value: function () {
+                    if (this.placed) this.context.drawImage(this.source, this.x, this.y);
+                }
+            },
+            setPosition: {
+                value: function (x, y) {
+                    if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Image] Cannot set image position – coordinates must be numbers.");
+                    this.x = x;
+                    this.y = y;
+                }
+            },
+            togglePlacement: {
+                value: function () {
+                    this.placed = !this.placed;
+                }
+            }
+        });
+
+        return PlacementImage;
+
+    })();
+
     //  Sheet:
 
     var Sheet = (function () {
@@ -1403,6 +1488,9 @@ var Game = (function () {
                 else if (dataobj.__properties__[fn.substr(0, s)] instanceof Jelli) return arguments[2] instanceof Array ? run(dataobj.__properties__[fn.substr(0, s)], fn.substr(s + 1), arguments[2]) : run(dataobj.__properties__[fn.substr(0, s)], fn.substr(s + 1));
                 else throw new Error("[JelliScript] Function name did not resolve into a function.");
             }
+            else if (!dataobj.__functions__) {
+                console.log(dataobj);
+            }
             else if (dataobj.__functions__[fn] instanceof Function) return arguments[2] instanceof Array ? dataobj.__functions__[fn].apply(dataobj, arguments[2].map(value.bind(undefined, global ? global : dataobj))) : dataobj.__functions__[fn].call(dataobj);
             else throw new Error("[JelliScript] Function name did not resolve into a function.");
         }
@@ -1427,9 +1515,7 @@ var Game = (function () {
                 else throw new Error("[JelliScript] " + prop.substr(0, s) + " did not resolve into a Jelli object");
             }
             else if (typeof dataobj.__properties__[prop] === "number" || dataobj.__properties__[prop] instanceof Number || dataobj.__properties__[prop] instanceof Jelli) return dataobj.__properties__[prop];
-            else if (dataobj.__properties__[prop] === undefined) {
-                throw new Error("[JelliScript] Variable is undefined.");
-            }
+            else if (dataobj.__properties__[prop] === undefined) {throw new Error("[JelliScript] Variable is undefined.");}
             else return String(dataobj.__properties__[prop]);
         }
 
@@ -1672,8 +1758,9 @@ var Game = (function () {
             //  Sets up the area as a Jelli:
 
             Jelli.call(this, {
-                characters: {value: new Characters(this)},
+                characters: {value: new Collection(this, Character)},
                 game: {value: game},
+                images: {value: new Collection(this, JelliImage)},
                 x: {
                     get: function () {return x;},
                     set: (function (value) {
@@ -1706,6 +1793,7 @@ var Game = (function () {
 
             Object.defineProperties(this, {
                 characters: {value: this.__properties__.characters},
+                images: {value: this.__properties__.images},
                 x: {
                     get: function () {return this.__properties__.x;},
                     set: function (n) {this.__properties__.x = n;}
@@ -1767,7 +1855,10 @@ var Game = (function () {
                         }
                     }
                     for (i in this.characters.__properties__) {
-                        this.characters.__properties__[i].draw(this.game.screens.mainground.context)
+                        this.characters.__properties__[i].draw();
+                    }
+                    for (i in this.images.__properties__) {
+                        this.images.__properties__[i].draw();
                     }
                     this.set("clear", 0);
                 }
@@ -1809,22 +1900,14 @@ var Game = (function () {
             var elt;
             var i;
             var item;
-            var props = {
-                area: {value: area},
-                game: {value: area.game},
-                height: {value: this.height},
-                origin_x: {value: this.origin_x},
-                origin_y: {value: this.origin_y},
-                sprite_height: {value: this.sprite_height},
-                sprite_width: {value: this.sprite_width},
-                width: {value: this.width}
-            };
+            var props = {};
             var sprites = [];
 
             //  Handling arguments and error checking:
 
+            if (!(area instanceof Area)) return;
             elt = area.game.datadoc.getElementById(name);
-            if (!(area instanceof Area && elt instanceof Element)) return;
+            if (!(elt instanceof Element)) return;
 
             //  Loading sprites:
 
@@ -1834,20 +1917,32 @@ var Game = (function () {
                 if (collection.item(i).hasAttribute("title") && props[collection.item(i).getAttribute("title")] === undefined) props[collection.item(i).getAttribute("title")] = {value: i};
             }
 
+            //  Preparing Jelli properties
+
+            props.area = {value: area};
+            props.game = {value: area.game};
+            props.height = {value: Number(item.dataset.boxHeight || sprites[0].height)};
+            props.origin_x = {value: Number(item.dataset.boxX || sprites[0].width / 2)};
+            props.origin_y = {value: Number(item.dataset.boxY || sprites[0].height / 2)};
+            props.sprite_height = {value: sprites[0].height};
+            props.sprite_width = {value: sprites[0].width};
+            props.width = {value: Number(item.dataset.boxWidth || sprites[0].width)};
+
             //  Defining properties:
 
             Object.defineProperties(this, {  //  None of the above are writable, so I can just reference them straight below
-                area: {value: area},
-                game: {value: area.game},
-                height: {value: Number(item.dataset.boxHeight || sprites[0].height)},
+                area: props.area,
+                game: props.game,
+                height: props.height,
                 initScript: {value: elt.getElementsByClassName("init").item(0) ? elt.getElementsByClassName("init").item(0).text || elt.getElementsByClassName("init").item(0).textContent : ""},
-                origin_x: {value: Number(item.dataset.boxX || sprites[0].width / 2)},
-                origin_y: {value: Number(item.dataset.boxY || sprites[0].height / 2)},
+                origin_x: props.origin_x,
+                origin_y: props.origin_y,
+                screen: {value: area.game.screens[elt.dataset.screen]},
                 sprites: {value: sprites},
-                sprite_height: {value: sprites[0].height},
-                sprite_width: {value: sprites[0].width},
+                sprite_height: props.sprite_height,
+                sprite_width: props.sprite_width,
                 stepScript: {value: elt.getElementsByClassName("step").item(0) ? elt.getElementsByClassName("step").item(0).text || elt.getElementsByClassName("step").item(0).textContent : ""},
-                width: {value: Number(item.dataset.boxWidth || sprites[0].width)}
+                width: props.width
             });
 
             //  Sets up the character as a Jelli:
@@ -1884,8 +1979,9 @@ var Game = (function () {
 
         Character.prototype = Object.create(Jelli.prototype, {
             draw: {
-                value: function (context) {
-                    return this.sprites[this.get("dir")].draw(context, Math.round(this.get("x") - this.origin_x + this.area.get("x")), Math.round(this.get("y") - this.origin_y + this.area.get("y")), this.get("frame"));
+                value: function () {
+                    if (!(this.screen instanceof Screen)) return;
+                    return this.sprites[this.get("dir")].draw(this.screen.context, Math.round(this.get("x") - this.origin_x + this.area.get("x")), Math.round(this.get("y") - this.origin_y + this.area.get("y")), this.get("frame"));
                 }
             },
             getCollisionEdge: {
@@ -2031,9 +2127,9 @@ var Game = (function () {
             }
         });
 
-        //  Characters constructor:
+        //  Collection constructor:
 
-        function Characters(area) {
+        function Collection(area, constructor) {
 
             Jelli.call(this, {
                 area: {value: area},
@@ -2044,22 +2140,23 @@ var Game = (function () {
 
             Object.defineProperties(this, {
                 area: {get: function () {return this.__properties__.area;}},
+                Type: {value: constructor},
                 game: {get: function () {return this.__properties__.game;}}
             })
 
-            //  Characters freezing:
+            //  Images freezing:
 
             Object.freeze(this);
 
         }
 
-        //  Characters prototyping:
+        //  Collection prototyping:
 
-        Characters.prototype = Object.create(Jelli.prototype, {
+        Collection.prototype = Object.create(Jelli.prototype, {
             load: {
                 value: function (name) {
                     this.declare(name);
-                    this.set(name, new Character(this.area, name));
+                    this.set(name, new this.Type(this.area, name));
                 }
             }
         });
@@ -2098,6 +2195,7 @@ var Game = (function () {
 
             if (typeof Screen === "undefined" || !Screen) throw new Error("[Game] Screen module not loaded");
             if (typeof Control === "undefined" || !Control) throw new Error("[Game] Control module not loaded");
+            if (typeof PlacementImage === "undefined" || !PlacementImage) throw new Error("[Game] Image module not loaded");
             if (typeof Sheet === "undefined" || !Sheet) throw new Error("[Game] Sheet module not loaded");
             if (typeof Letters === "undefined" || !Letters) throw new Error("[Game] Letters module not loaded");
             if (typeof Tileset === "undefined" || !Tileset) throw new Error("[Game] Tileset module not loaded");
@@ -2116,6 +2214,7 @@ var Game = (function () {
                 control: {value: new Control(true)},
                 datadoc: {value: datadoc},
                 document: {value: doc},
+                images: {value: {}},
                 letters: {value: {}},
                 screens: {value: {}},
                 sheets: {value: {}},
@@ -2177,6 +2276,12 @@ var Game = (function () {
 
             for (collection = datadoc.getElementsByTagName("canvas"), i = 0; i < collection.length; i++) {
                 Object.defineProperty(this.screens, collection.item(i).id, {value: new Screen(placed(collection.item(i)), "2d"), enumerable: true});
+            }
+
+            //  Loading images:
+
+            for (collection = datadoc.getElementsByClassName("image"), i = 0; i < collection.length; i++) {
+                Object.defineProperty(this.images, collection.item(i).id, {value: imported(collection.item(i))});
             }
 
             //  Sprite sheet setup:
@@ -2424,6 +2529,58 @@ var Game = (function () {
 
                 }
             }
+        });
+
+        //  Image constructor:
+
+        function JelliImage(area, name) {
+
+            //  Setting up variables:
+
+            var elt;
+
+            //  Handling arguments and error checking:
+
+            if (!(area instanceof Area)) return;
+            elt = area.game.images[name];
+            if (!(elt instanceof Element)) return;
+
+            //  Defining image as placement image:
+
+            PlacementImage.call(this, elt, area.game.screens[elt.dataset.screen].context, 0, 0, 0);
+
+            //  But it's actually a Jelli!
+
+            Jelli.call(this, {
+                placed: {
+                    get: (function () {return this.placed ? 1 : 0;}).bind(this),
+                    set: (function (n) {this.placed = n;}).bind(this)
+                },
+                x: {
+                    get: (function () {return this.x;}).bind(this),
+                    set: (function (n) {this.x = n;}).bind(this)
+                },
+                y: {
+                    get: (function () {return this.y;}).bind(this),
+                    set: (function (n) {this.y = n;}).bind(this)
+                },
+            }, {
+                setPosition: {value: this.setPosition},
+                togglePlacement: {value: this.togglePlacement}
+            });
+
+            //  Image sealing:
+
+            Object.seal(this);
+
+        }
+
+        //  Image prototyping:
+
+        JelliImage.prototype = Object.create(Jelli.prototype, {
+            draw: {value: PlacementImage.prototype.draw},
+            setPosition: {value: PlacementImage.prototype.setPosition},
+            togglePlacement: {value: PlacementImage.prototype.togglePlacement}
         });
 
         //  Text constructor:
