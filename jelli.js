@@ -1453,7 +1453,9 @@ var Game = (function () {
                     if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to mod-increment a non-declared value.");
                     if (arguments[2] !== undefined) this.__properties__[prop] += arguments[2];
                     else this.__properties__[prop]++;
-                    return this.__properties__[prop] %= mod;
+                    this.__properties__[prop] %= mod;
+                    if (this.__properties__[prop] < 0) this.__properties__[prop] += mod;
+                    return this.__properties__[prop];
                 }
             },
             set: {
