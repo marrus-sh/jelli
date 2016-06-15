@@ -1454,7 +1454,7 @@ var Game = (function () {
                     if (arguments[2] !== undefined) this.__properties__[prop] += arguments[2];
                     else this.__properties__[prop]++;
                     this.__properties__[prop] %= mod;
-                    if (this.__properties__[prop] < 0) this.__properties__[prop] += mod;
+                    if (this.__properties__[prop] < 0 && mod > 0 || this.__properties__[prop] > 0 && mod < 0) this.__properties__[prop] += mod;
                     return this.__properties__[prop];
                 }
             },
