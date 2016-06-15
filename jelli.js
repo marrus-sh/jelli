@@ -393,7 +393,7 @@ var Game = (function () {
         PlacementImage.prototype = Object.create(Object.prototype, {
             draw: {
                 value: function () {
-                    if (this.placed) this.context.drawImage(this.source, this.x, this.y);
+                    if (this.placed) this.context.drawImage(this.source, Math.floor(this.x), Math.floor(this.y));
                 }
             },
             setPosition: {
@@ -1488,7 +1488,7 @@ var Game = (function () {
                 else if (dataobj.__properties__[fn.substr(0, s)] instanceof Jelli) return arguments[2] instanceof Array ? run(dataobj.__properties__[fn.substr(0, s)], fn.substr(s + 1), arguments[2]) : run(dataobj.__properties__[fn.substr(0, s)], fn.substr(s + 1));
                 else throw new Error("[JelliScript] Function name did not resolve into a function.");
             }
-            else if (!dataobj.__functions__) {
+            else if (!dataobj.__modifiers__) {
                 console.log(dataobj);
             }
             else if (dataobj.__functions__[fn] instanceof Function) return arguments[2] instanceof Array ? dataobj.__functions__[fn].apply(dataobj, arguments[2].map(value.bind(undefined, global ? global : dataobj))) : dataobj.__functions__[fn].call(dataobj);
@@ -2129,11 +2129,23 @@ var Game = (function () {
 
         //  Collection constructor:
 
-        function Collection(area, constructor) {
+        function Collection(parent, constructor) {
+
+            var area;
+            var game;
+
+            if (parent instanceof Area) {
+                area = parent;
+                game = parent.game;
+            }
+            else if (parent instanceof Game) {
+                game = parent;
+            }
 
             Jelli.call(this, {
                 area: {value: area},
-                game: {value: area.game}
+                game: {value: game},
+                parent: {value: parent},
             }, {}, {
                 load: {value: this.load}
             });
@@ -2141,7 +2153,8 @@ var Game = (function () {
             Object.defineProperties(this, {
                 area: {get: function () {return this.__properties__.area;}},
                 Type: {value: constructor},
-                game: {get: function () {return this.__properties__.game;}}
+                game: {get: function () {return this.__properties__.game;}},
+                parent: {get: function () {return this.__properties__.parent;}}
             })
 
             //  Images freezing:
@@ -2155,8 +2168,9 @@ var Game = (function () {
         Collection.prototype = Object.create(Jelli.prototype, {
             load: {
                 value: function (name) {
+                    var args = [undefined, this.parent].concat(Array.prototype.slice.call(arguments));
                     this.declare(name);
-                    this.set(name, new this.Type(this.area, name));
+                    this.set(name, new (this.Type.bind.apply(this.Type, args))());
                 }
             }
         });
@@ -2239,7 +2253,7 @@ var Game = (function () {
                 key_down: {get: (function () {return Number(this.control.isActive("down"));}).bind(this)},
                 key_left: {get: (function () {return Number(this.control.isActive("left"));}).bind(this)},
                 key_right: {get: (function () {return Number(this.control.isActive("right"));}).bind(this)},
-                texts: {value: new Texts(this)},
+                texts: {value: new Collection(this, Text)},
                 touch: {get: function () {return 0;}}  //  TK
             }, {
                 clearScreen: {value: this.clearScreen},
@@ -2533,16 +2547,17 @@ var Game = (function () {
 
         //  Image constructor:
 
-        function JelliImage(area, name) {
+        function JelliImage(area, name, id) {
 
             //  Setting up variables:
 
             var elt;
+            if (!id) id = name;
 
             //  Handling arguments and error checking:
 
             if (!(area instanceof Area)) return;
-            elt = area.game.images[name];
+            elt = area.game.images[id];
             if (!(elt instanceof Element)) return;
 
             //  Defining image as placement image:
@@ -2585,8 +2600,10 @@ var Game = (function () {
 
         //  Text constructor:
 
-        function Text(game, context, letters, text, isBase64) {
+        function Text(game, name, screen, letters_name, text, isBase64) {
 
+            var context = game.screens[screen].context;
+            var letters = game.letters[letters_name];
             if (isBase64) text = game.window.atob(text);
 
             //  Defining properties:
@@ -2677,37 +2694,6 @@ var Game = (function () {
             fill: {value: function () {return this.block.fill.apply(this.block, arguments);}},
             item: {value: function (n) {return this.block.item.apply(this.block, arguments);}},
             line: {value: function (n) {return this.block.line.apply(this.block, arguments);}}
-        });
-
-        //  Texts constructor:
-
-        function Texts(game) {
-
-            Jelli.call(this, {
-                game: {value: game}
-            }, {}, {
-                create: {value: this.create}
-            });
-
-            Object.defineProperties(this, {
-                game: {get: function () {return this.__properties__.game;}}
-            })
-
-            //  Texts freezing:
-
-            Object.freeze(this);
-
-        }
-
-        //  Texts prototyping:
-
-        Texts.prototype = Object.create(Jelli.prototype, {
-            create: {
-                value: function (name, screen, letters, text, isBase64) {
-                    this.declare(name);
-                    this.set(name, new Text(this.game, this.game.screens[screen].context, this.game.letters[letters], text, isBase64 ? !!isBase64 : false));
-                }
-            }
         });
 
         return Game;
