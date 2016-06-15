@@ -1650,7 +1650,7 @@ var Game = (function () {
             //  Handling arguments and error checking:
 
             elt = game.datadoc.getElementsByClassName("area").item(index);
-            if (!(elt instanceof Element)) throw new Error("[Game] Could not load area – no element found at the specified index.");
+            if (!(game instanceof Game && elt instanceof Element)) return;
 
             //  Defining properties:
 
@@ -1801,51 +1801,63 @@ var Game = (function () {
 
         //  Character constructor:
 
-        function Character(area, sprites, box_x, box_y, box_width, box_height, props, initScript, stepScript) {
+        function Character(area, name) {
 
             //  Setting up variables:
 
+            var collection;
+            var elt;
             var i;
+            var item;
+            var props = {
+                area: {value: area},
+                game: {value: area.game},
+                height: {value: this.height},
+                origin_x: {value: this.origin_x},
+                origin_y: {value: this.origin_y},
+                sprite_height: {value: this.sprite_height},
+                sprite_width: {value: this.sprite_width},
+                width: {value: this.width}
+            };
+            var sprites = [];
 
             //  Handling arguments and error checking:
 
-            if (!(area instanceof Area)) throw new Error("[Game] Cannot create character – no area provided.");
-            if (!(sprites instanceof Array)) throw new Error("[Game] Cannot create character – sprites must be provided in an array.");
-            if (!(props instanceof Array)) throw new Error("[Game] Cannot create character – variables must be provided in an array.");
-            if (!(typeof initScript === "string" || initScript instanceof String)) throw new Error("[Game] Cannot create character – No init function provided.");
-            if (!(typeof stepScript === "string" || stepScript instanceof String)) throw new Error("[Game] Cannot create character – No step function provided.");
+            elt = area.game.datadoc.getElementById(name);
+            if (!(area instanceof Area && elt instanceof Element)) return;
+
+            //  Loading sprites:
+
+            item = (area.game.datadoc.getElementById(elt.dataset.sprites) && area.game.datadoc.getElementById(elt.dataset.sprites).className === "sprites") ? area.game.datadoc.getElementById(elt.dataset.sprites) : null;
+            for (collection = item ? item.getElementsByClassName("sprite") : [], i = 0; i < collection.length; i++) {
+                sprites.push(area.game.sheets[item.dataset.sheet].getSprite(Number(collection.item(i).dataset.index), Number(collection.item(i).dataset.length ? collection.item(i).dataset.length : 1)));
+                if (collection.item(i).hasAttribute("title") && props[collection.item(i).getAttribute("title")] === undefined) props[collection.item(i).getAttribute("title")] = {value: i};
+            }
 
             //  Defining properties:
 
-            Object.defineProperties(this, {  //  None of the above are writable, so I can just re-use their sources below
+            Object.defineProperties(this, {  //  None of the above are writable, so I can just reference them straight below
                 area: {value: area},
                 game: {value: area.game},
-                height: {value: box_height},
-                initScript: {value: initScript},
-                origin_x: {value: box_x},
-                origin_y: {value: box_y},
+                height: {value: Number(item.dataset.boxHeight || sprites[0].height)},
+                initScript: {value: elt.getElementsByClassName("init").item(0) ? elt.getElementsByClassName("init").item(0).text || elt.getElementsByClassName("init").item(0).textContent : ""},
+                origin_x: {value: Number(item.dataset.boxX || sprites[0].width / 2)},
+                origin_y: {value: Number(item.dataset.boxY || sprites[0].height / 2)},
                 sprites: {value: sprites},
                 sprite_height: {value: sprites[0].height},
                 sprite_width: {value: sprites[0].width},
-                stepScript: {value: stepScript},
-                width: {value: box_width}
+                stepScript: {value: elt.getElementsByClassName("step").item(0) ? elt.getElementsByClassName("step").item(0).text || elt.getElementsByClassName("step").item(0).textContent : ""},
+                width: {value: Number(item.dataset.boxWidth || sprites[0].width)}
             });
 
             //  Sets up the character as a Jelli:
 
-            Jelli.call(this, {
-                area: {value: area},
-                game: {value: area.game},
-                height: {value: box_height},
-                origin_x: {value: box_x},
-                origin_y: {value: box_y},
-                sprite_height: {value: sprites[0].height},
-                sprite_width: {value: sprites[0].width},
-                width: {value: box_width}
-            }, {
+            Jelli.call(this, props, {
                 target: {value: this.target},
                 targetBy: {value: this.targetBy}
             });
+
+            //  Setting JelliScript properties:
 
             this.declare("x");
             this.set("x", this.sprite_width / 2);
@@ -1854,10 +1866,13 @@ var Game = (function () {
             this.declare("dir");
             this.declare("frame");
 
-            for (i = 0; i < props.length; i++) {
-                if (!(typeof props[i] === "string" || props[i] instanceof String)) throw new Error("[Game] Cannot create character – Property names must be strings.");
-                this.declare(props[i]);
+            for (collection = elt.dataset.vars ? elt.dataset.vars.split(/\s+/) : [], i = 0; i < collection.length; i++) {
+                this.declare(collection[i]);
             }
+
+            //  Initialization:
+
+            this.init();
 
             //  Character freezing:
 
@@ -2043,29 +2058,8 @@ var Game = (function () {
         Characters.prototype = Object.create(Jelli.prototype, {
             load: {
                 value: function (name) {
-                    var character;
-                    var collection;
-                    var elt;
-                    var i;
-                    var item;
-                    var m;
-                    var n;
-                    elt = this.game.datadoc.getElementById(name);
-                    if (!elt) return;
-                    if (!this.game.datadoc.getElementById(elt.dataset.sprites) || this.game.datadoc.getElementById(elt.dataset.sprites).className !== "sprites") throw new Error("[Game] Cannot load character – No sprites provided.");
-                    else item = this.game.datadoc.getElementById(elt.dataset.sprites);
-                    m = {};
-                    n = [];
-                    for (collection = item.getElementsByClassName("sprite"), i = 0; i < collection.length; i++) {
-                        n.push(this.game.sheets[item.dataset.sheet].getSprite(Number(collection.item(i).dataset.index), Number(collection.item(i).dataset.length ? collection.item(i).dataset.length : 1)));
-                        if (collection.item(i).hasAttribute("title")) m[collection.item(i).getAttribute("title")] = i;
-                    }
                     this.declare(name);
-                    this.set(name, character = new Character(this.get("area"), n, Number(item.dataset.boxX || n[0].width / 2), Number(item.dataset.boxY || n[0].height / 2), Number(item.dataset.boxWidth || n[0].width), Number(item.dataset.boxHeight || n[0].height), elt.dataset.vars ? elt.dataset.vars.split(/\s+/) : [], elt.getElementsByClassName("init").item(0) ? elt.getElementsByClassName("init").item(0).text || elt.getElementsByClassName("init").item(0).textContent : "", elt.getElementsByClassName("step").item(0) ? elt.getElementsByClassName("step").item(0).text || elt.getElementsByClassName("step").item(0).textContent : ""));
-                    for (i in m) {
-                        Object.defineProperty(character.__properties__, i, {value: m[i]});
-                    }
-                    character.init();
+                    this.set(name, new Character(this.area, name));
                 }
             }
         });
