@@ -1431,7 +1431,6 @@ var Game = (function () {
             get: {value: function(prop) {return value(this, prop);}},
             increment: {
                 value: function(prop /*  optional value  */) {
-                    var s;
                     if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
                     if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
                     if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to increment a non-declared value.");
@@ -1447,7 +1446,6 @@ var Game = (function () {
             },
             mod_increment: {
                 value: function(prop, mod /*  optional value  */) {
-                    var s;
                     if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
                     if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
                     if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to mod-increment a non-declared value.");
@@ -1456,6 +1454,16 @@ var Game = (function () {
                     this.__properties__[prop] %= mod;
                     if (this.__properties__[prop] < 0 && mod > 0 || this.__properties__[prop] > 0 && mod < 0) this.__properties__[prop] += mod;
                     return this.__properties__[prop];
+                }
+            },
+            round: {
+                value: function(prop /*  optional digits  */) {
+                    var n = 1;
+                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
+                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
+                    if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to round a non-declared value.");
+                    if (arguments[1] !== undefined) n = Math.pow(10, arguments[1])
+                    return (this.__properties__[prop] = Math.round(this.__properties__[prop] * n) / n);
                 }
             },
             set: {
