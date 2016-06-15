@@ -1045,7 +1045,7 @@ var Game = (function () {
             },
             createBlock: {
                 value: function (context, x, y /*  Some number of data strings  */) {
-                    var args = [undefined, this].concat(Array.of.apply(undefined, arguments));
+                    var args = [undefined, this].concat(Array.prototype.slice.call(arguments));
                     return new (LetterBlock.bind.apply(LetterBlock, args))();
                 }
             },
@@ -1370,7 +1370,7 @@ var Game = (function () {
             },
             getMap: {
                 value: function (context, map, tiles_wide /*  x, y (if not provided, the map will be centred on the screen)  */) {
-                    var args = [undefined, this].concat(Array.of.apply(undefined, arguments));
+                    var args = [undefined, this].concat(Array.prototype.slice.call(arguments));
                     return new (Map.bind.apply(Map, args))();
                 }
             },
