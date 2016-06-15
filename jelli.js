@@ -1174,9 +1174,9 @@ var Game = (function () {
             if (arguments[5] !== undefined && !(typeof arguments[5] === "number" || arguments[5] instanceof Number)) throw new Error("[Tileset] Cannot create map – starting coordinates must be numbers.");
             else y = arguments[5];
             if (arguments[6] !== undefined && !(typeof arguments[6] === "number" || arguments[6] instanceof Number)) throw new Error("[Tileset] Cannot create map – origin coordinates must be numbers.");
-            else x = arguments[6];
+            else origin_x = arguments[6];
             if (arguments[7] !== undefined && !(typeof arguments[7] === "number" || arguments[7] instanceof Number)) throw new Error("[Tileset] Cannot create map – origin coordinates must be numbers.");
-            else y = arguments[7];
+            else origin_y = arguments[7];
             if (x === undefined) x = Math.floor((context.canvas.width - tileset.tile_width * tiles_wide) / 2);
             if (y === undefined) y = Math.floor((context.canvas.height - tileset.tile_height * (decoded_map.length / tiles_wide)) / 2);
             if (origin_x === undefined) origin_x = 0;
@@ -1369,7 +1369,7 @@ var Game = (function () {
                 }
             },
             getMap: {
-                value: function (context, map, tiles_wide /*  x, y (if not provided, the map will be centred on the screen)  */) {
+                value: function (context, map, tiles_wide /*  x, y (if not provided, the map will be centred on the screen), origin_x, origin_y (if not provided, initialized to (0,0))  */) {
                     var args = [undefined, this].concat(Array.prototype.slice.call(arguments));
                     return new (Map.bind.apply(Map, args))();
                 }
