@@ -2190,11 +2190,7 @@ var Game = (function () {
                 Type: {value: constructor},
                 game: {get: function () {return this.__properties__.game;}},
                 parent: {get: function () {return this.__properties__.parent;}}
-            })
-
-            //  Images freezing:
-
-            Object.freeze(this);
+            });
 
         }
 
