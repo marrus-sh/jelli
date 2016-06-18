@@ -201,8 +201,10 @@
             <p>
                 Characters are used to insert any interactive element&mdash;including NPCs and player characters, but also potentially other elements, like doors&mdash;into the game.
                 They have the class <code>character</code>, and should a couple of scripts.
-                The <code>data-vars</code> element is used to declare character variables for use later in code; these are initialized to 0.
-                The <code>data-sprites</code> element tells which sprite collection to use with the character.
+                The <code>data-vars</code> attribute is used to declare character variables for use later in code; these are initialized to 0.
+                The <code>data-sprites</code> attribute tells which sprite collection to use with the character.
+                The <code>data-collides</code> attribute determines whether the sprite is involved in collisions; if present, it should have a value of either <code>map</code>, <code>character</code>, or <code>all</code>.
+                An element without a <code>data-collides</code> attribute is not involved in any collisions, and if this attribute is present but no value is provided, it defaults to <code>all</code>.
             </p>
             <p>
                 Characters generally need scripting.
@@ -226,6 +228,7 @@
                      data-sprites="jelly"
                      data-screen="mainground"
                      data-vars="timer"
+                     data-collides
                      >
                     <script type="text/plain" class="init">
                             x.set (16)
