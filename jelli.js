@@ -1927,7 +1927,7 @@ var Game = (function () {
 
             if (!id) id = name;
             if (!(collection instanceof Collection) || !collection.area || !collection.game) return;
-            elt = collection.game.datadoc.getElementById(name);
+            elt = collection.game.datadoc.getElementById(id);
             if (!(elt instanceof Element)) return;
 
             //  Loading sprites:
