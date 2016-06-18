@@ -335,20 +335,24 @@ var Game = (function () {
 
         //  Placement image constructor
 
-        function PlacementImage(source, context, x, y /*  Optional placed  */) {
+        function PlacementImage(source, context, x, y /*  Optional origin_x, origin_y, placed  */) {
 
             //  Variable setup:
 
+            var origin_x;
+            var origin_y
             var source_width;
             var source_height;
             var placed = !!arguments[4];
 
             //  Handling arguments and error checking:
 
-            if (!(context instanceof CanvasRenderingContext2D)) throw new Error("[Image] Cannot create image – rendering context must be 2d.");
-            if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Image] Cannot create image – coordinates must be numbers.");
             if (!(source instanceof HTMLImageElement || source instanceof SVGImageElement || source instanceof HTMLCanvasElement || (typeof createImageBitmap !== "undefined" && source instanceof ImageBitmap))) throw new Error("[Image] Rendering source must be an image.")
             if (source instanceof HTMLImageElement && !source.complete) throw new Error("[Image] Rendering source has not finished loading.");
+            if (!(context instanceof CanvasRenderingContext2D)) throw new Error("[Image] Cannot create image – rendering context must be 2d.");
+            if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Image] Cannot create image – coordinates must be numbers.");
+            if (isNaN(origin_x = Number(arguments[5]))) origin_x = 0;
+            if (isNaN(origin_y = Number(arguments[5]))) origin_y = 0;
 
             //  Getting width and height:
 
@@ -360,22 +364,22 @@ var Game = (function () {
             //  Adding properties:
 
             Object.defineProperties(this, {
-                context: {
-                    value: context
+                context: {value: context},
+                height: {value: source_height},
+                origin_x: {
+                    value: origin_x,
+                    writable: true
                 },
-                height: {
-                    value: source_height
+                origin_y: {
+                    value: origin_y,
+                    writable: true
                 },
                 placed: {
                     get: function () {return placed;},
                     set: function (n) {placed = !!n;}
                 },
-                source: {
-                    value: source
-                },
-                width: {
-                    value: source_width
-                },
+                source: {value: source},
+                width: {value: source_width},
                 x: {
                     value: x,
                     writable: true
@@ -393,7 +397,7 @@ var Game = (function () {
         PlacementImage.prototype = Object.create(Object.prototype, {
             draw: {
                 value: function () {
-                    if (this.placed) this.context.drawImage(this.source, Math.floor(this.x), Math.floor(this.y));
+                    if (this.placed) this.context.drawImage(this.source, Math.floor(this.origin_x + this.x), Math.floor(this.origin_y + this.y));
                 }
             },
             setPosition: {
@@ -1251,6 +1255,14 @@ var Game = (function () {
                     }
                 }
             },
+            draw: {
+                value: function () {
+                    var i;
+                    for (i = 0; i < this.map.length; i++) {
+                        this.tileset.draw(this.context, this.map[i], this.origin_x + this.x + (i % this.tiles_wide) * this.tile_width, this.origin_y + this.y + Math.floor(i / this.tiles_wide) * this.tile_height);
+                    }
+                }
+            },
             getCollisionEdge: {
                 value: function (dir, sx, sy) {
                     var collision;
@@ -1312,14 +1324,6 @@ var Game = (function () {
                             if ((corner == 0x1 && !(collision & 0x4)) || (corner == 0x2 && !(collision & 0x8))) return iy * this.tile_height + this.tile_height / 2 + this.y;
                             else return iy * this.tile_height + this.tile_height + this.y;
                             break;
-                    }
-                }
-            },
-            draw: {
-                value: function () {
-                    var i;
-                    for (i = 0; i < this.map.length; i++) {
-                        this.tileset.draw(this.context, this.map[i], this.origin_x + this.x + (i % this.tiles_wide) * this.tile_width, this.origin_y + this.y + Math.floor(i / this.tiles_wide) * this.tile_height);
                     }
                 }
             }
@@ -1790,6 +1794,7 @@ var Game = (function () {
                         for (i = 0; i < this.maps.length; i++) {
                             this.maps[i].origin_x = value;
                         }
+                        this.images.doForEach(function (image) {image.origin_x = value;});
                         this.set("clear", 1);
                     }).bind(this)
                 },
@@ -1802,6 +1807,7 @@ var Game = (function () {
                         for (i = 0; i < this.maps.length; i++) {
                             this.maps[i].origin_y = value;
                         }
+                        this.images.doForEach(function (image) {image.origin_y = value;});
                         this.set("clear", 1);
                     }).bind(this)
                 }
@@ -1874,12 +1880,8 @@ var Game = (function () {
                             this.maps[i].draw();
                         }
                     }
-                    for (i in this.characters.__properties__) {
-                        this.characters.__properties__[i].draw();
-                    }
-                    for (i in this.images.__properties__) {
-                        this.images.__properties__[i].draw();
-                    }
+                    this.characters.doForEach(function (character) {character.draw();});
+                    this.images.doForEach(function (image) {image.draw();});
                     this.set("clear", 0);
                 }
             },
@@ -1903,9 +1905,7 @@ var Game = (function () {
                 value: function () {
                     var i;
                     Jelli.parseScript(this.stepScript, this);
-                    for (i in this.characters.__properties__) {
-                        this.characters.__properties__[i].step();
-                    }
+                    this.characters.doForEach(function (character) {character.step();});
                 }
             },
         });
@@ -2086,14 +2086,14 @@ var Game = (function () {
                                 if (sx === undefined || sx > tx) sx = tx;
                             }
                         }
-                        for (i in this.area.characters.__properties__) {
-                            if (this === this.area.characters.__properties__[i] || this.area.characters.__properties__[i].get("collides") === 0 || this.area.characters.__properties__[i].get("collides") === "map") continue;
-                            k = Math.floor(this.height / this.area.characters.__properties__[i].height) + 1;
+                        this.area.characters.doForEach((function (some) {
+                            if (this === some || some.get("collides") === 0 || some.get("collides") === "map") return;
+                            k = Math.floor(this.height / some.height) + 1;
                             for (j = 0; j <= k; j++) {
-                                tx = this.area.characters.__properties__[i].getCollisionEdge("left", this.get("x") + ux + this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
+                                tx = some.getCollisionEdge("left", this.get("x") + ux + this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
                                 if (sx === undefined || sx > tx) sx = tx;
                             }
-                        }
+                        }).bind(this));
                         if (sx !== undefined) this.set("x", sx - this.width / 2);
                     }
                     else if (dx < 0) {
@@ -2104,14 +2104,14 @@ var Game = (function () {
                                 if (sx === undefined || sx < tx) sx = tx;
                             }
                         }
-                        for (i in this.area.characters.__properties__) {
-                            if (this === this.area.characters.__properties__[i] || this.area.characters.__properties__[i].get("collides") === 0 || this.area.characters.__properties__[i].get("collides") === "map") continue;
+                        this.area.characters.doForEach((function (some) {
+                            if (this === some || some.get("collides") === 0 || some.get("collides") === "map") return;
                             k = Math.floor(this.height / this.area.characters.__properties__[i].height) + 1;
                             for (j = 0; j <= k; j++) {
-                                tx = this.area.characters.__properties__[i].getCollisionEdge("right", this.get("x") + ux - this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
+                                tx = some.getCollisionEdge("right", this.get("x") + ux - this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
                                 if (sx === undefined || sx < tx) sx = tx;
                             }
-                        }
+                        }).bind(this));
                         if (sx !== undefined) this.set("x", sx + this.width / 2);
                     }
                     if (dy > 0) {
@@ -2122,14 +2122,14 @@ var Game = (function () {
                                 if (sy === undefined || sy > ty) sy = ty;
                             }
                         }
-                        for (i in this.area.characters.__properties__) {
-                            if (this === this.area.characters.__properties__[i] || this.area.characters.__properties__[i].get("collides") === 0 || this.area.characters.__properties__[i].get("collides") === "map") continue;
-                            k = Math.floor(this.width / this.area.characters.__properties__[i].width) + 1;
+                        this.area.characters.doForEach((function (some) {
+                            if (this === some || some.get("collides") === 0 || some.get("collides") === "map") return;
+                            k = Math.floor(this.width /some.width) + 1;
                             for (j = 0; j <= k; j++) {
-                                ty = this.area.characters.__properties__[i].getCollisionEdge("top", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy + this.height / 2);
+                                ty = some.getCollisionEdge("top", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy + this.height / 2);
                                 if (sy === undefined || sy > ty) sy = ty;
                             }
-                        }
+                        }).bind(this));
                         if (sy !== undefined) this.set("y", sy - this.height / 2);
                     }
                     else if (dy < 0) {
@@ -2140,14 +2140,14 @@ var Game = (function () {
                                 if (sy === undefined || sy < ty) sy = ty;
                             }
                         }
-                        for (i in this.area.characters.__properties__) {
-                            if (this === this.area.characters.__properties__[i] || this.area.characters.__properties__[i].get("collides") === 0 || this.area.characters.__properties__[i].get("collides") === "map") continue;
-                            k = Math.floor(this.width / this.area.characters.__properties__[i].width) + 1;
+                        this.area.characters.doForEach((function (some) {
+                            if (this === some || some.get("collides") === 0 || some.get("collides") === "map") return;
+                            k = Math.floor(this.width / some.width) + 1;
                             for (j = 0; j <= k; j++) {
-                                ty = this.area.characters.__properties__[i].getCollisionEdge("bottom", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy - this.height / 2);
+                                ty = some.getCollisionEdge("bottom", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy - this.height / 2);
                                 if (sy === undefined || sy < ty) sy = ty;
                             }
-                        }
+                        }).bind(this));
                         if (sy !== undefined) this.set("y", sy + this.height / 2);
                     }
                 }
@@ -2178,8 +2178,10 @@ var Game = (function () {
                     value: 0,
                     writable: true
                 },
-                parent: {value: parent},
-            }, {}, {
+                parent: {value: parent}
+            }, {
+                loadNameless: {value: this.loadNameless}
+            }, {
                 load: {value: this.load}
             });
 
@@ -2620,7 +2622,7 @@ var Game = (function () {
 
             //  Defining image as placement image:
 
-            PlacementImage.call(this, elt, collection.game.screens[elt.dataset.screen].context, 0, 0, 0);
+            PlacementImage.call(this, elt, collection.game.screens[elt.dataset.screen].context, 0, 0, collection.area.x, collection.area.y, 0);
 
             //  But it's actually a Jelli!
 
