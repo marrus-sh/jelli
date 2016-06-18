@@ -2210,7 +2210,7 @@ var Game = (function () {
             },
             kill: {
                 value: function (name) {
-                    if (this.hasOwnProperty(name)) delete this.name;
+                    if (this.hasOwnProperty(name)) delete this[name];
                     else this.delete(name);
                 }
             },
