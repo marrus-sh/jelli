@@ -1467,6 +1467,12 @@ var Game = (function () {
                 }
             },
             run: {value: function (fn) {return run.call(null, this, fn, Array.prototype.slice.call(arguments, 1));}},
+            scale: {value: function (prop, factor) {
+                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
+                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
+                    if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to increment a non-declared value.");
+                    return this.__properties__[prop] *= factor;
+            }},
             set: {
                 value: function (prop, to) {
                     var s;
