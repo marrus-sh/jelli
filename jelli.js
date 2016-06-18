@@ -1468,10 +1468,10 @@ var Game = (function () {
             },
             run: {value: function (fn) {return run.call(null, this, fn, Array.prototype.slice.call(arguments, 1));}},
             scale: {value: function (prop, factor) {
-                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
-                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
-                    if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to increment a non-declared value.");
-                    return this.__properties__[prop] *= factor;
+                if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
+                if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
+                if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to increment a non-declared value.");
+                return this.__properties__[prop] *= factor;
             }},
             set: {
                 value: function (prop, to) {
@@ -2174,6 +2174,10 @@ var Game = (function () {
                 area: {value: area},
                 game: {value: game},
                 length: {get: (function () {return this[Object.keys(this).length];}).bind(this)},
+                nextIndex: {
+                    value: 0,
+                    writable: true
+                },
                 parent: {value: parent},
             }, {}, {
                 load: {value: this.load}
@@ -2222,8 +2226,9 @@ var Game = (function () {
             },
             loadNameless: {
                 value: function () {
-                    var args = [null, this.parent, this.length].concat(Array.prototype.slice.call(arguments));
-                    this[this.length] = new (this.Type.bind.apply(this.Type, args))();
+                    var args = [null, this.parent, this.__properties__.nextIndex].concat(Array.prototype.slice.call(arguments));
+                    this[this.__properties__.nextIndex] = new (this.Type.bind.apply(this.Type, args))();
+                    this.__properties__.nextIndex++;
                 }
             }
         });
