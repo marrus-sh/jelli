@@ -2224,7 +2224,7 @@ var Game = (function () {
             },
             loadNameless: {
                 value: function () {
-                    var args = [null, this.parent, this.__properties__.nextIndex].concat(Array.prototype.slice.call(arguments));
+                    var args = [null, this, this.__properties__.nextIndex].concat(Array.prototype.slice.call(arguments));
                     this[this.__properties__.nextIndex] = new (this.Type.bind.apply(this.Type, args))();
                     this.__properties__.nextIndex++;
                 }
