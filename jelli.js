@@ -2226,6 +2226,7 @@ var Game = (function () {
                 value: function () {
                     var args = [null, this, this.__properties__.nextIndex].concat(Array.prototype.slice.call(arguments));
                     this[this.__properties__.nextIndex] = new (this.Type.bind.apply(this.Type, args))();
+                    Object.defineProperty(this[this.__properties__.nextIndex].__functions__, "kill", {value: this.kill.bind(this, name)});
                     this.__properties__.nextIndex++;
                 }
             }
