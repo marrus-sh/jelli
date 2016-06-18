@@ -442,19 +442,18 @@
                     </script>
                     <script type="text/plain" class="step">
                         tx.set (characters.player.x)
-                        tx.increment (x)
+                        tx.increment (-x)
                         (tx < 8) scroll_left.set (1)
                         (tx > 248) scroll_right.set (1)
-                        (scroll_left) x.increment (1)
-                        (scroll_right) x.increment (-1)
-                        tx.set (-x)
-                        (tx < map0x) ?
+                        (scroll_left) x.increment (-1)
+                        (scroll_right) x.increment (1)
+                        (x < map0x) ?
                             map0x.increment (-256)
                             map1x.increment (-256)
                             setMapOffset (0, map0x)
                             setMapOffset (1, map1x)
                         ;
-                        -(tx < map1x) ?
+                        -(x < map1x) ?
                             map0x.increment (256)
                             map1x.increment (256)
                             setMapOffset (0, map0x)

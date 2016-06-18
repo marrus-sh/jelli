@@ -397,7 +397,7 @@ var Game = (function () {
         PlacementImage.prototype = Object.create(Object.prototype, {
             draw: {
                 value: function () {
-                    if (this.placed) this.context.drawImage(this.source, Math.floor(this.origin_x + this.x), Math.floor(this.origin_y + this.y));
+                    if (this.placed) this.context.drawImage(this.source, Math.floor(this.x - this.origin_x), Math.floor(this.y - this.origin_y));
                 }
             },
             setPosition: {
@@ -1259,7 +1259,7 @@ var Game = (function () {
                 value: function () {
                     var i;
                     for (i = 0; i < this.map.length; i++) {
-                        this.tileset.draw(this.context, this.map[i], this.origin_x + this.x + (i % this.tiles_wide) * this.tile_width, this.origin_y + this.y + Math.floor(i / this.tiles_wide) * this.tile_height);
+                        this.tileset.draw(this.context, this.map[i], this.x + (i % this.tiles_wide) * this.tile_width - this.origin_x, this.y + Math.floor(i / this.tiles_wide) * this.tile_height - this.origin_y);
                     }
                 }
             },
@@ -2003,7 +2003,7 @@ var Game = (function () {
             draw: {
                 value: function () {
                     if (!(this.screen instanceof Screen)) return;
-                    return this.sprites[this.get("dir")].draw(this.screen.context, Math.round(this.get("x") - this.origin_x + this.area.get("x")), Math.round(this.get("y") - this.origin_y + this.area.get("y")), this.get("frame"));
+                    return this.sprites[this.get("dir")].draw(this.screen.context, Math.round(this.get("x") - this.origin_x - this.area.get("x")), Math.round(this.get("y") - this.origin_y - this.area.get("y")), this.get("frame"));
                 }
             },
             getCollisionEdge: {
