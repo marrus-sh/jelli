@@ -1,12 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html data-vars="poke_active poke_x poke_y">
     <head>
         <title>Jelli : A Game Engine</title>
         <meta charset="utf-8">
         <meta name="viewport" content="user-scalable=no,width=device-width">
         <link rel="icon" href="icon.png">
-        <!--  `style.css` is necessary for styling the controls on mobile in this stage of development  -->
-        <link rel="stylesheet" href="style.css">
         <script type="text/javascript" src="jelli.js"></script>
         <script type="text/javascript">
             /*
@@ -26,6 +24,11 @@
 
             >>  Step code would go here
 
+        </script>
+        <script type="text/plain" class="click_function touch_function" data-click-number="1" data-touch-number="1">
+            game.poke_active.set (true)
+            game.poke_x.set (x)
+            game.poke_y.set (y)
         </script>
     </head>
     <body hidden style="display: none;">
@@ -66,13 +69,6 @@
                      data-sprite-height="8"
                      data-system-background="#4f4f4f"
                      data-screen-background="#000000"
-                     >
-                <!--  Right now this doesn't do anything: Control stuff is still in development, and currently is styled using `style.css` :(  -->
-                <img class="gui-buttons" alt="Buttons" src="gui/ctrl.png"
-                     data-sprite-width="16"
-                     data-sprite-height="16"
-                     data-button-width="24"
-                     data-button-height="24"
                      >
             </section>
         </section>
@@ -227,7 +223,7 @@
                 <div id="player" class="character"
                      data-sprites="jelly"
                      data-screen="mainground"
-                     data-vars="timer"
+                     data-vars="timer tx ty"
                      data-collides
                      >
                     <script type="text/plain" class="init">
@@ -239,63 +235,72 @@
 
                             >>  This controls jelly movement:
 
-                            (game.key_up) ?
-                                (game.key_down) ?
-                                    (game.key_left) ?
-                                        (game.key_right) ?
-                                            targetBy (0, 0)
-                                        :
-                                            targetBy (-1, 0)
-                                        ;
-                                    :
-                                        (game.key_right) ?
-                                            targetBy (1, 0)
-                                        :
-                                            targetBy (0, 0)
-                                        ;
-                                    ;
-                                :
-                                    (game.key_left) ?
-                                        (game.key_right) ?
-                                            targetBy (0, -1)
-                                        :
-                                            targetBy (-1, -1)
-                                        ;
-                                    :
-                                        (game.key_right) ?
-                                            targetBy (1, -1)
-                                        :
-                                            targetBy (0, -1)
-                                        ;
-                                    ;
-                                ;
+                            (game.poke_active) ?
+                                tx.set (game.poke_x)
+                                tx.increment (area.x)
+                                ty.set (game.poke_y)
+                                ty.increment (area.y)
+                                target (tx, ty)
+                                game.poke_active.set (false)
                             :
-                                (game.key_down) ?
-                                    (game.key_left) ?
-                                        (game.key_right) ?
-                                            targetBy (0, 1)
+                                (game.key_up) ?
+                                    (game.key_down) ?
+                                        (game.key_left) ?
+                                            (game.key_right) ?
+                                                targetBy (0, 0)
+                                            :
+                                                targetBy (-1, 0)
+                                            ;
                                         :
-                                            targetBy (-1, 1)
+                                            (game.key_right) ?
+                                                targetBy (1, 0)
+                                            :
+                                                targetBy (0, 0)
+                                            ;
                                         ;
                                     :
-                                        (game.key_right) ?
-                                            targetBy (1, 1)
+                                        (game.key_left) ?
+                                            (game.key_right) ?
+                                                targetBy (0, -1)
+                                            :
+                                                targetBy (-1, -1)
+                                            ;
                                         :
-                                            targetBy (0, 1)
+                                            (game.key_right) ?
+                                                targetBy (1, -1)
+                                            :
+                                                targetBy (0, -1)
+                                            ;
                                         ;
                                     ;
                                 :
-                                    (game.key_left) ?
-                                        (game.key_right) ?
-                                            targetBy (0, 0)
+                                    (game.key_down) ?
+                                        (game.key_left) ?
+                                            (game.key_right) ?
+                                                targetBy (0, 1)
+                                            :
+                                                targetBy (-1, 1)
+                                            ;
                                         :
-                                            targetBy (-1, 0)
+                                            (game.key_right) ?
+                                                targetBy (1, 1)
+                                            :
+                                                targetBy (0, 1)
+                                            ;
                                         ;
                                     :
-                                        (game.key_right) ?
-                                            targetBy (1, 0)
+                                        (game.key_left) ?
+                                            (game.key_right) ?
+                                                targetBy (0, 0)
+                                            :
+                                                targetBy (-1, 0)
+                                            ;
                                         :
-                                            targetBy (0, 0)
+                                            (game.key_right) ?
+                                                targetBy (1, 0)
+                                            :
+                                                targetBy (0, 0)
+                                            ;
                                         ;
                                     ;
                                 ;
@@ -465,35 +470,5 @@
                 </div>
             </section>
         </section>
-
-        <!--  Until control mechanisms are improved, just leave these divs as they are at the bottom of the page and pretend they don't exist XP  -->
-        <div id="jo-ctls-lf">
-            <!--  Left Controls  -->
-            <div id="jo-ctlr-l1">
-                <div id="jo-ctrl-selc" title="Select"></div>
-                <div id="jo-ctrl-strt" title="Start"></div>
-            </div>
-            <div id="jo-ctlr-l2">
-                <div id="jo-ctrl-look" title="Look"></div>
-                <div id="jo-ctrl-menu" title="Menu"></div>
-            </div>
-            <div id="jo-ctlr-l3">
-                <div id="jo-ctrl-exit" title="Exit"></div>
-                <div id="jo-ctrl-actn" title="Action"></div>
-            </div>
-        </div>
-        <div id="jo-ctls-rt">
-            <!--  Right Controls  -->
-            <div id="jo-ctlr-r1">
-                <div id="jo-ctrl-uprw" title="Up Arrow"></div>
-            </div>
-            <div id="jo-ctlr-r2">
-                <div id="jo-ctrl-lfrw" title="Left Arrow"></div>
-                <div id="jo-ctrl-rtrw" title="Right Arrow"></div>
-            </div>
-            <div id="jo-ctlr-r3">
-                <div id="jo-ctrl-dnrw" title="Down Arrow"></div>
-            </div>
-        </div>
     </body>
 </html>

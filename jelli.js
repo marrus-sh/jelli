@@ -1558,6 +1558,7 @@ var Game = (function () {
                 value: Object.create(Object.prototype, {
                     "false": {value: 0},
                     "rand": {get: function () {return Math.random();}},
+                    "this": {value: this},
                     "true": {value: 1}
                 })
             });
@@ -1764,9 +1765,17 @@ var Game = (function () {
 
             //  Defining properties:
 
+            Object.defineProperty(this, "game", {value: game});
             Object.defineProperties(this, {
-                game: {
-                    value: game
+                characters: {value: new Collection(this, Character)},
+                clear: {
+                    value: 1,
+                    writable: true
+                },
+                images: {value: new Collection(this, JelliImage)},
+                index: {
+                    value: index,
+                    writable: true
                 },
                 initScript: {
                     value: elt.getElementsByClassName("init").item(0) ? elt.getElementsByClassName("init").item(0).text || elt.getElementsByClassName("init").item(0).textContent : ""
@@ -1776,15 +1785,7 @@ var Game = (function () {
                 },
                 stepScript: {
                     value: elt.getElementsByClassName("step").item(0) ? elt.getElementsByClassName("step").item(0).text || elt.getElementsByClassName("step").item(0).textContent : ""
-                }
-            });
-
-            //  Sets up the area as a Jelli:
-
-            Jelli.call(this, {
-                characters: {value: new Collection(this, Character)},
-                game: {value: game},
-                images: {value: new Collection(this, JelliImage)},
+                },
                 x: {
                     get: function () {return x;},
                     set: (function (value) {
@@ -1795,7 +1796,7 @@ var Game = (function () {
                             this.maps[i].origin_x = value;
                         }
                         this.images.doForEach(function (image) {image.origin_x = value;});
-                        this.set("clear", 1);
+                        this.clear = 1;
                     }).bind(this)
                 },
                 y: {
@@ -1808,34 +1809,39 @@ var Game = (function () {
                             this.maps[i].origin_y = value;
                         }
                         this.images.doForEach(function (image) {image.origin_y = value;});
-                        this.set("clear", 1);
+                        this.clear = 1;
                     }).bind(this)
+                }
+            });
+
+            //  Sets up the area as a Jelli:
+
+            Jelli.call(this, {
+                characters: {value: this.characters},
+                clear: {
+                    get: (function () {return this.clear;}).bind(this),
+                    set: (function (n) {this.clear = n;}).bind(this)
+                },
+                game: {value: game},
+                images: {value: this.images},
+                index: {
+                    get: (function () {return this.index;}).bind(this),
+                    set: (function (n) {this.index = n;}).bind(this)
+                },
+                x: {
+                    get: function () {return x;},
+                    set: (function (n) {this.x = n;}).bind(this)
+                },
+                y: {
+                    get: function () {return y;},
+                    set: (function (n) {this.y = n;}).bind(this)
                 }
             }, {
                 setMapOffset: {value: this.setMapOffset}
             });
 
-            //  Jelli aliases:
-
-            Object.defineProperties(this, {
-                characters: {value: this.__properties__.characters},
-                images: {value: this.__properties__.images},
-                x: {
-                    get: function () {return this.__properties__.x;},
-                    set: function (n) {this.__properties__.x = n;}
-                },
-                y: {
-                    get: function () {return this.__properties__.y;},
-                    set: function (n) {this.__properties__.y = n;}
-                }
-            });
-
             //  Initializing properties:
 
-            this.declare("clear");
-            this.set("clear", 1);
-            this.declare("index");
-            this.set("index", game.get(index));
             this.x = 0; //  This initializes the x value (so you can use this.set())
             this.y = 0; //  This initializes the y value (so you can use this.set())
 
@@ -1849,7 +1855,7 @@ var Game = (function () {
 
             for (collection = elt.getElementsByClassName("map"), i = 0; i < collection.length; i++) {
                 item = collection.item(i);
-                this.maps[i] = game.tilesets[item.dataset.tileset].getMap(game.screens[item.dataset.screen].context, item.textContent.trim(), Number(item.dataset.mapwidth), isNaN(Number(item.dataset.dx)) ? 0 : Number(item.dataset.dx), isNaN(Number(item.dataset.dy)) ? 0 : Number(item.dataset.dy), this.get("x"), this.get("y"));
+                this.maps[i] = game.tilesets[item.dataset.tileset].getMap(game.screens[item.dataset.screen].context, item.textContent.trim(), Number(item.dataset.mapwidth), isNaN(Number(item.dataset.dx)) ? 0 : Number(item.dataset.dx), isNaN(Number(item.dataset.dy)) ? 0 : Number(item.dataset.dy), this.x, this.y);
             }
 
 
@@ -1859,9 +1865,9 @@ var Game = (function () {
                 this.characters.load(collection[i]);
             }
 
-            //  Area freezing:
+            //  Area sealing:
 
-            Object.freeze(this);
+            Object.seal(this);
 
             //  Initialization:
 
@@ -1875,22 +1881,17 @@ var Game = (function () {
             draw: {
                 value: function (context) {
                     var i;
-                    if (this.get("clear")) {
+                    if (this.clear) {
                         for (i = 0; i < this.maps.length; i++) {
                             this.maps[i].draw();
                         }
                     }
                     this.characters.doForEach(function (character) {character.draw();});
                     this.images.doForEach(function (image) {image.draw();});
-                    this.set("clear", 0);
+                    this.clear = 0;
                 }
             },
-            init: {
-                value: function () {
-                    if (this.index === 1) window.area = this;
-                    return Jelli.parseScript(this.initScript, this);
-                }
-            },
+            init: {value: function () {return Jelli.parseScript(this.initScript, this);}},
             setMapOffset: {
                 value: function (index /*  x, y  */) {
                     if (arguments[1] !== undefined) {
@@ -1903,7 +1904,6 @@ var Game = (function () {
             },
             step: {
                 value: function () {
-                    var i;
                     Jelli.parseScript(this.stepScript, this);
                     this.characters.doForEach(function (character) {character.step();});
                 }
@@ -1942,6 +1942,14 @@ var Game = (function () {
 
             props.area = {value: collection.area};
             props.collides = {value: elt.hasAttribute("data-collides") ? elt.dataset.collides : 0};
+            props.dir = {
+                get: (function () {return this.dir;}).bind(this),
+                set: (function (n) {this.dir = n;}).bind(this)
+            };
+            props.frame = {
+                get: (function () {return this.frame;}).bind(this),
+                set: (function (n) {this.frame = n;}).bind(this)
+            };
             props.game = {value: collection.game};
             props.height = {value: Number(item.dataset.boxHeight || sprites[0].height)};
             props.origin_x = {value: Number(item.dataset.boxX || sprites[0].width / 2)};
@@ -1949,11 +1957,28 @@ var Game = (function () {
             props.sprite_height = {value: sprites[0].height};
             props.sprite_width = {value: sprites[0].width};
             props.width = {value: Number(item.dataset.boxWidth || sprites[0].width)};
+            props.x = {
+                get: (function () {return this.x;}).bind(this),
+                set: (function (n) {this.x = n;}).bind(this)
+            };
+            props.y = {
+                get: (function () {return this.y;}).bind(this),
+                set: (function (n) {this.y = n;}).bind(this)
+            };
 
             //  Defining properties:
 
-            Object.defineProperties(this, {  //  None of the above are writable, so I can just reference them straight below
+            Object.defineProperties(this, {  //  Pretty much none of the above are writable, so I can just reference them straight below
                 area: props.area,
+                collides : props.collides,
+                dir: {
+                    value: 0,
+                    writable: true
+                },
+                frame: {
+                    value: 0,
+                    writable: true
+                },
                 game: props.game,
                 height: props.height,
                 initScript: {value: elt.getElementsByClassName("init").item(0) ? elt.getElementsByClassName("init").item(0).text || elt.getElementsByClassName("init").item(0).textContent : ""},
@@ -1964,7 +1989,15 @@ var Game = (function () {
                 sprite_height: props.sprite_height,
                 sprite_width: props.sprite_width,
                 stepScript: {value: elt.getElementsByClassName("step").item(0) ? elt.getElementsByClassName("step").item(0).text || elt.getElementsByClassName("step").item(0).textContent : ""},
-                width: props.width
+                width: props.width,
+                x: {
+                    value: props.sprite_width.value / 2,
+                    writable: true
+                },
+                y: {
+                    value: props.sprite_height.value / 2,
+                    writable: true
+                }
             });
 
             //  Sets up the character as a Jelli:
@@ -1974,15 +2007,6 @@ var Game = (function () {
                 targetBy: {value: this.targetBy}
             });
 
-            //  Setting JelliScript properties:
-
-            this.declare("x");
-            this.set("x", this.sprite_width / 2);
-            this.declare("y");
-            this.set("y", this.sprite_height / 2);
-            this.declare("dir");
-            this.declare("frame");
-
             for (items = elt.dataset.vars ? elt.dataset.vars.split(/\s+/) : [], i = 0; i < items.length; i++) {
                 this.declare(items[i]);
             }
@@ -1991,9 +2015,9 @@ var Game = (function () {
 
             this.init();
 
-            //  Character freezing:
+            //  Character sealing:
 
-            Object.freeze(this);
+            Object.seal(this);
 
         }
 
@@ -2003,14 +2027,14 @@ var Game = (function () {
             draw: {
                 value: function () {
                     if (!(this.screen instanceof Screen)) return;
-                    return this.sprites[this.get("dir")].draw(this.screen.context, Math.round(this.get("x") - this.origin_x - this.area.get("x")), Math.round(this.get("y") - this.origin_y - this.area.get("y")), this.get("frame"));
+                    return this.sprites[this.dir].draw(this.screen.context, Math.round(this.x - this.origin_x - this.area.x), Math.round(this.y - this.origin_y - this.area.y), this.frame);
                 }
             },
             getCollisionEdge: {
                 value: function (dir, x, y) {
                     if (!(dir == "left" || dir == "top" || dir == "right" || dir == "bottom")) throw new Error("[Game] Cannot get collision edge – No proper directional keyword provided.");
                     if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Game] Cannot find collision – coordinates must be numbers.");
-                    if (this.get("collides") === 0 || this.get("collides") === "map" || x <= Math.round(this.get("x") - this.width / 2) || x >= Math.round(this.get("x") + this.width / 2) || y <= Math.round(this.get("y") - this.height / 2) || y >= Math.round(this.get("y") + this.height / 2)) {
+                    if (this.collides === 0 || this.collides === "map" || x <= Math.round(this.x - this.width / 2) || x >= Math.round(this.x + this.width / 2) || y <= Math.round(this.y - this.height / 2) || y >= Math.round(this.y + this.height / 2)) {
                         switch (dir) {
                             case "left":
                             case "right":
@@ -2022,30 +2046,22 @@ var Game = (function () {
                     }
                     switch (dir) {
                         case "left":
-                            return Math.round(this.get("x") - this.width / 2);
+                            return Math.round(this.x - this.width / 2);
                         case "right":
-                            return Math.round(this.get("x") + this.width / 2);
+                            return Math.round(this.x + this.width / 2);
                         case "top":
-                            return Math.round(this.get("y") - this.height / 2);
+                            return Math.round(this.y - this.height / 2);
                         case "bottom":
-                            return Math.round(this.get("y") + this.height / 2);
+                            return Math.round(this.y + this.height / 2);
                     }
                 }
             },
-            init: {
-                value: function () {
-                    return Jelli.parseScript(this.initScript, this);
-                }
-            },
-            step: {
-                value: function () {
-                    return Jelli.parseScript(this.stepScript, this);
-                }
-            },
+            init: {value: function () {return Jelli.parseScript(this.initScript, this);}},
+            step: {value: function () {return Jelli.parseScript(this.stepScript, this);}},
             target: {
                 value: function(cx, cy) {
-                    var dx = cx - this.get("x");
-                    var dy = cy - this.get("y");
+                    var dx = cx - this.x - this.width / 2;
+                    var dy = cy - this.y - this.width / 2;
                     return this.targetBy(dx, dy);
                 }
             },
@@ -2073,82 +2089,82 @@ var Game = (function () {
                         ux = dx;
                         uy = dy;
                     }
-                    if (this.get("collides") === 0 || this.get("collides") === "character") {
-                        this.increment("x", ux);
-                        this.increment("y", uy);
+                    if (this.collides === 0 || this.collides === "character") {
+                        this.x += ux;
+                        this.y += uy;
                         return;
                     }
                     if (dx > 0) {
                         for (i = 0; i < this.area.maps.length; i++) {
                             k = Math.floor(this.height / (this.area.maps[i].tile_height / 2)) + 1;
                             for (j = 0; j <= k; j++) {
-                                tx = this.area.maps[i].getCollisionEdge("left", this.get("x") + ux + this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
+                                tx = this.area.maps[i].getCollisionEdge("left", this.x + ux + this.width / 2, this.y + (j - k / 2) * this.height / k);
                                 if (sx === undefined || sx > tx) sx = tx;
                             }
                         }
                         this.area.characters.doForEach((function (some) {
-                            if (this === some || some.get("collides") === 0 || some.get("collides") === "map") return;
+                            if (this === some || some.collides === 0 || some.collides === "map") return;
                             k = Math.floor(this.height / some.height) + 1;
                             for (j = 0; j <= k; j++) {
-                                tx = some.getCollisionEdge("left", this.get("x") + ux + this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
+                                tx = some.getCollisionEdge("left", this.x + ux + this.width / 2, this.y + (j - k / 2) * this.height / k);
                                 if (sx === undefined || sx > tx) sx = tx;
                             }
                         }).bind(this));
-                        if (sx !== undefined) this.set("x", sx - this.width / 2);
+                        if (sx !== undefined) this.x = sx - this.width / 2;
                     }
                     else if (dx < 0) {
                         for (i = 0; i < this.area.maps.length; i++) {
                             k = Math.floor(this.height / (this.area.maps[i].tile_height / 2)) + 1;
                             for (j = 0; j <= k; j++) {
-                                tx = this.area.maps[i].getCollisionEdge("right", this.get("x") + ux - this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
+                                tx = this.area.maps[i].getCollisionEdge("right", this.x + ux - this.width / 2, this.y + (j - k / 2) * this.height / k);
                                 if (sx === undefined || sx < tx) sx = tx;
                             }
                         }
                         this.area.characters.doForEach((function (some) {
-                            if (this === some || some.get("collides") === 0 || some.get("collides") === "map") return;
+                            if (this === some || some.collides === 0 || some.collides === "map") return;
                             k = Math.floor(this.height / this.area.characters.__properties__[i].height) + 1;
                             for (j = 0; j <= k; j++) {
-                                tx = some.getCollisionEdge("right", this.get("x") + ux - this.width / 2, this.get("y") + (j - k / 2) * this.height / k);
+                                tx = some.getCollisionEdge("right", this.x + ux - this.width / 2, this.y + (j - k / 2) * this.height / k);
                                 if (sx === undefined || sx < tx) sx = tx;
                             }
                         }).bind(this));
-                        if (sx !== undefined) this.set("x", sx + this.width / 2);
+                        if (sx !== undefined) this.x = sx + this.width / 2;
                     }
                     if (dy > 0) {
                         for (i = 0; i < this.area.maps.length; i++) {
                             k = Math.floor(this.width / (this.area.maps[i].tile_width / 2)) + 1;
                             for (j = 0; j <= k; j++) {
-                                ty = this.area.maps[i].getCollisionEdge("top", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy + this.height / 2);
+                                ty = this.area.maps[i].getCollisionEdge("top", this.x + (j - k / 2) * this.width / k, this.y + uy + this.height / 2);
                                 if (sy === undefined || sy > ty) sy = ty;
                             }
                         }
                         this.area.characters.doForEach((function (some) {
-                            if (this === some || some.get("collides") === 0 || some.get("collides") === "map") return;
+                            if (this === some || some.collides === 0 || some.collides === "map") return;
                             k = Math.floor(this.width /some.width) + 1;
                             for (j = 0; j <= k; j++) {
-                                ty = some.getCollisionEdge("top", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy + this.height / 2);
+                                ty = some.getCollisionEdge("top", this.x + (j - k / 2) * this.width / k, this.y + uy + this.height / 2);
                                 if (sy === undefined || sy > ty) sy = ty;
                             }
                         }).bind(this));
-                        if (sy !== undefined) this.set("y", sy - this.height / 2);
+                        if (sy !== undefined) this.y = sy - this.height / 2;
                     }
                     else if (dy < 0) {
                         for (i = 0; i < this.area.maps.length; i++) {
                             k = Math.floor(this.width / (this.area.maps[i].tile_width / 2)) + 1;
                             for (j = 0; j <= k; j++) {
-                                ty = this.area.maps[i].getCollisionEdge("bottom", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy - this.height / 2);
+                                ty = this.area.maps[i].getCollisionEdge("bottom", this.x + (j - k / 2) * this.width / k, this.y + uy - this.height / 2);
                                 if (sy === undefined || sy < ty) sy = ty;
                             }
                         }
                         this.area.characters.doForEach((function (some) {
-                            if (this === some || some.get("collides") === 0 || some.get("collides") === "map") return;
+                            if (this === some || some.collides === 0 || some.collides === "map") return;
                             k = Math.floor(this.width / some.width) + 1;
                             for (j = 0; j <= k; j++) {
-                                ty = some.getCollisionEdge("bottom", this.get("x") + (j - k / 2) * this.width / k, this.get("y") + uy - this.height / 2);
+                                ty = some.getCollisionEdge("bottom", this.x + (j - k / 2) * this.width / k, this.y + uy - this.height / 2);
                                 if (sy === undefined || sy < ty) sy = ty;
                             }
                         }).bind(this));
-                        if (sy !== undefined) this.set("y", sy + this.height / 2);
+                        if (sy !== undefined) this.y = sy + this.height / 2;
                     }
                 }
             }
@@ -2170,6 +2186,13 @@ var Game = (function () {
                 game = parent;
             }
 
+            Object.defineProperties(this, {
+                area: {value: area},
+                Type: {value: constructor},
+                game: {value: game},
+                parent: {value: parent}
+            });
+
             Jelli.call(this, {
                 area: {value: area},
                 game: {value: game},
@@ -2183,13 +2206,6 @@ var Game = (function () {
                 loadNameless: {value: this.loadNameless}
             }, {
                 load: {value: this.load}
-            });
-
-            Object.defineProperties(this, {
-                area: {get: function () {return this.__properties__.area;}},
-                Type: {value: constructor},
-                game: {get: function () {return this.__properties__.game;}},
-                parent: {get: function () {return this.__properties__.parent;}}
             });
 
         }
@@ -2239,8 +2255,10 @@ var Game = (function () {
             //  Setting up variables:
 
             var collection;
+            var collection_2;
             var datadoc;
             var i;
+            var j;
 
             //  imported() and placed() functions:
 
@@ -2282,14 +2300,20 @@ var Game = (function () {
             //  Defining properties:
 
             Object.defineProperties(this, {
+                click_functions: {value: {}},
+                clicks: {value: {}},
                 control: {value: new Control(true)},
                 datadoc: {value: datadoc},
                 document: {value: doc},
                 images: {value: {}},
+                initScript: {value: doc.head.getElementsByClassName("init").item(0) ? doc.head.getElementsByClassName("init").item(0).text || doc.head.getElementsByClassName("init").item(0).textContent : ""},
                 letters: {value: {}},
                 screens: {value: {}},
                 sheets: {value: {}},
+                stepScript: {value: doc.head.getElementsByClassName("step").item(0) ? doc.head.getElementsByClassName("step").item(0).text || doc.head.getElementsByClassName("step").item(0).textContent : ""},
                 tilesets: {value: {}},
+                touch_functions: {value: {}},
+                touches: {value: {}},
                 window: {value: doc.defaultView ? doc.defaultView : window}
             });
 
@@ -2327,26 +2351,35 @@ var Game = (function () {
                 texts: {value: this.__properties__.texts}
             });
 
-            //  Control setup:
+            this.control.add("action").addKeys("action", 0x58, "U+0058", "KeyX", "X", "x");
+            this.control.add("down").addKeys("down", 0x28, "ArrowDown", "Down");
+            this.control.add("exit").addKeys("exit", 0x5A, "U+005A", "KeyZ", "Z", "z");
+            this.control.add("left").addKeys("left", 0x25, "ArrowLeft", "Left");
+            this.control.add("look").addKeys("look", 0x53, "U+0053", "KeyS", "S", "s");
+            this.control.add("menu").addKeys("menu", 0x41, "U+0041", "KeyA", "A", "a");
+            this.control.add("right").addKeys("right", 0x27, "ArrowRight", "Right");
+            this.control.add("select").addKeys("select", 0x57, "U+0057", "KeyW", "W", "w");
+            this.control.add("start").addKeys("start", 0x51, "U+0051", "KeyQ", "Q", "q");
+            this.control.add("up").addKeys("up", 0x26, "ArrowUp", "Up");
 
-            placed("jo-ctls-lf");
-            placed("jo-ctls-rt");
+            //  Loading click/touch functions:
 
-            this.control.add("action").addKeys("action", 0x58, "U+0058", "KeyX", "X", "x").linkElement("action", "jo-ctrl-actn");
-            this.control.add("down").addKeys("down", 0x28, "ArrowDown", "Down").linkElement("down", "jo-ctrl-dnrw");
-            this.control.add("exit").addKeys("exit", 0x5A, "U+005A", "KeyZ", "Z", "z").linkElement("exit", "jo-ctrl-exit");
-            this.control.add("left").addKeys("left", 0x25, "ArrowLeft", "Left").linkElement("left", "jo-ctrl-lfrw");
-            this.control.add("look").addKeys("look", 0x53, "U+0053", "KeyS", "S", "s").linkElement("look", "jo-ctrl-look");
-            this.control.add("menu").addKeys("menu", 0x41, "U+0041", "KeyA", "A", "a").linkElement("menu", "jo-ctrl-menu");
-            this.control.add("right").addKeys("right", 0x27, "ArrowRight", "Right").linkElement("right", "jo-ctrl-rtrw");
-            this.control.add("select").addKeys("select", 0x57, "U+0057", "KeyW", "W", "w").linkElement("select", "jo-ctrl-selc");
-            this.control.add("start").addKeys("start", 0x51, "U+0051", "KeyQ", "Q", "q").linkElement("start", "jo-ctrl-strt");
-            this.control.add("up").addKeys("up", 0x26, "ArrowUp", "Up").linkElement("up", "jo-ctrl-uprw");
+            for (collection = doc.head.getElementsByClassName("click_function"), i = 0; i < collection.length; i++) {
+                for (collection_2 = collection.item(i).dataset.clickNumber ? collection.item(i).dataset.clickNumber.split(/\s+/) : [], j = 0; j < collection.length; j++) {
+                    Object.defineProperty(this.click_functions, collection_2[i], {value: collection.item(i).text || collection.item(i).textContent});
+                }
+            }
+            for (collection = doc.head.getElementsByClassName("touch_function"), i = 0; i < collection.length; i++) {
+                for (collection_2 = collection.item(i).dataset.touchNumber ? collection.item(i).dataset.touchNumber.split(/\s+/) : [], j = 0; j < collection.length; j++) {
+                    Object.defineProperty(this.touch_functions, collection_2[i], {value: collection.item(i).text || collection.item(i).textContent});
+                }
+            }
 
             //  Loading screens:
 
             for (collection = datadoc.getElementsByTagName("canvas"), i = 0; i < collection.length; i++) {
                 Object.defineProperty(this.screens, collection.item(i).id, {value: new Screen(placed(collection.item(i)), "2d"), enumerable: true});
+                if (i === 0) Object.defineProperty(this, "placement_screen", {value: this.screens[collection.item(i).id]});
             }
 
             //  Loading images:
@@ -2392,10 +2425,16 @@ var Game = (function () {
 
             //  Adding event listeners:
 
-            doc.body.addEventListener("touchmove", function (e) {e.preventDefault();}, false);
             this.window.addEventListener("keydown", this, false);
             this.window.addEventListener("resize", this, false);
-            this.window.addEventListener("touchstart", this, false);
+            doc.documentElement.addEventListener("touchstart", this, false);
+            doc.documentElement.addEventListener("touchend", this, false);
+            doc.documentElement.addEventListener("touchmove", this, false);
+            doc.documentElement.addEventListener("touchcancel", this, false);
+            doc.documentElement.addEventListener("mousedown", this, false);
+            doc.documentElement.addEventListener("mouseup", this, false);
+            doc.documentElement.addEventListener("mousemove", this, false);
+
 
             //  Starting the render and logic processes:
 
@@ -2446,7 +2485,10 @@ var Game = (function () {
             },
             handleEvent: {
                 value: function (e) {
+                    var i;
+                    var j;
                     var k;
+                    var n;
                     switch (e.type) {
                         case "keydown":
                             k = e.code || e.key || e.keyIdentifier || e.keyCode;
@@ -2469,18 +2511,64 @@ var Game = (function () {
                                 }
                             }
                             break;
+                        case "mousedown":
+                            e.preventDefault();
+                            for (i = 1, j = 1; i <= 4; i++, j *= 2) {
+                                if (e.buttons & j) this.clicks[i] = new Poke(this, e, i);
+                            }
+                            break;
+                        case "mousemove":
+                            e.preventDefault();
+                            for (i in this.clicks) {
+                                this.clicks[i].updateWith(e);
+                            }
+                            break;
+                        case "mouseup":
+                            e.preventDefault();
+                            for (i = 1, j = 1; i <= 4; i++, j *= 2) {
+                                if (this.clicks[i] && !(e.buttons & j)) delete this.clicks[i];
+                            }
+                            break;
                         case "resize":
                             this.set("resized", 1);
                             break;
+                        case "touchcancel":
+                        case "touchend":
+                            e.preventDefault();
+                            k = e.changedTouches;
+                            for (i = 0; i < k.length; i++) {
+                                delete this.touches[k[i].identifier];
+                            }
+                            break;
+                        case "touchmove":
+                            e.preventDefault();
+                            k = e.changedTouches;
+                            for (i = 0; i < k.length; i++) {
+                                this.touches[k[i].identifier].updateWith(k[i]);
+                            }
+                            break;
                         case "touchstart":
+                            e.preventDefault();
                             if (!this.document.documentElement.hasAttribute("data-touch")) {
                                 this.document.documentElement.setAttribute("data-touch", "");
                                 this.set("resized", 1);
+                            }
+                            j = 1;
+                            while (n !== j) {
+                                n = j;
+                                for (i in this.touches) {
+                                    if (j === this.touches[i].number) j++;
+                                }
+                            }
+                            k = e.changedTouches;
+                            for (i = 0; i < k.length; i++) {
+                                this.touches[k[i].identifier] = new Poke(this, k[i], n);
                             }
                             break;
                     }
                 }
             },
+            init: {value: function () {return Jelli.parseScript(this.initScript, this);}},
             layout: {
                 value: function () {
                     var body_height;
@@ -2488,24 +2576,12 @@ var Game = (function () {
                     var border_img = this.datadoc.querySelector("img.gui-border");
                     var border_height =  Number(border_img.dataset.spriteHeight);
                     var border_width =  Number(border_img.dataset.spriteWidth);
-                    var button_img = this.datadoc.querySelector("img.gui-buttons");
-                    var button_height;
-                    var button_width;
                     var canvas;
-                    var horizontal;
                     var i;
                     var scaled_height;
                     var scaled_width;
                     var temporary_height;
                     var temporary_width;
-                    if (this.document.documentElement.hasAttribute("data-touch")) {
-                        button_height = Number(button_img.dataset.buttonHeight);
-                        button_width = Number(button_img.dataset.buttonWidth);
-                    }
-                    else {
-                        button_height = 0;
-                        button_width = 0;
-                    }
                     this.document.documentElement.style.margin = "0";
                     this.document.documentElement.style.padding = "0";
                     this.document.documentElement.style.background = "black";
@@ -2530,17 +2606,9 @@ var Game = (function () {
                     this.document.body.style.background = border_img.dataset.systemBackground;
                     body_width = this.document.body.clientWidth;
                     body_height = this.document.body.clientHeight;
-                    canvas = this.document.getElementsByTagName("canvas").item(0)
-                    if (body_width / body_height > canvas.width / canvas.height) {
-                        horizontal = true;
-                        body_width -= 2 * button_width;
-                    }
-                    else {
-                        horizontal = false;
-                        body_height -= button_height;
-                    }
-                    for (i = 0; i < this.document.getElementsByTagName("canvas").length; i++) {
-                        canvas = this.document.getElementsByTagName("canvas").item(i);
+                    canvas = this.placement_screen
+                    for (i in this.screens) {
+                        canvas = this.screens[i].canvas;
                         if (body_width / body_height > canvas.width / canvas.height) {
                             if (body_height < canvas.height) scaled_height = body_height;
                             else scaled_height = canvas.height * Math.floor(body_height / canvas.height);
@@ -2561,23 +2629,10 @@ var Game = (function () {
                         canvas.style.borderRadius = border_width + "px " + border_height + "px";
                         canvas.style.borderImage = "url(" + border_img.src + ") " + border_width + " " + border_height + " repeat";
                         if (!i) canvas.style.background = border_img.dataset.screenBackground;
-                        if (horizontal) canvas.style.top = "calc(50% - " + (scaled_height / 2 + border_height) + "px)";
-                        else canvas.style.top = "calc(50% - " + (scaled_height / 2 + border_height + button_height / 2) + "px)";
+                        canvas.style.top = "calc(50% - " + (scaled_height / 2 + border_height) + "px)";
                         canvas.style.left = "calc(50% - " + (scaled_width / 2 + border_width) + "px)";
                         canvas.style.width = scaled_width + "px";
                         canvas.style.height = scaled_height + "px";
-                    }
-                    if (horizontal){
-                        this.document.getElementById("jo-ctls-lf").style.top = "0";
-                        this.document.getElementById("jo-ctls-rt").style.top = "0";
-                        this.document.getElementById("jo-ctls-lf").style.right = "";
-                        this.document.getElementById("jo-ctls-rt").style.left = "";
-                    }
-                    else {
-                        this.document.getElementById("jo-ctls-lf").style.top = "";
-                        this.document.getElementById("jo-ctls-rt").style.top = "";
-                        this.document.getElementById("jo-ctls-lf").style.right = "50%";
-                        this.document.getElementById("jo-ctls-rt").style.left = "50%";
                     }
                     this.document.body.style.visibility = "";
                 }
@@ -2586,9 +2641,22 @@ var Game = (function () {
             step: {
                 value: function () {
 
+                    //  Variable setup:
+
+                    var i;
+
+                    //  Click/touch stepping:
+
+                    for (i in this.clicks) {
+                        if (this.click_functions[i]) Jelli.parseScript(this.click_functions[i], this.clicks[i]);
+                    }
+                    for (i in this.touches) {
+                        if (this.touch_functions[i]) Jelli.parseScript(this.touch_functions[i], this.touches[i]);
+                    }
+
                     //  Game stepping:
 
-                    if (document.head.getElementsByClassName("step").item(0)) Jelli.parseScript(document.head.getElementsByClassName("step").item(0).text || document.head.getElementsByClassName("step").item(0).textContent, this);
+                    Jelli.parseScript(this.stepScript, this);
 
                     //  Area stepping:
 
@@ -2662,6 +2730,61 @@ var Game = (function () {
             draw: {value: PlacementImage.prototype.draw},
             setPosition: {value: PlacementImage.prototype.setPosition},
             togglePlacement: {value: PlacementImage.prototype.togglePlacement}
+        });
+
+        //  Touch constructor:
+
+        function Poke(game, e, n) {
+
+            //  Setting up variables:
+
+            var elt = game.placement_screen.canvas;
+            var rect = elt.getBoundingClientRect();
+
+            //  Argument handling and error checking:
+
+            if (!(game instanceof Game) || typeof e !== "object") return;
+
+            //  Property definitions:
+
+            Object.defineProperties(this, {
+                game: {value: game},
+                number: {value: n},
+                start_x: {value: (e.pageX - rect.left + elt.clientLeft) * elt.width / elt.clientWidth,},
+                start_y: {value: (e.pageY - rect.top + elt.clientTop) * elt.width / elt.clientWidth,},
+                target: {value: game.placement_screen.canvas,},
+                x: {
+                    value: (e.pageX - rect.left + elt.clientLeft) * elt.width / elt.clientWidth,
+                    writable: true
+                },
+                y: {
+                    value: (e.pageY - rect.top + elt.clientTop) * elt.width / elt.clientWidth,
+                    writable: true
+                }
+            });
+
+            //  Setting up touch as a Jelli:
+
+            Jelli.call(this, {
+                game: {value: game},
+                number: {value: n},
+                start_x: {value: this.start_x},
+                start_y: {value: this.start_y},
+                x: {get: (function () {return this.x;}).bind(this)},
+                y: {get: (function () {return this.y;}).bind(this)},
+            });
+
+        }
+
+        //  Touch prototyping:
+
+        Poke.prototype = Object.create(Jelli.prototype, {
+            updateWith: {value: function (e) {
+                if (!(this.target instanceof Element) || typeof e !== "object") return;
+                var rect = this.target.getBoundingClientRect();
+                this.x = (e.pageX - rect.left + this.target.clientLeft) * this.target.width / this.target.clientWidth;
+                this.y = (e.pageY - rect.top + this.target.clientTop) * this.target.width / this.target.clientWidth;
+            }}
         });
 
         //  Text constructor:
