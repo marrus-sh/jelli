@@ -2652,7 +2652,7 @@ var Game = (function () {
                         if (this.click_functions[i]) Jelli.parseScript(this.click_functions[i], this.clicks[i]);
                     }
                     for (i in this.touches) {
-                        if (this.touch_functions[i]) Jelli.parseScript(this.touch_functions[i], this.touches[i]);
+                        if (this.touch_functions[this.touches[i].number]) Jelli.parseScript(this.touch_functions[this.touches[i].number], this.touches[i]);
                     }
 
                     //  Game stepping:
