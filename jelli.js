@@ -2518,9 +2518,7 @@ var Game = (function () {
                             break;
                         case "mousedown":
                             e.preventDefault();
-                            for (i = 1, j = 1; i <= 4; i++, j *= 2) {
-                                if (e.buttons & j) this.clicks[i] = new Poke(this, e, i);
-                            }
+                            this.clicks[[1, 3, 2, 4, 5][e.button]] = new Poke(this, e, i);
                             break;
                         case "mousemove":
                             e.preventDefault();
@@ -2530,9 +2528,7 @@ var Game = (function () {
                             break;
                         case "mouseup":
                             e.preventDefault();
-                            for (i = 1, j = 1; i <= 4; i++, j *= 2) {
-                                if (this.clicks[i] && !(e.buttons & j)) delete this.clicks[i];
-                            }
+                            delete this.clicks[[1, 3, 2, 4, 5][e.button]];
                             break;
                         case "resize":
                             this.set("resized", 1);
