@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html data-vars="poke_active poke_x poke_y">
+<html data-vars="poke_active poke2_active poke_x poke_y">
     <head>
         <title>Jelli : A Game Engine</title>
         <meta charset="utf-8">
@@ -29,6 +29,9 @@
             game.poke_active.set (true)
             game.poke_x.set (x)
             game.poke_y.set (y)
+        </script>
+        <script type="text/plain" class="click_function touch_function" data-click-number="2" data-touch-number="2">
+            game.poke2_active.set (true)
         </script>
     </head>
     <body hidden style="display: none;">
@@ -377,7 +380,7 @@
                         game.texts.menu1.y.set (120)
                         game.texts.menu1.color.set ("red")
                         game.texts.menu1.fill
-                        game.texts.menu2.load ("textground", "letters", "Press X to begin")
+                        game.texts.menu2.load ("textground", "letters", "Press X, touch, or click to begin")
                         game.texts.menu2.x.set (96)
                         game.texts.menu2.y.set (136)
                         game.texts.menu2.color.set ("black")
@@ -404,22 +407,26 @@
                             game.texts.menu2.color.set ("black")
                             game.texts.menu2.fill
                         ;
-                        (game.key_action) ?
-                            characters.pointer.dir.set (characters.pointer.rt)
-                            game.texts.title.delete
-                            game.texts.menu1.delete
-                            game.texts.menu2.delete
-                            game.clearScreen ("textground")
-                            game.loadArea (1)
-                        :
-                            characters.pointer.dir.set (characters.pointer.lf)
+                        (game.key_action)(game.poke_active) ?
+                            -(game.poke2_active) ?
+                                characters.pointer.dir.set (characters.pointer.rt)
+                                game.texts.title.delete
+                                game.texts.menu1.delete
+                                game.texts.menu2.delete
+                                game.clearScreen ("textground")
+                                game.loadArea (1)
+                            :
+                                characters.pointer.dir.set (characters.pointer.lf)
+                            ;
                         ;
-                        (game.key_menu) ?
+                        (game.key_menu)(game.poke2_active) ?
                             images.ctrlimg.placed.set (true)
                         :
                             images.ctrlimg.placed.set (false)
                             game.clearScreen ("menuground")
                         ;
+                        game.poke_active.set (false)
+                        game.poke2_active.set (false)
                         characters.pointer.timer.mod_increment (10)
                         -(characters.pointer.timer) characters.pointer.frame.mod_increment (2)
                     </script>

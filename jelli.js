@@ -1622,6 +1622,7 @@ var Game = (function () {
             //  Setting up variables:
 
             var args;
+            var args_regex = /-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)|"(?:\\"|[^"])*?"/g;
             var b;
             var breakdown;
             var condition;
@@ -1723,7 +1724,7 @@ var Game = (function () {
                 }
 
                 else if (b && breakdown[2]) {
-                    if (breakdown[3]) run(dataobj, breakdown[2], breakdown[3].substring(1, breakdown[3].length - 1).trim().split(/\s*,\s*/));
+                    if (breakdown[3]) run(dataobj, breakdown[2], breakdown[3].match(args_regex));
                     else run(dataobj, breakdown[2]);
                 }
 
@@ -2365,13 +2366,13 @@ var Game = (function () {
             //  Loading click/touch functions:
 
             for (collection = doc.head.getElementsByClassName("click_function"), i = 0; i < collection.length; i++) {
-                for (collection_2 = collection.item(i).dataset.clickNumber ? collection.item(i).dataset.clickNumber.split(/\s+/) : [], j = 0; j < collection.length; j++) {
-                    Object.defineProperty(this.click_functions, collection_2[i], {value: collection.item(i).text || collection.item(i).textContent});
+                for (collection_2 = collection.item(i).dataset.clickNumber ? collection.item(i).dataset.clickNumber.split(/\s+/) : [], j = 0; j < collection_2.length; j++) {
+                    Object.defineProperty(this.click_functions, collection_2[j], {value: collection.item(i).text || collection.item(i).textContent});
                 }
             }
             for (collection = doc.head.getElementsByClassName("touch_function"), i = 0; i < collection.length; i++) {
-                for (collection_2 = collection.item(i).dataset.touchNumber ? collection.item(i).dataset.touchNumber.split(/\s+/) : [], j = 0; j < collection.length; j++) {
-                    Object.defineProperty(this.touch_functions, collection_2[i], {value: collection.item(i).text || collection.item(i).textContent});
+                for (collection_2 = collection.item(i).dataset.touchNumber ? collection.item(i).dataset.touchNumber.split(/\s+/) : [], j = 0; j < collection_2.length; j++) {
+                    Object.defineProperty(this.touch_functions, collection_2[j], {value: collection.item(i).text || collection.item(i).textContent});
                 }
             }
 
@@ -2427,6 +2428,7 @@ var Game = (function () {
 
             this.window.addEventListener("keydown", this, false);
             this.window.addEventListener("resize", this, false);
+            this.window.addEventListener("contextmenu", this, false);
             doc.documentElement.addEventListener("touchstart", this, false);
             doc.documentElement.addEventListener("touchend", this, false);
             doc.documentElement.addEventListener("touchmove", this, false);
@@ -2490,6 +2492,9 @@ var Game = (function () {
                     var k;
                     var n;
                     switch (e.type) {
+                        case "contextmenu":
+                            e.preventDefault();
+                            break;
                         case "keydown":
                             k = e.code || e.key || e.keyIdentifier || e.keyCode;
                             if (this.document.documentElement.hasAttribute("data-touch")) {
