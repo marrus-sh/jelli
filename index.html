@@ -226,7 +226,7 @@
                 <div id="player" class="character"
                      data-sprites="jelly"
                      data-screen="mainground"
-                     data-vars="timer tx ty"
+                     data-vars="timer tx ty tw th"
                      data-collides
                      >
                     <script type="text/plain" class="init">
@@ -244,7 +244,14 @@
                                 ty.set (game.poke_y)
                                 ty.increment (area.y)
                                 target (tx, ty)
-                                game.poke_active.set (false)
+                                th.set (height)
+                                th.scale (.5)
+                                tw.set (width)
+                                tw.scale (.5)
+                                tx.increment (-th)
+                                ty.increment (-tw)
+                                (tx < x) dir.set (lf)
+                                (tx > x) dir.set (rt)
                             :
                                 (game.key_up) ?
                                     (game.key_down) ?
@@ -323,10 +330,12 @@
 
                             >>  This increments the timer if an arrow key is pressed:
 
-                            (game.key_up)(game.key_down)(game.key_left)(game.key_right) ?
+                            (game.key_up)(game.key_down)(game.key_left)(game.key_right)(game.poke_active) ?
                                 timer.mod_increment (15)
                                 -(timer) frame.mod_increment (2)
                             ;
+
+                            game.poke_active.set (false)
 
                     </script>
                 </div>
