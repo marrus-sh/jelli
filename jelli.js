@@ -1659,6 +1659,7 @@ var Game = (function () {
 
                 if (breakdown[1]) {
                     b = false;
+                    conds_regex.lastIndex = 0;
                     while ((condition = conds_regex.exec(breakdown[1])) && !b) {
                         if (condition[1]) n = true;
                         else n = false;
