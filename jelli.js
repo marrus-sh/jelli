@@ -1920,15 +1920,15 @@ var Game = (function () {
 
             //  Handling arguments:
 
-            if (typeof arguments[3] === "number" || arguments[3] instanceof Number) {
+            if (typeof arguments[2] === "number" || arguments[2] instanceof Number) {
                 id = name;
-                x = arguments[3];
-                if (isNaN(y = Number(arguments[4]))) y = undefined;
+                x = arguments[2];
+                if (isNaN(y = Number(arguments[3]))) y = undefined;
             }
             else {
-                id = arguments[3] ? arguments[3] : name;
-                if (isNaN(x = Number(arguments[4]))) x = undefined;
-                if (isNaN(y = Number(arguments[5]))) y = undefined;
+                id = arguments[2] ? arguments[2] : name;
+                if (isNaN(x = Number(arguments[3]))) x = undefined;
+                if (isNaN(y = Number(arguments[4]))) y = undefined;
             }
             if (!(collection instanceof Collection) || !collection.area || !collection.game) return;
             elt = collection.game.datadoc.getElementById(id);
@@ -2688,20 +2688,20 @@ var Game = (function () {
 
             //  Handling arguments:
 
-            if (typeof arguments[3] === "number" || arguments[3] instanceof Number) {
+            if (typeof arguments[2] === "number" || arguments[2] instanceof Number) {
                 id = name;
-                x = arguments[3];
+                x = arguments[2];
+                if (isNaN(y = Number(arguments[3]))) y = undefined;
+                placed = !!arguments[4];
+            }
+            else {
+                id = arguments[2] ? arguments[2] : name;
+                if (isNaN(x = Number(arguments[3]))) x = undefined;
                 if (isNaN(y = Number(arguments[4]))) y = undefined;
                 placed = !!arguments[5];
             }
-            else {
-                id = arguments[3] ? arguments[3] : name;
-                if (isNaN(x = Number(arguments[4]))) x = undefined;
-                if (isNaN(y = Number(arguments[5]))) y = undefined;
-                placed = !!arguments[6];
-            }
             if (!(collection instanceof Collection) || !collection.area || !collection.game) return;
-            elt = collection.game.datadoc.getElementById(id);
+            elt = collection.game.images[id];
             if (!(elt instanceof Element)) return;
 
             //  Defining image as placement image:
