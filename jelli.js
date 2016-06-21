@@ -1479,7 +1479,7 @@ var Game = (function () {
             if (prop instanceof Jelli) return prop;
             else if (!isNaN(Number(prop))) return Number(prop);
             else if ((typeof prop === "string" || prop instanceof String) && prop[0] === '"' && prop[prop.length - 1] === '"' && !/^"|[^\\]"/.test(prop.substring(1, prop.length - 1))) {
-                return prop.substring(1, prop.length - 1);
+                return prop.substring(1, prop.length - 1).replace('\\"', '"').replace('\\\\', '\\');
             }
             else if ((typeof prop === "string" || prop instanceof String) && prop[0] === "-") {
                 s = value(dataobj, prop.substr(1));
@@ -1575,18 +1575,18 @@ var Game = (function () {
             //  Setting up variables:
 
             var args;
-            var args_regex = /-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)|"(?:\\"|[^"])*?"/g;
+            var args_regex = /-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)|"(?:\\.|[^"\\])*?"/g;
             var b;
             var breakdown;
             var condition;
-            var conds_regex = /(-)?\s*\(\s*(-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)|"(?:\\"|[^"])*?")(?:\s*([<>=])\s*(-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+))|"(?:\\"|[^"])*?")?\s*\)/g;
+            var conds_regex = /(-)?\s*\(\s*(-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)|"(?:\\.|[^"\\])*?")(?:\s*([<>=])\s*(-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+))|"(?:\\.|[^"\\])*?")?\s*\)/g;
             var unset_global;
             var i;
             var j;
             var line;
             var lines;
             var n;
-            var regex = /^\s*(?:(?:((?:-?\s*\(\s*(?:-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)|"(?:\\"|[^"])*?")(?:\s*[<>=]\s*(?:-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)|"(?:\\"|[^"])*?"))?\s*\)\s*?)+)?\s*(?:(\w+(?:\.\w+)*)\s*(\(\s*(?:-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)|"(?:\\"|[^"])*?")(?:\s*,\s*(?:-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)|"(?:\\"|[^"])*?"))*\s*\))?|(\?))|([:;]))|>>.*)\s*$/;
+            var regex = /^\s*(?:(?:((?:-?\s*\(\s*(?:-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)|"(?:\\.|[^"\\])*?")(?:\s*[<>=]\s*(?:-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)|"(?:\\.|[^"\\])*?"))?\s*\)\s*?)+)?\s*(?:(\w+(?:\.\w+)*)\s*(\(\s*(?:-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)|"(?:\\.|[^"\\])*?")(?:\s*,\s*(?:-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)|"(?:\\.|[^"\\])*?"))*\s*\))?|(\?))|([:;]))|>>.*)\s*$/;
             var s;
 
             //  Handling arguments and error checking:
