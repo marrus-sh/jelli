@@ -1380,6 +1380,14 @@ var Game = (function () {
                     this.__properties__[prop] = 0;
                 }
             },
+            declare_Jelli: {
+                value: function (prop) {
+                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
+                    if (!/^\w+$/.test(prop)) throw new Error("[JelliScript] Syntax error: Disallowed characters used in a variable name.");
+                    if (this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to declare an already-declared variable.");
+                    this.__properties__[prop] = new Jelli();
+                }
+            },
             delete: {
                 value: function (prop) {
                     if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
@@ -1399,6 +1407,33 @@ var Game = (function () {
                 value: function (prop) {
                     if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
                     return this.__properties__.hasOwnProperty(prop);
+                }
+            },
+            make_eternal: {
+                value: function (prop) {
+                    var s;
+                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
+                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
+                    if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to set a non-declared value.");
+                    return Object.defineProperty(this.__properties__, prop, {configurable: false});
+                }
+            },
+            make_hidden: {
+                value: function (prop) {
+                    var s;
+                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
+                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
+                    if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to set a non-declared value.");
+                    return Object.defineProperty(this.__properties__, prop, {enumerable: false});
+                }
+            },
+            make_static: {
+                value: function (prop) {
+                    var s;
+                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
+                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
+                    if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to set a non-declared value.");
+                    return Object.defineProperty(this.__properties__, prop, {writable: false});
                 }
             },
             mod_increment: {
