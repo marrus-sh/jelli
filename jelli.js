@@ -2238,10 +2238,10 @@ var Game = (function () {
                 value: function (fn) {
                     var i;
                     for (i in this.__properties__) {
-                        fn(this.__properties__[i]);
+                        if (!this.Type || this.__properties__[i] instanceof this.Type) fn(this.__properties__[i]);
                     }
                     for (i in this) {
-                        fn(this[i]);
+                        if (!this.Type || this.__properties__[i] instanceof this.Type) fn(this[i]);
                     }
                 }
             },
@@ -2255,15 +2255,15 @@ var Game = (function () {
                 value: function (name) {
                     var args = [null, this].concat(Array.prototype.slice.call(arguments));
                     this.declare(name);
-                    this.set(name, new (this.Type.bind.apply(this.Type, args))());
+                    if (typeof this.Type === "function" || this.Type instanceof Function) this.set(name, new (this.Type.bind.apply(this.Type, args))());
                     if (this.get(name).__functions__) Object.defineProperty(this.get(name).__functions__, "kill", {value: this.kill.bind(this, name)});
                 }
             },
             loadNameless: {
                 value: function () {
                     var args = [null, this, this.nextIndex].concat(Array.prototype.slice.call(arguments));
-                    this[this.nextIndex] = new (this.Type.bind.apply(this.Type, args))();
-                    if (this.get(name).__functions__) Object.defineProperty(this[this.nextIndex].__functions__, "kill", {value: this.kill.bind(this, this.nextIndex)});
+                    this[this.nextIndex] = typeof this.Type === "function" || this.Type instanceof Function ? new (this.Type.bind.apply(this.Type, args))() : null;
+                    if (this[this.nextIndex] && this[this.nextIndex].__functions__) Object.defineProperty(this[this.nextIndex].__functions__, "kill", {value: this.kill.bind(this, this.nextIndex)});
                     this.nextIndex++;
                 }
             }
