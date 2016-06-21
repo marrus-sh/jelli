@@ -1963,6 +1963,8 @@ var Game = (function () {
                 origin_x: {value: Number(item.dataset.boxX || sprites[0].width / 2)},
                 origin_y: {value: Number(item.dataset.boxY || sprites[0].height / 2)},
                 screen: {value: collection.game.screens[elt.dataset.screen]},
+                screen_x: {get: function () {return this.x - this.area.x}},
+                screen_y: {get: function () {return this.y - this.area.y}},
                 sprites: {value: sprites},
                 sprite_height: {value: sprites[0].height},
                 sprite_width: {value: sprites[0].width},
@@ -1995,6 +1997,8 @@ var Game = (function () {
                 height: {value: this.height},
                 origin_x: {value: this.origin_x},
                 origin_y: {value: this.origin_y},
+                screen_x: {get: (function () {return this.x - this.area.x}).bind(this)},
+                screen_y: {get: (function () {return this.y - this.area.y}).bind(this)},
                 sprite_height: {value: sprites[0].height},
                 sprite_width: {value: sprites[0].width},
                 width: {value: this.width},
@@ -2714,6 +2718,8 @@ var Game = (function () {
                     get: (function () {return this.placed ? 1 : 0;}).bind(this),
                     set: (function (n) {this.placed = n;}).bind(this)
                 },
+                screen_x: {get: (function () {return this.x - this.area.x}).bind(this)},
+                screen_y: {get: (function () {return this.y - this.area.y}).bind(this)},
                 x: {
                     get: (function () {return this.x;}).bind(this),
                     set: (function (n) {this.x = n;}).bind(this)
@@ -2731,7 +2737,9 @@ var Game = (function () {
             Object.defineProperties(this, {
                 area: {value: collection.area},
                 collection: {value: collection},
-                game: {value: collection.game}
+                game: {value: collection.game},
+                screen_x: {get: function () {return this.x - this.area.x}},
+                screen_y: {get: function () {return this.y - this.area.y}}
             });
 
             //  Image sealing:
