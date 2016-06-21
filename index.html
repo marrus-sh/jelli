@@ -171,7 +171,7 @@
             <p>
                 The sprites themselves take a couple of attributes:
                 <code>title</code> names the sprite&mdash;these need to be unique within a given sprite collection but not necessarily across the document.
-                It essentially functions by setting up a character variable with the value of the sprite's number, and you can always just use the number instead.
+                These can be referenced as strings via the <code>dir</code> property of characters.
                 <code>data-index</code> (required) specifies the starting index for the sprite, and <code>data-length</code> specifies the length of the animation (this defaults to 1).
             </p>
             <section>
@@ -232,7 +232,7 @@
                     <script type="text/plain" class="init">
                             x.set (16)
                             y.set (80)
-                            dir.set (rt)
+                            dir.set ("rt")
                     </script>
                     <script type="text/plain" class="step">
 
@@ -250,8 +250,8 @@
                                 tw.scale (.5)
                                 tx.increment (-th)
                                 ty.increment (-tw)
-                                (tx < x) dir.set (lf)
-                                (tx > x) dir.set (rt)
+                                (tx < x) dir.set ("lf")
+                                (tx > x) dir.set ("rt")
                             :
                                 (game.key_up) ?
                                     (game.key_down) ?
@@ -319,9 +319,9 @@
                             >>  This controls the direction the jelly is facing:
 
                             (game.key_left) ?
-                                -(game.key_right) dir.set (lf)
+                                -(game.key_right) dir.set ("lf")
                             :
-                                (game.key_right) dir.set (rt)
+                                (game.key_right) dir.set ("rt")
                             ;
 
                             >>  This makes the jelly fall a little regardless:
@@ -379,7 +379,7 @@
                         characters.pointer.load
                         characters.pointer.x.set (88)
                         characters.pointer.y.set (120)
-                        characters.pointer.dir.set (characters.pointer.lf)
+                        characters.pointer.dir.set ("lf")
                         game.texts.title.load ("textground", "letters", "Jelli Game Engine -- Demo")
                         game.texts.title.x.set (78)
                         game.texts.title.y.set (60)
@@ -418,14 +418,14 @@
                         ;
                         (game.key_action)(game.poke_active) ?
                             -(game.poke2_active) ?
-                                characters.pointer.dir.set (characters.pointer.rt)
+                                characters.pointer.dir.set ("rt")
                                 game.texts.title.delete
                                 game.texts.menu1.delete
                                 game.texts.menu2.delete
                                 game.clearScreen ("textground")
                                 game.loadArea (1)
                             :
-                                characters.pointer.dir.set (characters.pointer.lf)
+                                characters.pointer.dir.set ("lf")
                             ;
                         ;
                         (game.key_menu)(game.poke2_active) ?
