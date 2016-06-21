@@ -26,16 +26,16 @@ var Game = (function () {
 
         function Screen(canvas, context) {
 
-            //  Handling arguments and error checking:
+            //  Setting up variables:
 
-            if (arguments.length < 1)  throw new Error("[Screen] Screen constructor called with too few arguments.");
-            if (typeof canvas === "string" || canvas instanceof String) {
-                if (!document.getElementById(canvas)) throw new Error("[Screen] Cannot construct Screen – no element found with the given id (" + canvas + ").");
-                canvas = document.getElementById(canvas);
-            }
-            else if (!(canvas instanceof Element)) throw new Error("[Screen] The first argument of the Screen constructor must be an element or string.");
+            var doc;
+
+            //  Handling arguments:
+
+            if (canvas instanceof HTMLCanvasElement) doc = canvas.ownerDocument;
+            else canvas = doc.getElementById(String(canvas));
             if (typeof context === "undefined" || context === null) context = "2d";
-            else if (!(typeof context === "string" || context instanceof String)) throw new Error("[Screen] The second argument of the System constructor must be a string.");
+            else if (!(typeof context === "string" || context instanceof String)) context = String(context);
 
             //  Property definitions:
 
@@ -44,11 +44,12 @@ var Game = (function () {
                     value: canvas
                 },
                 context: {
-                    value: canvas.getContext(context)
+                    value: canvas ? canvas.getContext(context) : undefined
+                },
+                ownerDocument: {
+                    value: doc
                 }
             });
-
-            if (!this.context) throw new Error("[Screen] Failed to create canvas context `" + context + "`.");
 
         }
 
@@ -63,17 +64,19 @@ var Game = (function () {
             },
             height: {
                 get: function () {
-                    return this.canvas.height;
+                    return this.canvas ? this.canvas.height : undefined;
                 },
                 set: function (n) {
+                    if (!this.canvas) return;
                     this.canvas.height = n;
                 }
             },
             width: {
                 get: function () {
-                    return this.canvas.width;
+                    return this.canvas ? this.canvas.width : undefined;
                 },
                 set: function (n) {
+                    if (!this.canvas) return;
                     this.canvas.width = n;
                 }
             }
@@ -89,13 +92,25 @@ var Game = (function () {
 
         //  Control constructor:
 
-        function Control(shouldUpdateDOM) {
+        function Control(shouldUpdateDOM /*  Optional document  */) {
+
+            //  Setting up variables:
+
+            var doc;
+
+            //  Handling arguments:
+
+            if (arguments[1] instanceof Document) doc = arguments[1];
+            else doc = document;
 
             //  Property definitions:
 
             Object.defineProperties(this, {
                 controls: {
                     value: {}
+                },
+                ownerDocument: {
+                    value: doc
                 },
                 keys: {
                     value: {}
@@ -116,8 +131,7 @@ var Game = (function () {
 
             add: {
                 value: function (name) {
-                    if (arguments.length < 1) throw new Error("(control.js) No control given to add.");
-                    if (!(typeof name === "string" || name instanceof String)) throw new Error("(control.js) Control names must be strings.");
+                    if (name === undefined) return;
                     this.controls[name] = false;
                     return this;
                 }
@@ -126,12 +140,11 @@ var Game = (function () {
             addKeys: {
                 value: function (name /*  One or more keys  */) {
                     var i;
-                    if (arguments.length < 1) throw new Error("(control.js) No control given to assign keys to.");
-                    if (!(typeof name === "string" || name instanceof String)) throw new Error("(control.js) Control names must be strings.");
-                    if (this.controls[name] === undefined) throw new Error("(control.js) Control not defined.");
+                    var n;
+                    if (name === undefined || this.controls[name] === undefined) return;
                     for (i = 1; i < arguments.length; i++) {
-                        if (!(typeof arguments[i] === "string" || arguments[i] instanceof String || typeof arguments[i] === "number" || arguments[i] instanceof Number)) throw new Error("(control.js) Control keys must be strings or numbers.");
-                        this.keys[arguments[i]] = name;
+                        n = arguments[i]
+                        this.keys[n] = name;
                     }
                     return this;
                 }
@@ -139,8 +152,7 @@ var Game = (function () {
 
             getName: {
                 value: function (key) {
-                    if (arguments.length < 1) throw new Error("(control.js) No key provided to get.");
-                    if (!(typeof key === "string" || key instanceof String || typeof key === "number" || key instanceof Number)) throw new Error("(control.js) Control keys must be strings or numbers.");
+                    if (key === undefined) return;
                     return this.keys[key];
                 }
             },
@@ -148,7 +160,7 @@ var Game = (function () {
             handleEvent: {
                 value: function (e) {
                     var k;
-                    if (!(e instanceof Event)) throw new Error("(control.js) Tried to handle something that wasn't an event.");
+                    if (!(e instanceof Event)) return;
                     switch (e.type) {
                         case "mousedown":
                             if (this.isDefined(e.currentTarget.dataset.control)) this.toggle(e.currentTarget.dataset.control, true);
@@ -182,17 +194,14 @@ var Game = (function () {
 
             isActive: {
                 value: function (name) {
-                    if (arguments.length < 1) throw new Error("(control.js) No control given to check.");
-                    if (!(typeof name === "string" || name instanceof String)) throw new Error("(control.js) Control names must be strings.");
-                    if (this.controls[name] === undefined) throw new Error("(control.js) Control not defined.");
+                    if (name === undefined || this.controls[name] === undefined) return undefined;
                     return !!this.controls[name];
                 }
             },
 
             isDefined: {
                 value: function (name) {
-                    if (arguments.length < 1) throw new Error("(control.js) No control given to check for existance.");
-                    if (!(typeof name === "string" || name instanceof String)) throw new Error("(control.js) Control names must be strings.");
+                    if (name === undefined) return;
                     return this.controls[name] !== undefined;
                 }
             },
@@ -200,11 +209,9 @@ var Game = (function () {
             isKeyActive: {
                 value: function (key) {
                     var name;
-                    if (arguments.length < 1) throw new Error("(control.js) No key given to check.");
-                    if (!(typeof key === "string" || key instanceof String || typeof key === "number" || key instanceof Number)) throw new Error("(control.js) Control keys must be strings or numbers.");
+                    if (key === undefined) return;
                     name = this.keys[key];
-                    if (!(typeof name === "string" || name instanceof String)) throw new Error("(control.js) Control key resolved to a non-string name.");
-                    if (this.controls[name] === undefined) throw new Error("(control.js) Control not defined.");
+                    if (name === undefined || this.controls[name] === undefined) return undefined;
                     return !!this.controls[name];
                 }
             },
@@ -212,22 +219,16 @@ var Game = (function () {
             isKeyDefined: {
                 value: function (key) {
                     var name;
-                    if (arguments.length < 1) throw new Error("(control.js) No key given to check for existance.");
-                    if (!(typeof key === "string" || key instanceof String || typeof key === "number" || key instanceof Number)) throw new Error("(control.js) Control keys must be strings or numbers.");
+                    if (key === undefined) return;
                     return this.keys[key] !== undefined;
                 }
             },
 
             linkElement: {
                 value: function (name, element) {
-                    if (arguments.length < 1) throw new Error("(control.js) No control given to link.");
-                    if (!(typeof name === "string" || name instanceof String)) throw new Error("(control.js) Control names must be strings.");
-                    if (this.controls[name] === undefined) throw new Error("(control.js) Control not defined.");
-                    if (typeof element === "string" || element instanceof String) {
-                        if (!document.getElementById(element)) throw new Error("(control.js) Cannot link element – no element found with the given id (" + element + ").");
-                        element = document.getElementById(element);
-                    }
-                    else if (!(element instanceof Element)) throw new Error("(control.js) No element given to link.");
+                    if (name === undefined || this.controls[name] === undefined) return;
+                    if (!(element instanceof Element)) element = this.ownerDocument.getElementById(element);
+                    if (!element) return;
                     element.dataset.control = name;
                     if (this.controls[name]) element.setAttribute("data-control-active", "");
                     element.addEventListener("mousedown", this, false);
@@ -243,7 +244,7 @@ var Game = (function () {
             remove: {
                 value: function (name) {
                     var i;
-                    var elements = document.querySelectorAll("*[data-control='" + name + "']");
+                    var elements = this.ownerDocument.querySelectorAll("*[data-control='" + name + "']");
                     for (i in this.keys) {
                         if (this.keys[i] === name) delete this.keys[i];
                     }
@@ -268,11 +269,8 @@ var Game = (function () {
 
             toggle: {
                 value: function (name, to) {
-                    if (arguments.length < 1) throw new Error("(control.js) No control given to toggle.");
-                    if (!(typeof name === "string" || name instanceof String)) throw new Error("(control.js) Control names must be strings.");
-                    if (to !== undefined && !(typeof to === "boolean" || to instanceof Boolean)) throw new Error("(control.js) Toggle value must be a boolean.");
-                    if (this.controls[name] === undefined) throw new Error("(control.js) Control not defined.");
-                    if (to !== undefined) this.controls[name] = to;
+                    if (name === undefined || this.controls[name] === undefined) return;
+                    if (to !== undefined) this.controls[name] = !!to;
                     else this.controls[name] = !this.controls[name];
                     return this.controls[name];
                 }
@@ -281,13 +279,10 @@ var Game = (function () {
             toggleKey: {
                 value: function (key, to) {
                     var name;
-                    if (arguments.length < 1) throw new Error("(control.js) No key given to toggle.");
-                    if (!(typeof key === "string" || key instanceof String || typeof key === "number" || key instanceof Number)) throw new Error("(control.js) Control keys must be strings or numbers.");
+                    if (key === undefined) return;
                     name = this.keys[key];
-                    if (!(typeof name === "string" || name instanceof String)) throw new Error("(control.js) Control key resolved to a non-string name.");
-                    if (to !== undefined && !(typeof to === "boolean" || to instanceof Boolean)) throw new Error("(control.js) Toggle value must be a boolean.");
-                    if (this.controls[name] === undefined) throw new Error("(control.js) Control not defined.");
-                    if (to !== undefined) this.controls[name] = to;
+                    if (name === undefined || this.controls[name] === undefined) return;
+                    if (to !== undefined) this.controls[name] = !!to;
                     else this.controls[name] = !this.controls[name];
                     return this.controls[name];
                 }
@@ -295,12 +290,9 @@ var Game = (function () {
 
             unlinkElement: {
                 value: function (element) {
-                    if (arguments.length < 1) throw new Error("(control.js) No element given to unlink.");
-                    if (typeof element === "string" || element instanceof String) {
-                        if (!document.getElementById(element)) throw new Error("(control.js) Cannot link element – no element found with the given id (" + element + ").");
-                        element = document.getElementById(element);
-                    }
-                    else if (!(element instanceof Element)) throw new Error("(control.js) No element given to unlink.");
+                    if (name === undefined || this.controls[name] === undefined) return;
+                    if (!(element instanceof Element)) element = this.ownerDocument.getElementById(element);
+                    if (!element) return;
                     element.removeAttribute("data-control");
                     element.removeAttribute("data-control-active");
                     element.removeEventListener("mousedown", this, false);
@@ -314,7 +306,7 @@ var Game = (function () {
             updateDOM: {
                 value: function (shouldRepeat) {
                     var i;
-                    var elements = document.querySelectorAll("*[data-control]");
+                    var elements = this.ownerDocument.querySelectorAll("*[data-control]");
                     for (i = 0; i < elements.length; i++) {
                         if (this.controls[elements.item(i).dataset.control]) elements.item(i).setAttribute("data-control-active", "");
                         else if (this.controls[elements.item(i).dataset.control] !== undefined) elements.item(i).removeAttribute("data-control-active");
@@ -343,23 +335,21 @@ var Game = (function () {
             var origin_y
             var source_width;
             var source_height;
-            var placed = !!arguments[4];
+            var placed = !!arguments[6];
 
-            //  Handling arguments and error checking:
+            //  Handling arguments:
 
-            if (!(source instanceof HTMLImageElement || source instanceof SVGImageElement || source instanceof HTMLCanvasElement || (typeof createImageBitmap !== "undefined" && source instanceof ImageBitmap))) throw new Error("[Image] Rendering source must be an image.")
-            if (source instanceof HTMLImageElement && !source.complete) throw new Error("[Image] Rendering source has not finished loading.");
-            if (!(context instanceof CanvasRenderingContext2D)) throw new Error("[Image] Cannot create image – rendering context must be 2d.");
-            if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Image] Cannot create image – coordinates must be numbers.");
-            if (isNaN(origin_x = Number(arguments[5]))) origin_x = 0;
+            if (!(source instanceof HTMLImageElement || source instanceof SVGImageElement || source instanceof HTMLCanvasElement || (typeof createImageBitmap !== "undefined" && source instanceof ImageBitmap))) source = undefined;
+            if (!(context instanceof CanvasRenderingContext2D)) return;
+            if (isNaN(x = Number(x))) x = 0;
+            if (isNaN(y = Number(x))) y = 0;
+            if (isNaN(origin_x = Number(arguments[4]))) origin_x = 0;
             if (isNaN(origin_y = Number(arguments[5]))) origin_y = 0;
 
             //  Getting width and height:
 
-            if (source.naturalWidth) source_width = source.naturalWidth;
-            else source_width = source.width;
-            if (source.naturalHeight) source_height = source.naturalHeight;
-            else source_height = source.height;
+            if (!source || isNaN(source_width = Number(source.naturalWidth !== undefined ? source.naturalWidth : source.width))) source_width = 0;
+            if (!source || isNaN(source_height = Number(source.naturalHeight !== undefined ? source.naturalHeight : source.height))) source_height = 0;
 
             //  Adding properties:
 
@@ -397,19 +387,24 @@ var Game = (function () {
         PlacementImage.prototype = Object.create(Object.prototype, {
             draw: {
                 value: function () {
+                    if (this.source instanceof HTMLImageElement && !this.source.complete) return;
                     if (this.placed) this.context.drawImage(this.source, Math.floor(this.x - this.origin_x), Math.floor(this.y - this.origin_y));
                 }
             },
             setPosition: {
                 value: function (x, y) {
-                    if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Image] Cannot set image position – coordinates must be numbers.");
-                    this.x = x;
-                    this.y = y;
+                    if (!isNaN(x)) this.x = Number(x);
+                    if (!isNaN(y)) this.x = Number(y);
                 }
             },
             togglePlacement: {
                 value: function () {
                     this.placed = !this.placed;
+                }
+            },
+            setPlacement: {
+                value: function (n) {
+                    this.placed = !!n;
                 }
             }
         });
@@ -429,28 +424,21 @@ var Game = (function () {
             //  Variable setup:
 
             var i;
-            var index;
             var j;
 
-            //  Handling arguments and error checking:
+            //  Handling arguments:
 
-            if (!(sheet instanceof Sheet)) throw new Error("[Sheet] Cannot draw sprite – no sheet provided.");
-            if (!(typeof start_index === "number" || start_index instanceof Number)) throw new Error("[Sheet] Cannot draw sprite – index must be a number.");
-            else if (start_index > sheet.size) throw new Error("[Sheet] Cannot draw sprite – index out of range.");
-            if (!(context instanceof CanvasRenderingContext2D)) throw new Error("[Sheet] Cannot draw sprite – rendering context must be 2d.");
-            if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Sheet] Cannot draw sprite – coordinates must be numbers.");
-            if (arguments.length >= 6) {
-                if (!(typeof arguments[5] === "number" || arguments[5] instanceof Number)) throw new Error("[Sheet] Cannot draw sprite – frame must be a number.");
-                else if (start_index + arguments[5] > sheet.size) throw new Error("[Sheet] Cannot draw sprite – frame out of range.");
-                index = start_index + arguments[5];
-            }
-            else index = start_index;
-            i = index % sheet.width;
-            j = Math.floor(index / sheet.width);
+            if (isNaN(start_index = Number(start_index))) start_index = 0;
+            if (isNaN(x = Number(x))) x = 0;
+            if (isNaN(y = Number(y))) y = 0;
+            if (!isNaN(arguments[5])) start_index += Number(arguments[5]);
+            if (!(sheet instanceof Sheet) || start_index >= sheet.size || !(context instanceof CanvasRenderingContext2D)) return;
+            i = start_index % sheet.width;
+            j = Math.floor(start_index / sheet.width);
 
             //  Drawing the sprite:
 
-            context.drawImage((sheet.image || sheet.source), i * sheet.sprite_width, j * sheet.sprite_height, sheet.sprite_width, sheet.sprite_height, x, y, sheet.sprite_width, sheet.sprite_height);
+            if (((sheet.source instanceof HTMLImageElement && sheet.source.complete) || sheet.source instanceof SVGImageElement || sheet.source instanceof HTMLCanvasElement || (typeof createImageBitmap !== "undefined" && (sheet.source instanceof ImageBitmap || sheet.image instanceof ImageBitmap))) && !isNaN(i) && !isNaN(j) && Number(sheet.sprite_width) && Number(sheet.sprite_height)) context.drawImage((typeof createImageBitmap !== "undefined" && sheet.image instanceof ImageBitmap ? sheet.image : sheet.source), i * sheet.sprite_width, j * sheet.sprite_height, sheet.sprite_width, sheet.sprite_height, x, y, sheet.sprite_width, sheet.sprite_height);
 
         }
 
@@ -462,17 +450,10 @@ var Game = (function () {
 
             var length;
 
-            //  Handling arguments and error checking:
+            //  Handling arguments:
 
-            if (!(sheet instanceof Sheet)) throw new Error("[Sheet] Cannot create sprite – no sheet provided.");
-            if (!(typeof index === "number" || index instanceof Number)) throw new Error("[Sheet] Cannot create sprite – index must be a number.");
-            else if (index > sheet.size) throw new Error("[Sheet] Cannot create sprite – index out of range.");
-            if (arguments.length >= 3) {
-                if (!(typeof arguments[2] === "number" || arguments[2] instanceof Number)) throw new Error("[Sheet] Cannot create sprite – length must be a number.");
-                else if (index + arguments[2] - 1 >= sheet.size) throw new Error("[Sheet] Cannot create sprite – length out of range.");
-                length = arguments[2];
-            }
-            else length = 1;
+            if (isNaN(index = Number(index))) index = 0;
+            if (isNaN(length = Number(arguments[2]))) length = 1;
 
             //  Creating the image:
 
@@ -514,32 +495,25 @@ var Game = (function () {
             var source_width;
             var source_height;
 
-            //  Handling arguments and error checking:
+            //  Handling arguments:
 
-            if (!(source instanceof HTMLImageElement || source instanceof SVGImageElement || source instanceof HTMLCanvasElement || (typeof createImageBitmap !== "undefined" && source instanceof ImageBitmap))) throw new Error("[Sheet] Rendering source must be an image.")
-            if (source instanceof HTMLImageElement && !source.complete) throw new Error("[Sheet] Rendering source has not finished loading.");
-            if (!(typeof sprite_width === "number" || sprite_width instanceof Number) || !(typeof sprite_height === "number" || sprite_height instanceof Number)) throw new Error("[Sheet] Widths and heights must be numbers.");
+            if (!(source instanceof HTMLImageElement || source instanceof SVGImageElement || source instanceof HTMLCanvasElement || (typeof createImageBitmap !== "undefined" && source instanceof ImageBitmap))) source = undefined;
+            if (isNaN(sprite_width = Number(sprite_width))) sprite_width = 0;
+            if (isNaN(sprite_height = Number(sprite_height))) sprite_height = 0;
 
             //  Getting width and height:
 
-            if (source.naturalWidth) source_width = source.naturalWidth;
-            else source_width = source.width;
-            if (source.naturalHeight) source_height = source.naturalHeight;
-            else source_height = source.height;
-
-            //  Error-checking width and height:
-
-            if (!Number.isInteger(source_width / sprite_width)) throw new Error("[Sheet] Provided width does not perfectly divide source.");
-            if (!Number.isInteger(source_height / sprite_height)) throw new Error("[Sheet] Provided height does not perfectly divide source.");
+            if (!source || isNaN(source_width = Number(source.naturalWidth !== undefined ? source.naturalWidth : source.width))) source_width = 0;
+            if (!source || isNaN(source_height = Number(source.naturalHeight !== undefined ? source.naturalHeight : source.height))) source_height = 0;
 
             //  Adding properties:
 
             Object.defineProperties(this, {
                 height: {
-                    value: source_height / sprite_height
+                    value: sprite_height ? source_height / sprite_height : undefined
                 },
                 size: {
-                    value: (source_width / sprite_width) * (source_height / sprite_height)
+                    value: sprite_width && sprite_height ? (source_width / sprite_width) * (source_height / sprite_height) : undefined
                 },
                 source: {
                     value: source
@@ -551,7 +525,7 @@ var Game = (function () {
                     value: sprite_width
                 },
                 width: {
-                    value: source_width / sprite_width
+                    value: sprite_width ? source_width / sprite_width : undefined
                 }
             });
 
@@ -562,22 +536,18 @@ var Game = (function () {
         Sheet.prototype = Object.create(Object.prototype, {
             drawIndex: {
                 value: function(context, index, x, y) {
-                    if (!(context instanceof CanvasRenderingContext2D)) throw new Error("[Sheet] Cannot draw sprite at index – rendering context must be 2d.");
-                    if (!(typeof index === "number" || index instanceof Number)) throw new Error("[Sheet] Cannot draw sprite at index – none provided.");
-                    else if (index >= this.size) throw new Error("[Sheet] Cannot draw sprite at index – index out of range.");
-                    if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Sheet] Cannot draw sprite at index – coordinates must be numbers.");
+                    if (isNaN(index = Number(index))) index = 0;
+                    if (isNaN(x = Number(x))) x = 0;
+                    if (isNaN(y = Number(y))) y = 0;
+                    if (!(context instanceof CanvasRenderingContext2D) || index >= this.size) return;
                     return drawSprite(this, index, context, x, y);
                 }
             },
             getSprite: {
                 value: function (index /*  Optional length  */) {
                     var length;
-                    if (!(typeof index === "number" || index instanceof Number)) throw new Error("[Sheet] Cannot get sprite – index must be a number.");
-                    if (arguments.length >= 2) {
-                        if (!(typeof arguments[1] === "number" || arguments[1] instanceof Number)) throw new Error("[Sheet] Cannot get sprite – length must be a number.");
-                        length = arguments[1];
-                    }
-                    else length = 1;
+                    if (isNaN(index = Number(index))) index = 0;
+                    if (isNaN(length = Number(length))) length = 1;
                     return new Sprite(this, index, length);
                 }
             }
@@ -586,21 +556,16 @@ var Game = (function () {
         //  Conveinence functions for drawing an arbitrary sprite:
 
         Sheet.draw = function(context, sprite, x, y /*  Optional frame  */) {
-            if (!(sprite instanceof Sprite)) throw new Error("(sprite.js) Cannot draw sprite – none provided.");
-            if (!(context instanceof CanvasRenderingContext2D)) throw new Error("[Sheet] Cannot draw sprite – rendering context must be 2d.");
-            if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Sheet] Cannot draw sprite – coordinates must be numbers.");
-            if (arguments.length >= 5) {
-                if (!(typeof arguments[4] === "number" || arguments[4] instanceof Number)) throw new Error("[Sheet] Cannot draw sprite – frame must be a number.");
-                return sprite.draw(context, x, y, arguments[4])
-            }
-            return sprite.draw(context, x, y)
+            if (!(sprite instanceof Sprite) || (context instanceof CanvasRenderingContext2D));
+            if (isNaN(x = Number(x))) x = 0;
+            if (isNaN(y = Number(y))) y = 0;
+            return isNaN(arguments[4]) ? sprite.draw(context, x, y) : sprite.draw(context, x, y, arguments[4]);
         }
         Sheet.drawSheetAtIndex = function(context, sheet, index, x, y) {
-            if (!(context instanceof CanvasRenderingContext2D)) throw new Error("[Sheet] Cannot draw sprite at index – rendering context must be 2d.");
-            if (!(sheet instanceof Sheet)) throw new Error("(sprite.js) Cannot draw sprite – no sheet provided.");
-            if (!(typeof index === "number" || index instanceof Number)) throw new Error("[Sheet] Cannot draw sprite at index – none provided.");
-            else if (index >= this.size) throw new Error("[Sheet] Cannot draw sprite at index – index out of range.");
-            if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Sheet] Cannot draw sprite at index – coordinates must be numbers.");
+            if (!(sheet instanceof Sheet) || (context instanceof CanvasRenderingContext2D));
+            if (isNaN(index = Number(index))) index = 0;
+            if (isNaN(x = Number(x))) x = 0;
+            if (isNaN(y = Number(y))) y = 0;
             return sheet.drawIndex(context, index, x, y);
         }
 
@@ -616,7 +581,7 @@ var Game = (function () {
 
     var Letters = (function () {
 
-        //  Drawing a sprite:
+        //  Drawing a letter:
 
         function drawLetter(letters, index, context, x, y) {
 
@@ -625,19 +590,18 @@ var Game = (function () {
             var i;
             var j;
 
-            //  Handling arguments and error checking:
+            //  Handling arguments:
 
-            if (!(letters instanceof Letters)) throw new Error("(letters.js) Cannot draw letter – no letters provided.");
-            if (!(typeof index === "number" || index instanceof Number)) throw new Error("(letter.js) Cannot draw letter – index must be a number.");
-            else if (index > letters.size) throw new Error("(letters.js) Cannot draw letter – index out of range.");
-            if (!(context instanceof CanvasRenderingContext2D)) throw new Error("(letters.js) Cannot draw letter – rendering context must be 2d.");
-            if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("(letter.js) Cannot draw letters – coordinates must be numbers.");
+            if (isNaN(index = Number(index))) index = 0;
+            if (isNaN(x = Number(x))) x = 0;
+            if (isNaN(y = Number(y))) y = 0;
+            if (!(letters instanceof Letters) || index > letters.size || !(context instanceof CanvasRenderingContext2D)) return;
             i = index % letters.width;
             j = Math.floor(index / letters.width);
 
             //  Drawing the letter:
 
-            context.drawImage(letters.canvas, i * letters.letter_width, j * letters.letter_height, letters.letter_width, letters.letter_height, x, y, letters.letter_width, letters.letter_height);
+            if (letters.canvas instanceof HTMLCanvasElement && !isNaN(i) && !isNaN(j) && Number(letters.letter_width) && Number(letters.letter_height)) context.drawImage(letters.canvas, i * letters.letter_width, j * letters.letter_height, letters.letter_width, letters.letter_height, x, y, letters.letter_width, letters.letter_height);
 
         }
 
@@ -645,23 +609,22 @@ var Game = (function () {
 
         function Letter(letters, index) {
 
-            //  Handling arguments and error checking:
+            //  Handling arguments:
 
-            if (!(letters instanceof Letters)) throw new Error("(letters.js) Cannot create letter – no letters provided.");
-            if (!(typeof index === "number" || index instanceof Number)) throw new Error("(letters.js) Cannot create letter – index must be a number.");
-            else if (index > letters.size) throw new Error("(letters.js) Cannot create letter – index out of range.");
+            if (!(letters instanceof Letters)) letters = undefined;
+            if (isNaN(index = Number(index))) index = 0;
 
             //  Creating the letter:
 
             Object.defineProperties(this, {
                 canvas: {
-                    value: letters.canvas
+                    value: letters ? letters.canvas : undefined
                 },
                 draw: {
                     value: drawLetter.bind(this, letters, index)
                 },
                 height: {
-                    value: letters.letter_height
+                    value: letters ? letters.letter_height : undefined
                 },
                 index: {
                     value: index
@@ -670,7 +633,7 @@ var Game = (function () {
                     value: letters
                 },
                 width: {
-                    value: letters.letter_width
+                    value: letters ? letters.letter_width : undefined
                 }
             });
 
@@ -690,19 +653,17 @@ var Game = (function () {
 
             var i;
 
-            //  Handling arguments and error checking:
+            //  Handling arguments:
 
-            if (!(context instanceof CanvasRenderingContext2D)) throw new Error("(letters.js) Cannot create block – provided context must be 2d.");
-            if (!(letters instanceof Letters)) throw new Error("(letters.js) Cannot create string – no letters provided.");
-            if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("(letters.js) Cannot create block – coordinates must be numbers.");
+            if (!(context instanceof CanvasRenderingContext2D)) context = undefined;
+            if (!(letters instanceof Letters)) letters = undefined;
+            if (isNaN(x = Number(x))) x = 0;
+            if (isNaN(y = Number(y))) y = 0;
 
             //  Creating the block:
 
             for (i = 4; i < arguments.length; i++) {
-                if (!(typeof arguments[i] === "string" || arguments[i] instanceof String)) throw new Error("(letters.js) Block arguments must be strings.");
-                Object.defineProperty(this, i - 4, {
-                    value: new LetterString(letters, arguments[i])
-                });
+                Object.defineProperty(this, i - 4, {value: new LetterString(letters, arguments[i])});
             }
 
             Object.defineProperties(this, {
@@ -724,7 +685,7 @@ var Game = (function () {
                         for (i = 0; i < this.height && n > this[i].length; i++) {
                             n -= this[i].length;
                         }
-                        if (this[i]) this[i].delIndex = n;
+                        if (i < this.height) this[i].delIndex = n;
                         while (++i < this.height) {
                             this[i].delIndex = 0;
                         }
@@ -745,7 +706,7 @@ var Game = (function () {
                         for (i = 0; i < this.height && n > this[i].length; i++) {
                             n -= this[i].length;
                         }
-                        if (this[i]) this[i].drawIndex = n;
+                        if (i < this.height) this[i].drawIndex = n;
                         while (++i < this.height) {
                             this[i].drawIndex = 0;
                         }
@@ -769,7 +730,7 @@ var Game = (function () {
                         for (i = 0; i < this.height && n > this[i].length; i++) {
                             n -= this[i].length;
                         }
-                        if (this[i]) this[i].index = n;
+                        if (i < this.height) this[i].index = n;
                         while (++i < this.height) {
                             this[i].index = 0;
                         }
@@ -791,15 +752,23 @@ var Game = (function () {
                 x: {
                     get: function () {return x;},
                     set: function (n) {
-                        x = n;
-                        this.clear();
+                        if (!isNaN(n)) {
+                            x = Number(n);
+                            this.delIndex = 0;
+                            this.drawIndex = 0;
+                            this.index = 0;
+                        }
                     }
                 },
                 y: {
                     get: function () {return y;},
                     set: function (n) {
-                        y = n;
-                        this.clear();
+                        if (!isNaN(n)) {
+                            y = Number(n);
+                            this.delIndex = 0;
+                            this.drawIndex = 0;
+                            this.index = 0;
+                        }
                     }
                 }
             });
@@ -811,11 +780,13 @@ var Game = (function () {
         LetterBlock.prototype = Object.create(Object.prototype, {
             advance: {
                 value: function (/*  Optional amount  */) {
-                    if (arguments[0]) this.index += arguments[0];
-                    else this.index++;
-                    if (this.index < 0) this.index = this.length;
-                    if (this.index > this.length) this.index = this.length;
-                    if (this.delIndex > this.index) this.delIndex = this.index;
+                    var i = this.index;
+                    if (!isNaN(arguments[0])) i += Number(arguments[0]);
+                    else i++;
+                    if (i < 0) i = 0;
+                    else if (i > this.length) i = this.length;
+                    this.index = i;
+                    if (this.delIndex > i) this.delIndex = i;
                 }
             },
             clear: {
@@ -829,8 +800,8 @@ var Game = (function () {
                     var i;
                     var y = this.y;
                     for (i = 0; i < this.height; i++) {
-                        if (!(this.line(i) instanceof LetterString)) throw new Error("(letters.js) Block index did not resolve to a string.");
-                        this.line(i).draw(this.context, this.x, y);
+                        if (!(this[i] instanceof LetterString)) return;
+                        this[i].draw(this.context, this.x, y);
                         y += this.letters.letter_height + 1;
                     }
                 }
@@ -843,16 +814,16 @@ var Game = (function () {
             item: {
                 value: function (n) {
                     var i;
+                    if (isNaN(n)) return;
                     for (i = 0; i < this.height && n > this[i].length; i++) {
                         n -= this[i].length;
                     }
-                    if (this[i]) return this[i].item(n);
-                    return null;
+                    return (i < this.height) ? this[i].item(n) : null;
                 }
             },
             line: {
                 value: function (n) {
-                    return this[n];
+                    return this[n] instanceof LetterString ? this[n] : null;
                 }
             }
         });
@@ -864,26 +835,29 @@ var Game = (function () {
             //  Variable setup:
 
             var i;
+            var delIndex;
+            var drawIndex;
+            var index;
 
-            //  Handling arguments and error checking:
+            //  Handling arguments:
 
-            if (!(letters instanceof Letters)) throw new Error("(letters.js) Cannot create string – no letters provided.");
-            if (!(typeof data === "string" || data instanceof String)) throw new Error("(letters.js) Cannot create string – no data provided.");
+            if (!(letters instanceof Letters)) letters = undefined;
+            data = String(data);
 
             //  Define string:
 
             Object.defineProperties(this, {
                 delIndex: {
-                    value: 0,
-                    writable: true
+                    get: function () {return delIndex},
+                    set: function (n) {if (!isNaN(n)) delIndex = Number(n);}
                 },
                 drawIndex: {
-                    value: 0,
-                    writable: true
+                    get: function () {return drawIndex},
+                    set: function (n) {if (!isNaN(n)) drawIndex = Number(n);}
                 },
                 index: {
-                    value: 0,
-                    writable: true
+                    get: function () {return index},
+                    set: function (n) {if (!isNaN(n)) index = Number(n);}
                 },
                 length: {
                     value: data.length
@@ -894,10 +868,9 @@ var Game = (function () {
             });
 
             for (i = 0; i < data.length; i++) {
-                if (data.charCodeAt(i) > letters.size) throw new Error("(letters.js) String index exceeds size of letters.");
                 Object.defineProperty(this, i, {
                     enumerable: true,
-                    value: letters.item(data.charCodeAt(i))
+                    value: letters ? letters.item(data.charCodeAt(i)) : null
                 });
             }
 
@@ -908,11 +881,13 @@ var Game = (function () {
         LetterString.prototype = Object.create(Object.prototype, {
             advance: {
                 value: function (/*  Optional amount  */) {
-                    if (arguments[0]) this.index += arguments[0];
-                    else this.index++;
-                    if (this.index < 0) this.index = this.length;
-                    if (this.index > this.length) this.index = this.length;
-                    if (this.delIndex > this.index) this.delIndex = this.index;
+                    var i = this.index;
+                    if (!isNaN(arguments[0])) i += Number(arguments[0]);
+                    else i++;
+                    if (i < 0) i = 0;
+                    else if (i > this.length) i = this.length;
+                    this.index = i;
+                    if (this.delIndex > i) this.delIndex = i;
                 }
             },
             clear: {
@@ -923,8 +898,9 @@ var Game = (function () {
             },
             draw: {
                 value: function (context, x, y) {
-                    if (!(context instanceof CanvasRenderingContext2D)) throw new Error("(letters.js) Cannot draw string – provided context must be 2d.");
-                    if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("(letters.js) Cannot draw string – coordinates must be numbers.");
+                    if (isNaN(x = Number(x))) x = 0;
+                    if (isNaN(y = Number(y))) y = 0;
+                    if (!(context instanceof CanvasRenderingContext2D) || !(this.letters instanceof Letters) || !Number(this.letters.letter_width) || !Number(this.letters.letter_height)) return;
                     if (this.drawIndex > this.length) this.drawIndex = this.length;
                     if (this.drawIndex < 0) this.drawIndex = 0;
                     if (this.delIndex > this.index) this.delIndex = this.index;
@@ -934,7 +910,7 @@ var Game = (function () {
                         this.drawIndex = this.delIndex;
                     }
                     while (this.drawIndex < this.length && this.drawIndex < this.index) {
-                        if (!(this.item(this.drawIndex) instanceof Letter)) throw new Error("(letters.js) String index did not resolve to a letter.");
+                        if (!(this.item(this.drawIndex) instanceof Letter)) continue;
                         this.item(this.drawIndex).draw(context, x + this.drawIndex * (this.letters.letter_width + 1), y);
                         this.drawIndex++;
                     }
@@ -948,48 +924,46 @@ var Game = (function () {
             },
             item: {
                 value: function (n) {
-                    return this[n];
+                    return this[n] instanceof Letter ? this[n] : null;
                 }
             }
         });
 
         //  Letters constructor:
 
-        function Letters(source, letter_width, letter_height) {
+        function Letters(source, letter_width, letter_height  /*  Optional document  */) {
 
             //  Variable setup:
 
             var canvas;
             var context;
+            var doc;
             var i;
             var source_width;
             var source_height;
 
-            //  Handling arguments and error checking:
+            //  Handling arguments:
 
-            if (!(source instanceof HTMLImageElement || source instanceof SVGImageElement || source instanceof HTMLCanvasElement || (typeof createImageBitmap !== "undefined" && source instanceof ImageBitmap))) throw new Error("(letters.js) Rendering source must be an image.")
-            if (source instanceof HTMLImageElement && !source.complete) throw new Error("(letters.js) Rendering source has not finished loading.");
-            if (!(typeof letter_width === "number" || letter_width instanceof Number) || !(typeof letter_height === "number" || letter_height instanceof Number)) throw new Error("(letters.js) Widths and heights must be numbers.");
+            if (!(source instanceof HTMLImageElement || source instanceof SVGImageElement || source instanceof HTMLCanvasElement || (typeof createImageBitmap !== "undefined" && source instanceof ImageBitmap))) source = undefined;
+            if (isNaN(letter_width = Number(letter_width))) letter_width = 0;
+            if (isNaN(letter_height = Number(letter_height))) letter_height = 0;
+            doc = arguments[3] instanceof Document ? arguments[3] : document;
 
             //  Getting width and height:
 
-            if (source.naturalWidth) source_width = source.naturalWidth;
-            else source_width = source.width;
-            if (source.naturalHeight) source_height = source.naturalHeight;
-            else source_height = source.height;
-
-            //  Error-checking width and height:
-
-            if (!Number.isInteger(source_width / letter_width)) throw new Error("(letters.js) Provided width does not perfectly divide source.");
-            if (!Number.isInteger(source_height / letter_height)) throw new Error("(letters.js) Provided height does not perfectly divide source.");
+            if (!source || isNaN(source_width = Number(source.naturalWidth !== undefined ? source.naturalWidth : source.width))) source_width = 0;
+            if (!source || isNaN(source_height = Number(source.naturalHeight !== undefined ? source.naturalHeight : source.height))) source_height = 0;
 
             //  Setting up context:
 
-            canvas = document.createElement("canvas");
-            canvas.width = source_width;
-            canvas.height = source_height;
-            context = canvas.getContext("2d");
-            context.drawImage(source, 0, 0);
+            if (source) {
+                canvas = document.createElement("canvas");
+                canvas.width = source_width;
+                canvas.height = source_height;
+                context = canvas.getContext("2d");
+                if (!(source instanceof HTMLImageElement) || source.complete) context.drawImage(source, 0, 0);
+            }
+            else canvas = context = null;
 
             //  Adding properties:
 
@@ -1005,10 +979,10 @@ var Game = (function () {
                     value: context
                 },
                 height: {
-                    value: source_height / letter_height
+                    value: letter_height ? source_height / letter_height : 0
                 },
                 size: {
-                    value: (source_width / letter_width) * (source_height / letter_height)
+                    value: letter_width && letter_height ? (source_width / letter_width) * (source_height / letter_height) : 0
                 },
                 source: {
                     value: source
@@ -1020,7 +994,7 @@ var Game = (function () {
                     value: letter_width
                 },
                 width: {
-                    value: source_width / letter_width
+                    value: letter_width ? source_width / letter_width : 0
                 }
             });
             for (i = 0; i < this.size; i++) {
@@ -1036,14 +1010,16 @@ var Game = (function () {
         Letters.prototype = Object.create(Object.prototype, {
             item: {
                 value: function (i) {
-                    return this[i];
+                    return this[i] instanceof Letter ? this[i] : null;
                 }
             },
             clearColor: {
                 value: function () {
                     if (this.color === undefined) return;
-                    this.context.clearRect(0, 0, this.context.canvas.width, this.context.canvas.height);
-                    this.context.drawImage(this.source, 0, 0);
+                    if (this.context instanceof CanvasRenderingContext2D) {
+                        this.context.clearRect(0, 0, this.context.canvas.width, this.context.canvas.height);
+                        if (!((this.source instanceof HTMLImageElement && this.source.complete) || this.source instanceof SVGImageElement || this.source instanceof HTMLCanvasElement || (typeof createImageBitmap !== "undefined" && this.source instanceof ImageBitmap))) this.context.drawImage(this.source, 0, 0);
+                    }
                     this.color = undefined;
                 }
             },
@@ -1055,17 +1031,18 @@ var Game = (function () {
             },
             createString: {
                 value: function (data) {
-                    if (!(typeof data === "string" || data instanceof String)) throw new Error("(letters.js) Cannot create string – no data provided.");
                     return new LetterString(this, data);
                 }
             },
             setColor: {
                 value: function (color) {
-                    if (this.color === color || color === undefined) return;
-                    this.context.globalCompositeOperation = "source-in";
-                    this.context.fillStyle = color;
-                    this.context.fillRect(0, 0, this.context.canvas.width, this.context.canvas.height);
-                    this.context.globalCompositeOperation = "source-over";
+                    if (color === undefined || this.color === (color = String(color))) return;
+                    if (this.context instanceof CanvasRenderingContext2D) {
+                        this.context.globalCompositeOperation = "source-in";
+                        this.context.fillStyle = color;
+                        this.context.fillRect(0, 0, this.context.canvas.width, this.context.canvas.height);
+                        this.context.globalCompositeOperation = "source-over";
+                    }
                     this.color = color;
                 }
             }
@@ -1098,9 +1075,10 @@ var Game = (function () {
             var placeholders;
             var values = Object.create(null);
 
-            //  Handling arguments and error checking:
+            //  Handling arguments:
 
-            if (!(typeof base64 === "string" || base64 instanceof String) || base64.length % 4) throw new Error("[Tileset] Collisions must be provided as a Base64-encoded string.");
+            base64 = String(base64);
+            if (base64.length % 4) throw new Error("Could not decode Base64-encoded data: String length not a multiple of 4.");
 
             //  Setting up values:
 
@@ -1167,28 +1145,17 @@ var Game = (function () {
 
             //  Handling arguments and error checking:
 
-            if (!(context instanceof CanvasRenderingContext2D)) throw new Error("[Tileset] Cannot create map – canvas context must be 2d.");
-            if (!(tileset instanceof Tileset)) throw new Error("[Tileset] Cannot create map – no tileset provided");
-            if (!(typeof map === "string" || map instanceof String) || map.length % 4) throw new Error("[Tileset] Cannot create map – map must be provided as a Base64-encoded string.");
-            if (!(typeof tiles_wide === "number" || tiles_wide instanceof Number)) throw new Error("[Tileset] Cannot create map – width of map not specified.");
+            if (!(context instanceof CanvasRenderingContext2D)) context = undefined;
+            if (!(tileset instanceof Tileset)) tileset = undefined;
+            if (isNaN(tiles_wide = Number(tiles_wide))) tiles_wide = 0;
             decoded_map = decode64(map);
-            if (decoded_map.length % tiles_wide !== 0) throw new Error("[Tileset] Cannot create map – provided map not evenly divided by its width.");
-            if (arguments[4] !== undefined && !(typeof arguments[4] === "number" || arguments[4] instanceof Number)) throw new Error("[Tileset] Cannot create map – starting coordinates must be numbers.");
-            else x = arguments[4];
-            if (arguments[5] !== undefined && !(typeof arguments[5] === "number" || arguments[5] instanceof Number)) throw new Error("[Tileset] Cannot create map – starting coordinates must be numbers.");
-            else y = arguments[5];
-            if (arguments[6] !== undefined && !(typeof arguments[6] === "number" || arguments[6] instanceof Number)) throw new Error("[Tileset] Cannot create map – origin coordinates must be numbers.");
-            else origin_x = arguments[6];
-            if (arguments[7] !== undefined && !(typeof arguments[7] === "number" || arguments[7] instanceof Number)) throw new Error("[Tileset] Cannot create map – origin coordinates must be numbers.");
-            else origin_y = arguments[7];
-            if (x === undefined) x = Math.floor((context.canvas.width - tileset.tile_width * tiles_wide) / 2);
-            if (y === undefined) y = Math.floor((context.canvas.height - tileset.tile_height * (decoded_map.length / tiles_wide)) / 2);
-            if (origin_x === undefined) origin_x = 0;
-            if (origin_y === undefined) origin_y = 0;
-            tiles_tall = decoded_map.length / tiles_wide;
+            tiles_tall = tiles_wide ? Math.ceil(decoded_map.length / tiles_wide) : 0;
+            x = arguments[4] === undefined && context && tileset ? Math.floor((context.canvas.width - tileset.tile_width * tiles_wide) / 2) : isNaN(arguments[4]) ? Number(arguments[4]) : 0;
+            y = arguments[5] === undefined && context && tileset ? Math.floor((context.canvas.width - tileset.tile_width * tiles_tall) / 2) : isNaN(arguments[5]) ? Number(arguments[5]) : 0;
+            if (isNaN(origin_x = Number(origin_x))) origin_x = 0;
+            if (isNaN(origin_y = Number(origin_y))) origin_y = 0;
 
             //  Making the map:
-
 
             Object.defineProperties(this, {
                 context: {
@@ -1198,18 +1165,18 @@ var Game = (function () {
                     value: decoded_map
                 },
                 origin_x: {
-                    value: origin_x,
-                    writable: true
+                    get: function () {return origin_x},
+                    set: function (n) {if (!isNaN(n)) origin_x = Number(n);}
                 },
                 origin_y: {
-                    value: origin_y,
-                    writable: true
+                    get: function () {return origin_y},
+                    set: function (n) {if (!isNaN(n)) origin_y = Number(n);}
                 },
                 tile_height: {
-                    value: tileset.tile_height
+                    value: tileset ? tileset.tile_height : 0
                 },
                 tile_width: {
-                    value: tileset.tile_width
+                    value: tileset ? tileset.tile_width : 0
                 },
                 tiles_tall: {
                     value: tiles_tall
@@ -1221,13 +1188,13 @@ var Game = (function () {
                     value: tileset
                 },
                 x: {
-                    value: x,
-                    writable: true
+                    get: function () {return x},
+                    set: function (n) {if (!isNaN(n)) x = Number(n);}
                 },
                 y: {
-                    value: y,
-                    writable: true
-                }
+                    get: function () {return y},
+                    set: function (n) {if (!isNaN(n)) y = Number(n);}
+                },
             });
 
         }
@@ -1240,26 +1207,26 @@ var Game = (function () {
                     var collision;
                     var x;
                     var y;
-                    if (!(typeof sx === "number" || sx instanceof Number) || !(typeof sy === "number" || sy instanceof Number)) throw new Error("[Tileset] Cannot find collision – coordinates must be numbers.");
-                    x = sx - this.x;
-                    y = sy - this.y;
+                    if (!(this.tileset instanceof Tileset)) return;
+                    if (isNaN(sx = Number(sx)) || isNaN(sy = Number(sy))) return null;
+                    x = isNaN(this.x) ? sx : sx - Number(this.x);
+                    y = isNaN(this.y) ? sy : sy - Number(this.y);
                     if (x < 0 || x >= this.tile_width * this.tiles_wide || y < 0 || y >= this.tile_height * this.tiles_tall) return 0x0;
                     collision = this.tileset.getCollision(this.map[Math.floor(x / this.tile_width) + Math.floor(y / this.tile_height) * this.tiles_wide]);
                     if ((0 <= x && x % this.tile_width <= this.tile_width / 2) || (0 > x && x % this.tile_width <= -this.tile_width / 2)) {
-                        if ((0 <= y && y % this.tile_height <= this.tile_height / 2) || (0 > y && y % this.tile_height <= -this.tile_height / 2)) return collision & 0x1;
-                        else return collision & 0x4;
+                        return ((0 <= y && y % this.tile_height <= this.tile_height / 2) || (0 > y && y % this.tile_height <= -this.tile_height / 2)) ? collision & 0x1 : collision & 0x4;
                     }
                     else {
-                        if ((0 <= y && y % this.tile_height <= this.tile_height / 2) || (0 > y && y % this.tile_height <= -this.tile_height / 2)) return collision & 0x2;
-                        else return collision & 0x8;
+                        return ((0 <= y && y % this.tile_height <= this.tile_height / 2) || (0 > y && y % this.tile_height <= -this.tile_height / 2)) ? collision & 0x2 : collision & 0x8;
                     }
                 }
             },
             draw: {
                 value: function () {
                     var i;
+                    if (!(this.context instanceof CanvasRenderingContext2D) || !Number(this.tile_width) || !Number(this.tile_height) || !Number(this.tiles_wide) || typeof this.map !== "object") return;
                     for (i = 0; i < this.map.length; i++) {
-                        this.tileset.draw(this.context, this.map[i], this.x + (i % this.tiles_wide) * this.tile_width - this.origin_x, this.y + Math.floor(i / this.tiles_wide) * this.tile_height - this.origin_y);
+                        this.tileset.draw(this.context, this.map[i], Number(this.x) + (i % this.tiles_wide) * this.tile_width - this.origin_x, Number(this.y) + Math.floor(i / this.tiles_wide) * this.tile_height - this.origin_y);
                     }
                 }
             },
@@ -1272,10 +1239,9 @@ var Game = (function () {
                     var iy;
                     var x;
                     var y;
-                    if (!(dir == "left" || dir == "top" || dir == "right" || dir == "bottom")) throw new Error("[Tileset] Cannot get collision edge – No proper directional keyword provided.");
-                    if (!(typeof sx === "number" || sx instanceof Number) || !(typeof sy === "number" || sy instanceof Number)) throw new Error("[Tileset] Cannot find collision – coordinates must be numbers.");
-                    x = Math.round(sx - this.x);
-                    y = Math.round(sy - this.y);
+                    if (!(dir == "left" || dir == "top" || dir == "right" || dir == "bottom") || isNaN(sx = Number(sx)) || isNaN(sy = Number(sy))) return undefined;
+                    x = Math.round(isNaN(this.x) ? sx : sx - Number(this.x));
+                    y = Math.round(isNaN(this.y) ? sy : sy - Number(this.y));
                     if (x % (this.tile_width / 2) === 0 || y % (this.tile_height / 2) === 0) {
                         switch (dir) {
                             case "left":
@@ -1303,27 +1269,19 @@ var Game = (function () {
                         case "left":
                             if (x > this.tile_width * this.tiles_wide) return this.tile_width * this.tiles_wide + this.x;
                             else if (y < 0 || y >= this.tile_height * this.tiles_tall) return sx;
-                            if ((corner == 0x2 && !(collision & 0x1)) || (corner == 0x8 && !(collision & 0x4))) return ix * this.tile_width + this.tile_width / 2 + this.x;
-                            else return ix * this.tile_width + this.x;
-                            break;
+                            return ((corner == 0x2 && !(collision & 0x1)) || (corner == 0x8 && !(collision & 0x4))) ? ix * this.tile_width + this.tile_width / 2 + this.x : ix * this.tile_width + this.x;
                         case "right":
                             if (x < 0) return this.x;
                             else if (y < 0 || y >= this.tile_height * this.tiles_tall) return sx;
-                            if ((corner == 0x1 && !(collision & 0x2)) || (corner == 0x4 && !(collision & 0x8))) return ix * this.tile_width + this.tile_width / 2 + this.x;
-                            else return ix * this.tile_width + this.tile_width + this.x;
-                            break;
+                            return ((corner == 0x1 && !(collision & 0x2)) || (corner == 0x4 && !(collision & 0x8))) ? ix * this.tile_width + this.tile_width / 2 + this.x : ix * this.tile_width + this.tile_width + this.x;
                         case "top":
                             if (y > this.tile_height * this.tiles_tall) return this.tile_height * this.tiles_tall + this.y;
                             else if (x < 0 || x >= this.tile_width * this.tiles_wide) return sy;
-                            if ((corner == 0x4 && !(collision & 0x1)) || (corner == 0x8 && !(collision & 0x2))) return iy * this.tile_height + this.tile_height / 2 + this.y;
-                            else return iy * this.tile_height + this.y;
-                            break;
+                            return ((corner == 0x4 && !(collision & 0x1)) || (corner == 0x8 && !(collision & 0x2))) ? iy * this.tile_height + this.tile_height / 2 + this.y : iy * this.tile_height + this.y;
                         case "bottom":
                             if (y < 0) return this.y;
                             else if (x < 0 || x >= this.tile_width * this.tiles_wide) return sy;
-                            if ((corner == 0x1 && !(collision & 0x4)) || (corner == 0x2 && !(collision & 0x8))) return iy * this.tile_height + this.tile_height / 2 + this.y;
-                            else return iy * this.tile_height + this.tile_height + this.y;
-                            break;
+                            return ((corner == 0x1 && !(collision & 0x4)) || (corner == 0x2 && !(collision & 0x8))) ? iy * this.tile_height + this.tile_height / 2 + this.y : iy * this.tile_height + this.tile_height + this.y;
                     }
                 }
             }
@@ -1335,9 +1293,9 @@ var Game = (function () {
 
             //  Handling arguments and error checking:
 
-            if (!(typeof tile_width === "number" || tile_width instanceof Number) || !(typeof tile_height === "number" || tile_height instanceof Number)) throw new Error("[Tileset] Cannot create tileset – tile widths and heights must be numbers.");
-            if (!(typeof collisions === "string" || collisions instanceof String) || collisions.length % 4) throw new Error("[Tileset] Collisions must be provided as a Base64-encoded string.");
-            if (!(typeof draw === "function" || draw instanceof Function)) throw new Error("[Tileset] No draw function provided");
+            if (isNaN(tile_width = Number(tile_width))) tile_width = 0;
+            if (isNaN(tile_height = Number(tile_height))) tile_height = 0;
+            if (!(typeof draw === "function" || draw instanceof Function)) draw = null;
 
             //  Adding properties:
 
@@ -1366,10 +1324,7 @@ var Game = (function () {
         Tileset.prototype = Object.create(Object.prototype, {
             draw: {
                 value: function (context, index, x, y) {
-                    if (!(context instanceof CanvasRenderingContext2D)) throw new Error("[Tileset] Cannot draw tile – canvas context must be 2d.");
-                    if (!(typeof index === "number" || index instanceof Number)) throw new Error("[Tileset] Cannot draw tile – index must be a number.");
-                    if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Tileset] Cannot draw tile – coordinates must be numbers.");
-                    return this.drawFunction(context, this.sheet, index, x, y);
+                    if (typeof this.drawFunction === "function" || this.drawFunction instanceof Function) return this.drawFunction(context, this.sheet, index, x, y);
                 }
             },
             getMap: {
@@ -1380,8 +1335,7 @@ var Game = (function () {
             },
             getCollision: {
                 value: function (index) {
-                    if (!(typeof index === "number" || index instanceof Number)) throw new Error("[Tileset] Cannot get collision – index must be a number.");
-                    return (this.collisions[Math.floor(index / 2)] >> 4 * ((index + 1) % 2)) & 0xF;
+                    return isNaN(index) ? null : (this.collisions[Math.floor(index / 2)] >> 4 * ((index + 1) % 2)) & 0xF;
                 }
             }
         });
@@ -1438,8 +1392,7 @@ var Game = (function () {
                     if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
                     if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
                     if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to increment a non-declared value.");
-                    if (arguments[1] !== undefined) return this.__properties__[prop] += arguments[1];
-                    else return this.__properties__[prop]++;
+                    return arguments[1] !== undefined ? this.__properties__[prop] += arguments[1] : this.__properties__[prop]++;
                 }
             },
             is_defined: {
@@ -1760,7 +1713,7 @@ var Game = (function () {
             var x;
             var y;
 
-            //  Handling arguments and error checking:
+            //  Handling arguments:
 
             elt = game.datadoc.getElementsByClassName("area").item(index);
             if (!(game instanceof Game && elt instanceof Element)) return;
@@ -1925,7 +1878,7 @@ var Game = (function () {
             var props = {};
             var sprites = [];
 
-            //  Handling arguments and error checking:
+            //  Handling arguments:
 
             if (!id) id = name;
             if (!(collection instanceof Collection) || !collection.area || !collection.game) return;
@@ -2034,8 +1987,10 @@ var Game = (function () {
             },
             getCollisionEdge: {
                 value: function (dir, x, y) {
-                    if (!(dir == "left" || dir == "top" || dir == "right" || dir == "bottom")) throw new Error("[Game] Cannot get collision edge – No proper directional keyword provided.");
-                    if (!(typeof x === "number" || x instanceof Number) || !(typeof y === "number" || y instanceof Number)) throw new Error("[Game] Cannot find collision – coordinates must be numbers.");
+                    if (!(dir == "left" || dir == "top" || dir == "right" || dir == "bottom")) return undefined;
+                    if (isNaN(x) || isNaN(y)) return undefined;
+                    x = Number(x);
+                    y = Number(y);
                     if (this.collides === 0 || this.collides === "map" || x <= Math.round(this.x - this.width / 2) || x >= Math.round(this.x + this.width / 2) || y <= Math.round(this.y - this.height / 2) || y >= Math.round(this.y + this.height / 2)) {
                         switch (dir) {
                             case "left":
@@ -2080,9 +2035,8 @@ var Game = (function () {
                     var sy;
                     var tx;
                     var ty;
-                    if (!(this.area instanceof Area)) throw new Error("[Game] Could not target character – character is not associated with an area.");
                     d = Math.sqrt(dx * dx + dy * dy);
-                    if (!d) return;
+                    if (!(this.area instanceof Area) || !(this.area.characters instanceof Collection) || typeof this.area.maps !== "object" || !d) return;
                     if (d > 1) {
                         ux = dx / d;
                         uy = dy / d;
@@ -2179,6 +2133,7 @@ var Game = (function () {
             var area;
             var game;
             var len;
+            var nextIndex;
 
             if (parent instanceof Area) {
                 area = parent;
@@ -2192,6 +2147,10 @@ var Game = (function () {
                 area: {value: area},
                 Type: {value: constructor},
                 game: {value: game},
+                nextIndex: {
+                    get: function () {return nextIndex},
+                    set: function (n) {if (!isNaN(n)) nextIndex = Number(n);}
+                },
                 parent: {value: parent}
             });
 
@@ -2200,8 +2159,8 @@ var Game = (function () {
                 game: {value: game},
                 length: {get: (function () {return this[Object.keys(this).length];}).bind(this)},
                 nextIndex: {
-                    value: 0,
-                    writable: true
+                    get: function () {return nextIndex},
+                    set: function (n) {if (!isNaN(n)) nextIndex = Number(n);}
                 },
                 parent: {value: parent}
             }, {
@@ -2237,15 +2196,15 @@ var Game = (function () {
                     var args = [null, this].concat(Array.prototype.slice.call(arguments));
                     this.declare(name);
                     this.set(name, new (this.Type.bind.apply(this.Type, args))());
-                    Object.defineProperty(this.get(name).__functions__, "kill", {value: this.kill.bind(this, name)});
+                    if (this.get(name).__functions__) Object.defineProperty(this.get(name).__functions__, "kill", {value: this.kill.bind(this, name)});
                 }
             },
             loadNameless: {
                 value: function () {
-                    var args = [null, this, this.__properties__.nextIndex].concat(Array.prototype.slice.call(arguments));
-                    this[this.__properties__.nextIndex] = new (this.Type.bind.apply(this.Type, args))();
-                    Object.defineProperty(this[this.__properties__.nextIndex].__functions__, "kill", {value: this.kill.bind(this, this.__properties__.nextIndex)});
-                    this.__properties__.nextIndex++;
+                    var args = [null, this, this.nextIndex].concat(Array.prototype.slice.call(arguments));
+                    this[this.nextIndex] = new (this.Type.bind.apply(this.Type, args))();
+                    if (this.get(name).__functions__) Object.defineProperty(this[this.nextIndex].__functions__, "kill", {value: this.kill.bind(this, this.nextIndex)});
+                    this.nextIndex++;
                 }
             }
         });
@@ -2262,35 +2221,15 @@ var Game = (function () {
             var i;
             var j;
 
+            //  Handling arguments and making sure modules are loaded:
+
+            if (!(doc instanceof Document) || doc.game || typeof Screen === "undefined" || !Screen || typeof Control === "undefined" || !Control || typeof PlacementImage === "undefined" || !PlacementImage || typeof Sheet === "undefined" || !Sheet || typeof Letters === "undefined" || !Letters || typeof Tileset === "undefined" || !Tileset || typeof Jelli === "undefined" || !Jelli) return;
+            Object.defineProperty(doc, "game", {value: this});
+
             //  imported() and placed() functions:
 
-            function imported(node) {
-                if (typeof node === "string" || node instanceof String) node = datadoc.getElementById(node);
-                if (!(node instanceof Node)) throw new Error("[Game] Cannot import node – none provided");
-                return doc.importNode(node, true);
-            }
-
-            function placed(node) {
-                if (typeof node === "string" || node instanceof String) node = datadoc.getElementById(node);
-                if (!(node instanceof Node)) throw new Error("[Game] Cannot place node – none provided");
-                return doc.body.appendChild(document.importNode(node, true));
-            }
-
-            //  Handling arguments and error checking:
-
-            if (!(doc instanceof Document)) return;
-            if (doc.game) return;
-            else Object.defineProperty(doc, "game", {value: this});
-
-            //  Making sure modules are loaded:
-
-            if (typeof Screen === "undefined" || !Screen) throw new Error("[Game] Screen module not loaded");
-            if (typeof Control === "undefined" || !Control) throw new Error("[Game] Control module not loaded");
-            if (typeof PlacementImage === "undefined" || !PlacementImage) throw new Error("[Game] Image module not loaded");
-            if (typeof Sheet === "undefined" || !Sheet) throw new Error("[Game] Sheet module not loaded");
-            if (typeof Letters === "undefined" || !Letters) throw new Error("[Game] Letters module not loaded");
-            if (typeof Tileset === "undefined" || !Tileset) throw new Error("[Game] Tileset module not loaded");
-            if (typeof Jelli === "undefined" || !Tileset) throw new Error("[Game] JelliScript module not loaded");
+            function imported(node) {return (node instanceof Node) ? doc.importNode(node, true) : doc.importNode(datadoc.getElementById(node), true);}
+            function placed(node) {return (node instanceof Node) ? doc.body.appendChild(doc.importNode(node, true)) : doc.body.appendChild(doc.importNode(datadoc.getElementById(node), true));}
 
             //  Setting up the data document and clearing the body
 
@@ -2452,8 +2391,7 @@ var Game = (function () {
             clearScreen: {
                 value: function (screen) {
                     if (!(screen instanceof Screen)) screen = this.screens[screen]
-                    if (!(screen instanceof Screen)) throw new Error("[Game] Could not clear screen – none provided.")
-                    screen.canvas.dataset.clear = "";
+                    if ((screen instanceof Screen)) screen.canvas.dataset.clear = "";
                 }
             },
             draw: {
@@ -2680,7 +2618,7 @@ var Game = (function () {
 
             var elt;
 
-            //  Handling arguments and error checking:
+            //  Handling arguments:
 
             if (!id) id = name;
             if (!(collection instanceof Collection) || !collection.area || !collection.game) return;
@@ -2734,7 +2672,7 @@ var Game = (function () {
             togglePlacement: {value: PlacementImage.prototype.togglePlacement}
         });
 
-        //  Touch constructor:
+        //  Poke constructor:
 
         function Poke(game, e, n) {
 
@@ -2743,7 +2681,7 @@ var Game = (function () {
             var elt = game.placement_screen.canvas;
             var rect = elt.getBoundingClientRect();
 
-            //  Argument handling and error checking:
+            //  Handling arguments:
 
             if (!(game instanceof Game) || typeof e !== "object") return;
 
@@ -2765,7 +2703,7 @@ var Game = (function () {
                 }
             });
 
-            //  Setting up touch as a Jelli:
+            //  Setting up poke as a Jelli:
 
             Jelli.call(this, {
                 game: {value: game},
@@ -2778,7 +2716,7 @@ var Game = (function () {
 
         }
 
-        //  Touch prototyping:
+        //  Poke prototyping:
 
         Poke.prototype = Object.create(Jelli.prototype, {
             updateWith: {value: function (e) {
@@ -2799,7 +2737,7 @@ var Game = (function () {
             var context;
             var letters;
 
-            //  Handling arguments and error checking:
+            //  Handling arguments:
 
             if (!(collection instanceof Collection) || !collection.game) return;
             context = collection.game.screens[screen].context;
