@@ -2243,7 +2243,7 @@ var Game = (function () {
             Object.defineProperties(this, {
                 click_functions: {value: {}},
                 clicks: {value: {}},
-                control: {value: new Control(true)},
+                control: {value: new Control(true, doc)},
                 datadoc: {value: datadoc},
                 document: {value: doc},
                 images: {value: {}},
@@ -2332,7 +2332,7 @@ var Game = (function () {
             //  Sprite sheet setup:
 
             for (collection = datadoc.getElementsByClassName("letters"), i = 0; i < collection.length; i++) {
-                Object.defineProperty(this.letters, collection.item(i).id, {value: new Letters(imported(collection.item(i)), Number(collection.item(i).dataset.spriteWidth), Number(collection.item(i).dataset.spriteHeight))});
+                Object.defineProperty(this.letters, collection.item(i).id, {value: new Letters(imported(collection.item(i)), Number(collection.item(i).dataset.spriteWidth), Number(collection.item(i).dataset.spriteHeight), doc)});
             }
             for (collection = datadoc.getElementsByClassName("sheet"), i = 0; i < collection.length; i++) {
                 Object.defineProperty(this.sheets, collection.item(i).id, {value: new Sheet(imported(collection.item(i)), Number(collection.item(i).dataset.spriteWidth), Number(collection.item(i).dataset.spriteHeight))});
