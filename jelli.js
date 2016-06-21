@@ -2193,7 +2193,7 @@ var Game = (function () {
             var area;
             var game;
             var len;
-            var nextIndex;
+            var nextIndex = 0;
 
             if (parent instanceof Area) {
                 area = parent;
@@ -2241,7 +2241,7 @@ var Game = (function () {
                         if (!this.Type || this.__properties__[i] instanceof this.Type) fn(this.__properties__[i]);
                     }
                     for (i in this) {
-                        if (!this.Type || this.__properties__[i] instanceof this.Type) fn(this[i]);
+                        if (!this.Type || this[i] instanceof this.Type) fn(this[i]);
                     }
                 }
             },
