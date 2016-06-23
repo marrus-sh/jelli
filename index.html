@@ -13,26 +13,6 @@
             */
             window.addEventListener("load", function () {new Game(document);}, false);
         </script>
-        <script type="text/plain" class="init">
-
-            >>  Area 0 is the splash screen (see below)
-
-            loadArea (0)
-
-        </script>
-        <script type="text/plain" class="step">
-
-            >>  Step code would go here
-
-        </script>
-        <script type="text/plain" class="click_function touch_function" data-click-number="1" data-touch-number="1">
-            game.poke_active.set (true)
-            game.poke_x.set (x)
-            game.poke_y.set (y)
-        </script>
-        <script type="text/plain" class="click_function touch_function" data-click-number="2" data-touch-number="2">
-            game.poke2_active.set (true)
-        </script>
     </head>
     <body hidden style="display: none;">
         <h1>Jelli : A Game Engine</h1>
@@ -42,6 +22,8 @@
         </p>
         <p>
             Be sure to keep the <code>hidden</code> attribute on the <code>&lt;body&gt;</code> element, and to load the jelli script in the <code>&lt;head&gt;</code>.
+            Alternatively, you can place all of the game-specific code in its own <code>hidden</code> <code>&lt;div&gt;</code>, and use the visible portion of <code>&lt;body&gt;</code> to display a loading or splash screen.
+            (However, upon running <code>new Game()</code> the <code>&lt;body&gt;</code> is replaced with the game.)
             <code>&lt;meta name="viewport" content="user-scalable=no,width=device-width"&gt;</code> is also helpful.
         </p>
         <section>
@@ -52,11 +34,22 @@
             </p>
             <p>
                 Sometimes the game itself needs scripting which cannot be achieved at a lower level.
-                This can be accomplished through two scripts, which should appear in the &lt;head&gt;.
-                The first, of class <code>init</code>, specifies the initialization code, which is run during game setup.
-                The second, of class <code>step</code>, specifies the code to run each time the game's logic is processed.
-                These scripts should have type <code>text/plain</code> and be written in JelliScript.
+                This can be accomplished through <code>defineFunctions</code>, run somewhere inside the body outside of a character or area.
             </p>
+            <script type="text/javascript">
+                defineFunctions({
+                    init: function () {
+                        //  Setting up controls:
+                        this.control.add("down").addKeys("down", 0x28, "ArrowDown", "Down");
+                        this.control.add("left").addKeys("left", 0x25, "ArrowLeft", "Left");
+                        this.control.add("right").addKeys("right", 0x27, "ArrowRight", "Right");
+                        this.control.add("up").addKeys("up", 0x26, "ArrowUp", "Up");
+                        //  Loading the first area:
+                        this.area = 0;
+                    },
+                    step: function () {/*  No step code needed at this level.  */}
+                });
+            </script>
         </section>
         <section>
             <h2>GUI Elements</h2>
@@ -207,10 +200,7 @@
             </p>
             <p>
                 Characters generally need scripting.
-                This is accomplished through two scripts, which should be placed inside the character.
-                The first, of class <code>init</code>, specifies the initialization code, which is run when the area is loaded.
-                The second, of class <code>step</code>, specifies the code to run each time the game's logic is processed.
-                These scripts should have type <code>text/plain</code> and be written in JelliScript.
+                This can be accomplished through <code>defineFunctions</code>, run somewhere inside the character element.
             </p>
             <p>
                 Characters are destroyed when an area is unloaded, and the values of their variables are not stored.
@@ -226,117 +216,41 @@
                 <div id="player" class="character"
                      data-sprites="jelly"
                      data-screen="mainground"
-                     data-vars="timer tx ty tw th"
+                     data-vars="timer"
                      data-collides
                      >
-                    <script type="text/plain" class="init">
-                            x.set (16)
-                            y.set (80)
-                            dir.set ("rt")
-                    </script>
-                    <script type="text/plain" class="step">
-
-                            >>  This controls jelly movement:
-
-                            (game.poke_active) ?
-                                tx.set (game.poke_x)
-                                tx.increment (area.x)
-                                ty.set (game.poke_y)
-                                ty.increment (area.y)
-                                target (tx, ty)
-                                th.set (height)
-                                th.scale (.5)
-                                tw.set (width)
-                                tw.scale (.5)
-                                tx.increment (-th)
-                                ty.increment (-tw)
-                                (tx < x) dir.set ("lf")
-                                (tx > x) dir.set ("rt")
-                            :
-                                (game.key_up) ?
-                                    (game.key_down) ?
-                                        (game.key_left) ?
-                                            (game.key_right) ?
-                                                targetBy (0, 0)
-                                            :
-                                                targetBy (-1, 0)
-                                            ;
-                                        :
-                                            (game.key_right) ?
-                                                targetBy (1, 0)
-                                            :
-                                                targetBy (0, 0)
-                                            ;
-                                        ;
-                                    :
-                                        (game.key_left) ?
-                                            (game.key_right) ?
-                                                targetBy (0, -1)
-                                            :
-                                                targetBy (-1, -1)
-                                            ;
-                                        :
-                                            (game.key_right) ?
-                                                targetBy (1, -1)
-                                            :
-                                                targetBy (0, -1)
-                                            ;
-                                        ;
-                                    ;
-                                :
-                                    (game.key_down) ?
-                                        (game.key_left) ?
-                                            (game.key_right) ?
-                                                targetBy (0, 1)
-                                            :
-                                                targetBy (-1, 1)
-                                            ;
-                                        :
-                                            (game.key_right) ?
-                                                targetBy (1, 1)
-                                            :
-                                                targetBy (0, 1)
-                                            ;
-                                        ;
-                                    :
-                                        (game.key_left) ?
-                                            (game.key_right) ?
-                                                targetBy (0, 0)
-                                            :
-                                                targetBy (-1, 0)
-                                            ;
-                                        :
-                                            (game.key_right) ?
-                                                targetBy (1, 0)
-                                            :
-                                                targetBy (0, 0)
-                                            ;
-                                        ;
-                                    ;
-                                ;
-                            ;
-
-                            >>  This controls the direction the jelly is facing:
-
-                            (game.key_left) ?
-                                -(game.key_right) dir.set ("lf")
-                            :
-                                (game.key_right) dir.set ("rt")
-                            ;
-
-                            >>  This makes the jelly fall a little regardless:
-
-                            targetBy (0, .1)
-
-                            >>  This increments the timer if an arrow key is pressed:
-
-                            (game.key_up)(game.key_down)(game.key_left)(game.key_right)(game.poke_active) ?
-                                timer.mod_increment (15)
-                                -(timer) frame.mod_increment (2)
-                            ;
-
-                            game.poke_active.set (false)
-
+                    <script type="text/javascript">
+                        defineFunctions({
+                            init: function () {
+                                this.x = 16;
+                                this.y = 80;
+                                this.dir = "rt";
+                                this.timer = 0;
+                            },
+                            step: function () {
+                                var game = this.game;
+                                var poke;
+                                var dx = 0;
+                                var dy = .1;
+                                if (poke = game.touches[0] || game.clicks[0]) {
+                                    this.target(poke.x + this.area.x, poke.y + this.area.y);
+                                    if (poke.x + this.area.x < this.x) this.dir = "lf";
+                                    if (poke.x + this.area.x > this.x) this.dir = "rt";
+                                    this.timer++;
+                                }
+                                else {
+                                    if (game.control.isActive("up")) dy--;
+                                    if (game.control.isActive("down")) dy++;
+                                    if (game.control.isActive("left")) dx--;
+                                    if (game.control.isActive("right")) dx++;
+                                    this.targetBy(dx, dy);
+                                    if (dx < 0) this.dir = "lf";
+                                    if (dx > 0) this.dir = "rt";
+                                    this.timer++;
+                                }
+                                if (!(this.timer %= 15)) this.frame = Number(!this.frame);
+                            }
+                        });
                     </script>
                 </div>
             </section>
@@ -358,9 +272,8 @@
                 The <code>data-canvas</code> attribute should identify the canvas on which the map should be drawn.
             </p>
             <p>
-                Characters can be loaded by referencing their <code>id</code>s in the <code>data-characters</code> attribute, or by passing a string to the <code>loadCharacters</code> function.
-                This creates a new JelliScript object at <code>characters.character_id</code>.
-                Characters can be deleted with the <code>characters.delete</code> function.
+                Characters can be loaded by referencing their <code>id</code>s in the <code>data-characters</code> attribute, or by passing a string to the <code>characters.load</code> function.
+                Characters can be deleted with the <code>characters.kill</code> function.
             </p>
             <section>
                 <h3>Some areas:</h3>
@@ -373,76 +286,76 @@
                           data-mapwidth="16"
                           data-screen="background"
                           >AAEAAQABAAEAAQABAAEAAQIDAgMCAwIDAgMCAwIDAgMAAQABAAEAAQABAAEAAQABAgMCAwIDAgMCAwIDAgMCAwABAAEAAQABAAEAAQABAAECAwIDAgMCAwIDAgMCAwIDAAEAAQABAAEAAQABAAEAAQIDAgMCAwIDAgMCAwIDAgMAAQABAAEAAQABAAEAAQABAgMCAwIDAgMCAwIDAgMCAw==</span>
-                    <script type="text/plain" class="init">
-                        images.ctrlimg.load
-                        images.ctrlimg.setPosition (80, 32)
-                        characters.pointer.load
-                        characters.pointer.x.set (88)
-                        characters.pointer.y.set (120)
-                        characters.pointer.dir.set ("lf")
-                        game.texts.title.load ("textground", "letters", "Jelli Game Engine -- Demo")
-                        game.texts.title.x.set (78)
-                        game.texts.title.y.set (60)
-                        game.texts.title.color.set ("sea")
-                        game.texts.menu1.load ("textground", "letters", "Use arrow keys to move")
-                        game.texts.menu1.x.set (96)
-                        game.texts.menu1.y.set (120)
-                        game.texts.menu1.color.set ("red")
-                        game.texts.menu1.fill
-                        game.texts.menu2.load ("textground", "letters", "Press X, touch, or click to begin")
-                        game.texts.menu2.x.set (96)
-                        game.texts.menu2.y.set (136)
-                        game.texts.menu2.color.set ("black")
-                        game.texts.menu2.fill
-                    </script>
-                    <script type="text/plain" class="step">
-                        -(title_timer) game.texts.title.advance
-                        title_timer.mod_increment (30)
-                        (game.key_down) ?
-                            characters.pointer.y.set (136)
-                            game.texts.menu1.clear
-                            game.texts.menu1.color.set ("black")
-                            game.texts.menu1.fill
-                            game.texts.menu2.clear
-                            game.texts.menu2.color.set ("red")
-                            game.texts.menu2.fill
-                        ;
-                        (game.key_up) ?
-                            characters.pointer.y.set (120)
-                            game.texts.menu1.clear
-                            game.texts.menu1.color.set ("red")
-                            game.texts.menu1.fill
-                            game.texts.menu2.clear
-                            game.texts.menu2.color.set ("black")
-                            game.texts.menu2.fill
-                        ;
-                        (game.key_action)(game.poke_active) ?
-                            -(game.poke2_active) ?
-                                characters.pointer.dir.set ("rt")
-                                game.texts.title.delete
-                                game.texts.menu1.delete
-                                game.texts.menu2.delete
-                                game.clearScreen ("textground")
-                                game.loadArea (1)
-                            :
-                                characters.pointer.dir.set ("lf")
-                            ;
-                        ;
-                        (game.key_menu)(game.poke2_active) ?
-                            images.ctrlimg.placed.set (true)
-                        :
-                            images.ctrlimg.placed.set (false)
-                            game.clearScreen ("menuground")
-                        ;
-                        game.poke_active.set (false)
-                        game.poke2_active.set (false)
-                        characters.pointer.timer.mod_increment (10)
-                        -(characters.pointer.timer) characters.pointer.frame.mod_increment (2)
+                    <script type="text/javascript">
+                        defineFunctions({
+                            init: function () {
+                                var menu1;
+                                var menu2;
+                                var texts = this.game.texts;
+                                var title;
+                                this.title_timer = 0;
+                                this.images.load("ctrlimg", 80, 32);
+                                this.characters.load("pointer", 88, 120, "lf");
+                                this.characters.pointer.timer = 0;
+                                title = this.game.texts.load("title", "textground", "letters", "Jelli Game Engine -- Demo");
+                                title.x = 78;
+                                title.y = 60;
+                                title.color = "sea";
+                                menu1 = this.game.texts.load("menu1", "textground", "letters", "Use arrow keys to move");
+                                menu1.x = 96;
+                                menu1.y = 120;
+                                menu1.color = "red";
+                                menu1.fill();
+                                menu2 = this.game.texts.load("menu2", "textground", "letters", "Press right, touch, or click to begin");
+                                menu2.x = 96;
+                                menu2.y = 136;
+                                menu2.color = "black";
+                                menu2.fill();
+                            },
+                            step: function () {
+                                var game = this.game;
+                                var texts = this.game.texts;
+                                if (!this.title_timer) texts.title.advance();
+                                this.title_timer++;
+                                this.title_timer %= 30;
+                                if (game.control.isActive("up")) {
+                                    this.characters.pointer.y = 120;
+                                    texts.menu1.clear();
+                                    texts.menu1.color = "red";
+                                    texts.menu1.fill();
+                                    texts.menu2.clear();
+                                    texts.menu2.color = "black";
+                                    texts.menu2.fill();
+                                }
+                                if (game.control.isActive("down")) {
+                                    this.characters.pointer.y = 136;
+                                    texts.menu1.clear();
+                                    texts.menu1.color = "black";
+                                    texts.menu1.fill();
+                                    texts.menu2.clear();
+                                    texts.menu2.color = "red";
+                                    texts.menu2.fill();
+                                }
+                                if (game.control.isActive("right") || game.touches[0] && !game.touches[1] || game.clicks[0]) {
+                                    texts.title.kill();
+                                    texts.menu1.kill();
+                                    texts.menu2.kill();
+                                    game.clearScreen("textground");
+                                    game.area = 1;
+                                }
+                                if (game.touches[1]) this.images.ctrlimg.placed = true;
+                                else {
+                                    this.images.ctrlimg.placed = false;
+                                    game.clearScreen("menuground");
+                                }
+                                this.characters.pointer.timer++;
+                                if (!(this.characters.pointer.timer %= 10)) this.characters.pointer.frame = Number(!this.characters.pointer.frame);
+                            }
+                        });
                     </script>
                 </div>
                 <div class="area" title="The Sea"
                      data-characters="player"
-                     data-vars="scroll_left scroll_right tx map0x map1x"
                      >
                     It is often way easier to define character code in their own init and step functions, however, as demonstrated here.
                     Then you can load the characters with the <code>data-characters</code> attribute.
@@ -457,31 +370,23 @@
                           data-dx="256"
                           data-screen="background"
                           >BwcHBwcHBwcHBwcHBwcHBwYGBgYGBgYGBgYGBgYGBgYFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUBBQUFBQUFBQUFBQUFBQUFBAQEBAQEBAQEBAQEBAQEBA==</span>
-                    <script type="text/plain" class="init">
-                        map0x.set (0)
-                        map1x.set (256)
-                    </script>
-                    <script type="text/plain" class="step">
-                        tx.set (characters.player.x)
-                        tx.increment (-x)
-                        (tx < 8) scroll_left.set (1)
-                        (tx > 248) scroll_right.set (1)
-                        (scroll_left) x.increment (-1)
-                        (scroll_right) x.increment (1)
-                        (x < map0x) ?
-                            map0x.increment (-256)
-                            map1x.increment (-256)
-                            setMapOffset (0, map0x)
-                            setMapOffset (1, map1x)
-                        ;
-                        -(x < map1x) ?
-                            map0x.increment (256)
-                            map1x.increment (256)
-                            setMapOffset (0, map0x)
-                            setMapOffset (1, map1x)
-                        ;
-                        scroll_left.set (0)
-                        scroll_right.set (0)
+                    <script type="text/javascript">
+                        defineFunctions({
+                            step: function () {
+                                if (this.characters.player.screen_x < 8) this.x--;
+                                if (this.characters.player.screen_x > 248) this.x++;
+                                if (this.x < this.maps[0].x) {
+                                    this.maps[0].x -= 256;
+                                    this.maps[1].x -= 256;
+                                    this.clear = true;
+                                }
+                                if (this.x > this.maps[1].x) {
+                                    this.maps[0].x += 256;
+                                    this.maps[1].x += 256;
+                                    this.clear = true;
+                                }
+                            }
+                        });
                     </script>
                 </div>
             </section>

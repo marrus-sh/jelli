@@ -7,6 +7,28 @@
 
 */
 
+//  This sets up the init, step, and draw functions:
+
+function defineFunctions(function_object) {
+
+    "use strict";
+
+    var elt;
+    var script;
+    var scripts;
+
+    scripts = document.getElementsByTagName("script");
+    elt = script = scripts[scripts.length - 1];
+    while ((elt = elt.parentElement)) {
+        if (elt.classList.contains("character") || elt.classList.contains("area") || elt === document.body) break;
+    }
+    if (!elt) return;
+
+    elt.functions = function_object;
+    Object.freeze(function_object);
+
+}
+
 //  All inside an anonymous function for strictness and proper closure:
 
 var Game = (function () {
@@ -1150,8 +1172,8 @@ var Game = (function () {
             if (isNaN(tiles_wide = Number(tiles_wide))) tiles_wide = 0;
             decoded_map = decode64(map);
             tiles_tall = tiles_wide ? Math.ceil(decoded_map.length / tiles_wide) : 0;
-            x = arguments[4] === undefined && context && tileset ? Math.floor((context.canvas.width - tileset.tile_width * tiles_wide) / 2) : isNaN(arguments[4]) ? Number(arguments[4]) : 0;
-            y = arguments[5] === undefined && context && tileset ? Math.floor((context.canvas.width - tileset.tile_width * tiles_tall) / 2) : isNaN(arguments[5]) ? Number(arguments[5]) : 0;
+            x = arguments[4] === undefined && context && tileset ? Math.floor((context.canvas.width - tileset.tile_width * tiles_wide) / 2) : isNaN(arguments[4]) ? 0 : Number(arguments[4]);
+            y = arguments[5] === undefined && context && tileset ? Math.floor((context.canvas.width - tileset.tile_width * tiles_tall) / 2) : isNaN(arguments[5]) ? 0 : Number(arguments[5]);
             if (isNaN(origin_x = Number(origin_x))) origin_x = 0;
             if (isNaN(origin_y = Number(origin_y))) origin_y = 0;
 
@@ -1358,375 +1380,6 @@ var Game = (function () {
 
     })();
 
-    //  JelliScript:
-
-    var Jelli = (function () {
-
-        //  The global JelliScript object
-
-        var global = null;
-        var globals = [];
-        var functions = Object.create(Object.prototype, {
-            log: {
-                value: function (prop) {console.log(value(global ? global : this, prop));}
-            }
-        });
-        var modifiers = Object.create(Object.prototype, {
-            declare: {
-                value: function (prop) {
-                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
-                    if (!/^\w+$/.test(prop)) throw new Error("[JelliScript] Syntax error: Disallowed characters used in a variable name.");
-                    if (this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to declare an already-declared variable.");
-                    this.__properties__[prop] = 0;
-                }
-            },
-            declare_Jelli: {
-                value: function (prop) {
-                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
-                    if (!/^\w+$/.test(prop)) throw new Error("[JelliScript] Syntax error: Disallowed characters used in a variable name.");
-                    if (this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to declare an already-declared variable.");
-                    this.__properties__[prop] = new Jelli();
-                }
-            },
-            delete: {
-                value: function (prop) {
-                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
-                    if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) delete this.__properties__[prop];
-                }
-            },
-            get: {value: function (prop) {return value(this, prop);}},
-            increment: {
-                value: function (prop /*  optional value  */) {
-                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
-                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
-                    if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to increment a non-declared value.");
-                    return arguments[1] !== undefined ? this.__properties__[prop] += arguments[1] : this.__properties__[prop]++;
-                }
-            },
-            is_defined: {
-                value: function (prop) {
-                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
-                    return this.__properties__.hasOwnProperty(prop);
-                }
-            },
-            make_eternal: {
-                value: function (prop) {
-                    var s;
-                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
-                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
-                    if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to set a non-declared value.");
-                    return Object.defineProperty(this.__properties__, prop, {configurable: false});
-                }
-            },
-            make_hidden: {
-                value: function (prop) {
-                    var s;
-                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
-                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
-                    if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to set a non-declared value.");
-                    return Object.defineProperty(this.__properties__, prop, {enumerable: false});
-                }
-            },
-            make_static: {
-                value: function (prop) {
-                    var s;
-                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
-                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
-                    if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to set a non-declared value.");
-                    return Object.defineProperty(this.__properties__, prop, {writable: false});
-                }
-            },
-            mod_increment: {
-                value: function (prop, mod /*  optional value  */) {
-                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
-                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
-                    if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to mod-increment a non-declared value.");
-                    if (arguments[2] !== undefined) this.__properties__[prop] += arguments[2];
-                    else this.__properties__[prop]++;
-                    this.__properties__[prop] %= mod;
-                    if (this.__properties__[prop] < 0 && mod > 0 || this.__properties__[prop] > 0 && mod < 0) this.__properties__[prop] += mod;
-                    return this.__properties__[prop];
-                }
-            },
-            round: {
-                value: function (prop /*  optional digits  */) {
-                    var n = 1;
-                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
-                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
-                    if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to round a non-declared value.");
-                    if (arguments[1] !== undefined) n = Math.pow(10, arguments[1])
-                    return (this.__properties__[prop] = Math.round(this.__properties__[prop] * n) / n);
-                }
-            },
-            run: {value: function (fn) {return run.call(null, this, fn, Array.prototype.slice.call(arguments, 1));}},
-            scale: {value: function (prop, factor) {
-                if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
-                if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
-                if (this.__properties__[prop] === undefined || !this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to increment a non-declared value.");
-                return this.__properties__[prop] *= factor;
-            }},
-            set: {
-                value: function (prop, to) {
-                    var s;
-                    if (!(typeof prop === "string" || prop instanceof String)) throw new Error("[JelliScript] Variables must be specified as strings.");
-                    if (prop.indexOf("-") !== -1) throw new Error("[JelliScript] Dashes are not allowed in variable names.");
-                    if (!this.__properties__.hasOwnProperty(prop)) throw new Error("[JelliScript] Attempted to set a non-declared value.");
-                    return (this.__properties__[prop] = to);
-                }
-            }
-        });
-
-        //  Copying object properties:
-
-        function copyOnto(from, to) {
-            var collection;
-            var i;
-            for (collection = Object.getOwnPropertyNames(from), i = 0; i < collection.length; i++) {
-                Object.defineProperty(to, collection[i], Object.getOwnPropertyDescriptor(from, collection[i]));
-            }
-        }
-
-        //  Running functions:
-
-        function run(dataobj, fn /*  arguments list  */) {
-            var s;
-            if (!(dataobj instanceof Jelli)) throw new Error("[JelliScript] Error: No Jelli object provided.");
-            if ((typeof fn === "string" || fn instanceof String) && fn.indexOf(".") !== -1) {
-                s = fn.indexOf(".");
-                if (dataobj.__properties__[fn.substr(0, s)] instanceof Jelli && dataobj.__properties__[fn.substr(0, s)].__functions__[fn.substr(s + 1)] instanceof Function && (arguments[2] instanceof Array ? arguments[2].length : 0) >= dataobj.__properties__[fn.substr(0, s)].__functions__[fn.substr(s + 1)].length) {
-                    dataobj = dataobj.__properties__[fn.substr(0, s)];
-                    s = fn.substr(s + 1);
-                    return arguments[2] instanceof Array ? dataobj.__functions__[s].apply(dataobj, arguments[2].map(value.bind(undefined, global ? global : dataobj))) : dataobj.__functions__[s].call(dataobj);
-                }
-                if (dataobj.__modifiers__[fn.substr(s + 1)] instanceof Function) return arguments[2] instanceof Array ? dataobj.__modifiers__[fn.substr(s + 1)].apply(dataobj, [fn.substr(0, s)].concat(arguments[2].map(value.bind(undefined, global ? global : dataobj)))) : dataobj.__modifiers__[fn.substr(s + 1)].call(dataobj, fn.substr(0, s));
-                else if (dataobj.__properties__[fn.substr(0, s)] instanceof Jelli) return arguments[2] instanceof Array ? run(dataobj.__properties__[fn.substr(0, s)], fn.substr(s + 1), arguments[2]) : run(dataobj.__properties__[fn.substr(0, s)], fn.substr(s + 1));
-                else throw new Error("[JelliScript] Function name did not resolve into a function.");
-            }
-            else if (dataobj.__functions__[fn] instanceof Function) return arguments[2] instanceof Array ? dataobj.__functions__[fn].apply(dataobj, arguments[2].map(value.bind(undefined, global ? global : dataobj))) : dataobj.__functions__[fn].call(dataobj);
-            else throw new Error("[JelliScript] Function name did not resolve into a function.");
-        }
-
-        //  Getting values:
-
-        function value(dataobj, prop) {
-            var s;
-            if (!(dataobj instanceof Jelli)) throw new Error("[JelliScript] Error: No Jelli object provided.");
-            if (prop instanceof Jelli) return prop;
-            else if (!isNaN(Number(prop))) return Number(prop);
-            else if ((typeof prop === "string" || prop instanceof String) && prop[0] === '"' && prop[prop.length - 1] === '"' && !/^"|[^\\]"/.test(prop.substring(1, prop.length - 1))) {
-                return prop.substring(1, prop.length - 1).replace('\\"', '"').replace('\\\\', '\\');
-            }
-            else if ((typeof prop === "string" || prop instanceof String) && prop[0] === "-") {
-                s = value(dataobj, prop.substr(1));
-                if (typeof s === "number" || s instanceof Number) return -s;
-            }
-            else if ((typeof prop === "string" || prop instanceof String) && prop.indexOf(".") !== -1) {
-                s = prop.indexOf(".");
-                if (dataobj.__properties__[prop.substr(0, s)] instanceof Jelli) return value(dataobj.__properties__[prop.substr(0, s)], prop.substr(s + 1));
-                else throw new Error("[JelliScript] " + prop.substr(0, s) + " did not resolve into a Jelli object");
-            }
-            else if (typeof dataobj.__properties__[prop] === "number" || dataobj.__properties__[prop] instanceof Number || dataobj.__properties__[prop] instanceof Jelli) return dataobj.__properties__[prop];
-            else if (dataobj.__properties__[prop] === undefined) {throw new Error("[JelliScript] Variable is undefined.");}
-            else return String(dataobj.__properties__[prop]);
-        }
-
-        //  Jelli object constructor:
-
-        function Jelli(props, fns, mods) {
-
-            //  Setting up variables:
-
-            var i;
-
-            //  Defining core properties:
-
-            Object.defineProperty(this, "__modifiers__", {value: {}});
-            Object.defineProperty(this, "__functions__", {value: Object.create(this.__modifiers__)});
-            Object.defineProperty(this, "__properties__", {
-                value: Object.create(Object.prototype, {
-                    "false": {value: 0},
-                    "rand": {get: function () {return Math.random();}},
-                    "this": {value: this},
-                    "true": {value: 1}
-                })
-            });
-
-            //  Setting provided properties and functions:
-
-            if (props) this.defineProperties(props);
-            copyOnto(functions, this.__functions__);
-            if (fns) this.defineFunctions(fns);
-            copyOnto(modifiers, this.__modifiers__);
-            if (mods) this.defineModifiers(mods);
-
-        }
-
-        //  Jelli object prototyping:
-
-        Jelli.prototype = Object.create(Object.prototype, {
-            declare: {value: modifiers.declare},
-            defineFunction: {value: function(name, fn) {
-                if (typeof fns !== "object") throw new Error("[JelliScript] Functions must be provided in a properties object.");
-                Object.defineProperty(this.__functions__, name, fn);
-            }},
-            defineFunctions: {value: function (fns) {
-                if (typeof fns !== "object") throw new Error("[JelliScript] Functions must be provided in a properties object.");
-                Object.defineProperties(this.__functions__, fns);
-            }},
-            defineModifier: {value: function(name, mod) {
-                if (typeof mods !== "object") throw new Error("[JelliScript] Modifiers must be provided in a properties object.");
-                Object.defineProperty(this.__modifiers__, name, mod);
-            }},
-            defineModifiers: {value: function (mods) {
-                if (typeof mods !== "object") throw new Error("[JelliScript] Modifiers must be provided in a properties object.");
-                Object.defineProperties(this.__modifiers__, mods);
-            }},
-            defineProperty: {value: function(name, prop) {
-                if (typeof props !== "object") throw new Error("[JelliScript] Properties must be provided in a properties object.");
-                Object.defineProperty(this.__property__, name, prop);
-            }},
-            defineProperties: {value: function (props) {
-                if (typeof props !== "object") throw new Error("[JelliScript] Properties must be provided in a properties object.");
-                Object.defineProperties(this.__properties__, props);
-            }},
-            delete: {value: modifiers.delete},
-            get: {value: modifiers.get},
-            increment: {value: modifiers.increment},
-            log: {value: functions.log},
-            mod_increment: {value: modifiers.mod_increment},
-            set: {value: modifiers.set}
-        });
-
-        //  The global Jelli object:
-
-        Object.defineProperty(Jelli, "global", {
-            get: function () {return global;}
-        });
-
-        //  JelliScript parsing:
-
-        Jelli.parseScript = function (script, dataobj) {
-
-            //  Setting up variables:
-
-            var args;
-            var args_regex = /-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)|"(?:\\.|[^"\\])*?"/g;
-            var b;
-            var breakdown;
-            var condition;
-            var conds_regex = /(-)?\s*\(\s*(-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)|"(?:\\.|[^"\\])*?")(?:\s*([<>=])\s*(-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+))|"(?:\\.|[^"\\])*?")?\s*\)/g;
-            var unset_global;
-            var i;
-            var j;
-            var line;
-            var lines;
-            var n;
-            var regex = /^\s*(?:(?:((?:-?\s*\(\s*(?:-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)|"(?:\\.|[^"\\])*?")(?:\s*[<>=]\s*(?:-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)|"(?:\\.|[^"\\])*?"))?\s*\)\s*?)+)?\s*(?:(\w+(?:\.\w+)*)\s*(\(\s*(?:-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)|"(?:\\.|[^"\\])*?")(?:\s*,\s*(?:-?(?:\w+(?:\.\w+)*|[0-9]*\.?[0-9]+)|"(?:\\.|[^"\\])*?"))*\s*\))?|(\?))|([:;]))|>>.*)\s*$/;
-            var s;
-
-            //  Handling arguments and error checking:
-
-            if (!(typeof script === "string" || script instanceof String)) throw new Error("[JelliScript] Error: Script is not a string.");
-            if (typeof dataobj !== "object") throw new Error("[JelliScript] Error: No data object provided.");
-
-            globals.push(global);
-            global = dataobj;
-
-            //  Parsing the lines:
-
-            for (lines = script.split("\n"), i = 0; i < lines.length; i++) {
-
-                //  Setting the current line:
-
-                line = lines[i].trim();
-                if (line === "") continue;
-                breakdown = regex.exec(line);
-                if (!breakdown) throw new Error("[JelliScript] Error on line " + (i + 1) + ": Parsing error.");
-
-                //  If there are conditions:
-
-                if (breakdown[1]) {
-                    b = false;
-                    conds_regex.lastIndex = 0;
-                    while ((condition = conds_regex.exec(breakdown[1])) && !b) {
-                        if (condition[1]) n = true;
-                        else n = false;
-                        switch (condition[3]) {
-                            case "=":
-                                b = n ? value(dataobj, condition[2]) !== value(dataobj, condition[4]) : value(dataobj, condition[2]) === value(dataobj, condition[4]);
-                                break;
-                            case "<":
-                                b = n ? value(dataobj, condition[2]) >= value(dataobj, condition[4]) : value(dataobj, condition[2]) < value(dataobj, condition[4]);
-                                break;
-                            case ">":
-                                b = n ? value(dataobj, condition[2]) <= value(dataobj, condition[4]) : value(dataobj, condition[2]) > value(dataobj, condition[4]);
-                                break;
-                            default:
-                                b = n ? !value(dataobj, condition[2]) : !!value(dataobj, condition[2]);
-                                break;
-                        }
-                    }
-                }
-                else b = true;
-
-                //  If the line ends in `?`:
-
-                if (breakdown[4]) {
-
-                    //  Setting up variables:
-
-                    n = false;
-                    j = 0;
-                    s = "";
-
-                    while (++i < lines.length) {
-
-                        //  Setting the current line:
-
-                        line = lines[i].trim();
-                        if (line === "") continue;
-                        breakdown = regex.exec(line);
-
-                        //  Managing nesting levels and ELSE statements:
-
-                        if (!breakdown) throw new Error("[JelliScript] Error on line " + (i + 1) + ": Parsing error.");
-                        if (breakdown[4]) j++;
-                        if (breakdown[5] === ";") {
-                            if (--j < 0) break;
-                        }
-                        if (!j && breakdown[5] === ":") {
-                            if (!n) n = true;
-                            else throw new Error("[JelliScript] Error on line " + (i + 1) + ": Improper second 'else'.");
-                            continue;
-                        }
-
-                        //  Adds the line to the string if necessary:
-
-                        if ((!n && b) || (n && !b)) s += line + "\n";
-
-                    }
-
-                    //  Parses the resultant string:
-
-                    Jelli.parseScript(s, dataobj);
-
-                }
-
-                else if (b && breakdown[2]) {
-                    if (breakdown[3]) run(dataobj, breakdown[2], breakdown[3].match(args_regex));
-                    else run(dataobj, breakdown[2]);
-                }
-
-            }
-
-            global = globals.pop();
-
-        }
-
-        return Jelli;
-
-    })();
-
     /*
         The game engine itself follows.
         I've placed it inside its own closure for convenient packaging, but it requires all of the previous modules to be loaded.
@@ -1740,8 +1393,8 @@ var Game = (function () {
 
             //  Setting up variables:
 
-            var clear = 1;
-            var collection;
+            var clear = true;
+            var items;
             var elt;
             var i;
             var item;
@@ -1751,8 +1404,9 @@ var Game = (function () {
 
             //  Handling arguments:
 
-            elt = game.datadoc.getElementsByClassName("area").item(index);
-            if (!(game instanceof Game && elt instanceof Element)) return;
+            if (!(game instanceof Game)) return;
+            elt = game.data.getElementsByClassName("area").item(index);
+            if (!(elt instanceof Element)) return;
 
             //  Defining properties:
 
@@ -1761,114 +1415,79 @@ var Game = (function () {
                 characters: {value: new Collection(this, Character)},
                 clear: {
                     get: function () {return clear},
-                    set: function (n) {clear = Number(!!n);}
+                    set: function (n) {clear = !!n;}
                 },
+                functions: {value: elt.functions},
                 images: {value: new Collection(this, JelliImage)},
                 index: {
                     get: function () {return index},
                     set: function (n) {this.game.loadArea(n);}
                 },
-                initScript: {
-                    value: elt.getElementsByClassName("init").item(0) ? elt.getElementsByClassName("init").item(0).text || elt.getElementsByClassName("init").item(0).textContent : ""
-                },
                 maps: {
                     value: []
                 },
-                stepScript: {
-                    value: elt.getElementsByClassName("step").item(0) ? elt.getElementsByClassName("step").item(0).text || elt.getElementsByClassName("step").item(0).textContent : ""
-                },
                 x: {
                     get: function () {return x;},
-                    set: (function (value) {
+                    set: function (n) {
                         var i;
-                        if (!(typeof value === "number" || value instanceof Number)) throw new Error("[Game] Cannot load area – x-coordinate must be a number.");
-                        x = value;
+                        if (isNaN(n)) return;
+                        x = Number(n);
                         for (i = 0; i < this.maps.length; i++) {
-                            this.maps[i].origin_x = value;
+                            this.maps[i].origin_x = x;
                         }
-                        this.images.doForEach(function (image) {image.origin_x = value;});
-                        this.clear = 1;
-                    }).bind(this)
+                        this.images.doForEach(function (image) {image.origin_x = x;});
+                        this.clear = true;
+                    }
                 },
                 y: {
                     get: function () {return y;},
-                    set: (function (value) {
+                    set: function (n) {
                         var i;
-                        if (!(typeof value === "number" || value instanceof Number)) throw new Error("[Game] Cannot load area – y-coordinate must be a number.");
-                        y = value;
+                        if (isNaN(n)) return;
+                        y = Number(n);
                         for (i = 0; i < this.maps.length; i++) {
-                            this.maps[i].origin_y = value;
+                            this.maps[i].origin_y = y;
                         }
-                        this.images.doForEach(function (image) {image.origin_y = value;});
-                        this.clear = 1;
-                    }).bind(this)
+                        this.images.doForEach(function (image) {image.origin_y = y;});
+                        this.clear = true;
+                    }
                 }
             });
 
-            //  Sets up the area as a Jelli:
-
-            Jelli.call(this, {
-                characters: {value: this.characters},
-                clear: {
-                    get: function () {return clear;},
-                    set: function (n) {clear = Number(!!n);}
-                },
-                game: {value: game},
-                images: {value: this.images},
-                index: {
-                    get: function () {return index;},
-                    set: (function (n) {this.game.loadArea(n);}).bind(this)
-                },
-                x: {
-                    get: function () {return x;},
-                    set: (function (n) {this.x = n;}).bind(this)
-                },
-                y: {
-                    get: function () {return y;},
-                    set: (function (n) {this.y = n;}).bind(this)
-                }
-            }, {
-                setMapOffset: {value: this.setMapOffset}
-            });
-
-            //  Initializing properties:
-
-            this.x = 0; //  This initializes the x value (so you can use this.set())
-            this.y = 0; //  This initializes the y value (so you can use this.set())
-
-            //   Adding dataset variables:
-
-            for (collection = (elt.dataset.vars ? elt.dataset.vars.split(/\s+/) : []), i = 0; i < collection.length; i++) {
-                this.declare(collection[i]);
-            }
+            for (items = elt.dataset.vars ? elt.dataset.vars.split(/\s+/) : [], i = 0; i < items.length; i++) {Object.defineProperty(this, items[i], {writable: true, configurable: false, enumerable: true});}
 
             //  Loading maps:
 
-            for (collection = elt.getElementsByClassName("map"), i = 0; i < collection.length; i++) {
-                item = collection.item(i);
-                this.maps[i] = game.tilesets[item.dataset.tileset].getMap(game.screens[item.dataset.screen].context, item.textContent.trim(), Number(item.dataset.mapwidth), isNaN(Number(item.dataset.dx)) ? 0 : Number(item.dataset.dx), isNaN(Number(item.dataset.dy)) ? 0 : Number(item.dataset.dy), this.x, this.y);
+            for (items = elt.getElementsByClassName("map"), i = 0; i < items.length; i++) {
+                item = items.item(i);
+                this.maps[i] = game.tilesets[item.dataset.tileset].getMap(game.screens[item.dataset.screen].context, item.textContent.trim(), item.dataset.mapwidth, isNaN(item.dataset.dx) ? 0 : item.dataset.dx, isNaN(item.dataset.dy) ? 0 : item.dataset.dy, this.x, this.y);
             }
-
 
             //  Loading characters:
 
-            for (collection = (elt.dataset.characters ? elt.dataset.characters.split(/\s+/) : []), i = 0; i < collection.length; i++) {
-                this.characters.load(collection[i]);
+            for (items = (elt.dataset.characters ? elt.dataset.characters.split(/\s+/) : []), i = 0; i < items.length; i++) {
+                this.characters.load(items[i]);
             }
+
+            //  Initializing properties:
+
+            this.x = 0; //  This initializes the x value across the board
+            this.y = 0; //  This initializes the y value across the board
 
             //  Area sealing:
 
+            Object.freeze(this.maps);
             Object.seal(this);
 
             //  Initialization:
 
-            this.init();
+            if (typeof this.functions === "object" && (typeof this.functions.init === "function" || this.functions.init instanceof Function)) this.functions.init.call(this);
 
         }
 
         //  Area prototyping:
 
-        Area.prototype = Object.create(Jelli.prototype, {
+        Area.prototype = Object.create(Object.prototype, {
             draw: {
                 value: function (context) {
                     var i;
@@ -1879,37 +1498,26 @@ var Game = (function () {
                     }
                     this.characters.doForEach(function (character) {character.draw();});
                     this.images.doForEach(function (image) {image.draw();});
-                    this.clear = 0;
-                }
-            },
-            init: {value: function () {return Jelli.parseScript(this.initScript, this);}},
-            setMapOffset: {
-                value: function (index /*  x, y  */) {
-                    if (arguments[1] !== undefined) {
-                        this.maps[index].x = arguments[1];
-                    }
-                    if (arguments[2] !== undefined) {
-                        this.maps[index].y = arguments[2];
-                    }
+                    this.clear = false;
                 }
             },
             step: {
                 value: function () {
-                    Jelli.parseScript(this.stepScript, this);
-                    this.characters.doForEach(function (character) {character.step();});
+                    if (typeof this.functions === "object" && (typeof this.functions.step === "function" || this.functions.step instanceof Function)) this.functions.step.call(this);
+                    this.characters.doForEach(function (character) {if (character.step) character.step();});
                 }
-            },
+            }
         });
 
         //  Character constructor:
 
-        function Character(collection, name /*  Optional x, y OR id, x, y  */) {
+        function Character(collection, name /*  Optional x, y, dir, frame OR id, x, y, dir, frame  */) {
 
             //  Setting up variables:
 
-            var dir = 0;
+            var dir;
             var elt;
-            var frame = 0;
+            var frame;
             var i;
             var id;
             var item;
@@ -1924,19 +1532,23 @@ var Game = (function () {
                 id = name;
                 x = arguments[2];
                 if (isNaN(y = Number(arguments[3]))) y = undefined;
+                if (isNaN(dir = Number(arguments[4]))) dir = 0;
+                if (isNaN(frame = Number(arguments[5]))) frame = 0;
             }
             else {
                 id = arguments[2] ? arguments[2] : name;
                 if (isNaN(x = Number(arguments[3]))) x = undefined;
                 if (isNaN(y = Number(arguments[4]))) y = undefined;
+                if (isNaN(dir = Number(arguments[5]))) dir = 0;
+                if (isNaN(frame = Number(arguments[6]))) frame = 0;
             }
             if (!(collection instanceof Collection) || !collection.area || !collection.game) return;
-            elt = collection.game.datadoc.getElementById(id);
+            elt = collection.game.data.getElementsByTagName("*").namedItem(id);
             if (!(elt instanceof Element)) return;
 
             //  Loading sprites:
 
-            item = (collection.game.datadoc.getElementById(elt.dataset.sprites) && collection.game.datadoc.getElementById(elt.dataset.sprites).className === "sprites") ? collection.game.datadoc.getElementById(elt.dataset.sprites) : null;
+            item = (collection.game.data.getElementsByTagName("*").namedItem(elt.dataset.sprites) && collection.game.data.getElementsByTagName("*").namedItem(elt.dataset.sprites).className === "sprites") ? collection.game.data.getElementsByTagName("*").namedItem(elt.dataset.sprites) : null;
             for (items = item ? item.getElementsByClassName("sprite") : [], i = 0; i < items.length; i++) {
                 if (sprites[i] === undefined) Object.defineProperty(sprites, i, {value: collection.game.sheets[item.dataset.sheet] ? collection.game.sheets[item.dataset.sheet].getSprite(items.item(i).dataset.index, items.item(i).dataset.length ? items.item(i).dataset.length : 1) : null});
                 if (items.item(i).hasAttribute("title") && sprites[items.item(i).getAttribute("title")] === undefined) Object.defineProperty(sprites, items.item(i).getAttribute("title"), {value: sprites[i]});
@@ -1946,7 +1558,7 @@ var Game = (function () {
 
             //  Defining properties:
 
-            Object.defineProperties(this, {  //  Pretty much none of the above are writable, so I can just reference them straight below
+            Object.defineProperties(this, {
                 area: {value: collection.area},
                 collides : {value: elt.hasAttribute("data-collides") ? elt.dataset.collides : 0},
                 dir: {
@@ -1959,7 +1571,11 @@ var Game = (function () {
                 },
                 game: {value: collection.game},
                 height: {value: Number(item.dataset.boxHeight || sprites[0].height)},
-                initScript: {value: elt.getElementsByClassName("init").item(0) ? elt.getElementsByClassName("init").item(0).text || elt.getElementsByClassName("init").item(0).textContent : ""},
+                init: {value: typeof elt.functions === "object" && (typeof elt.functions.init === "function" || elt.functions.init instanceof Function) ? elt.functions.init.bind(this) : null},
+                kill: {  //  This gets overwritten by the collection after creation.
+                    value: null,
+                    writable: true
+                },
                 origin_x: {value: Number(item.dataset.boxX || sprites[0].width / 2)},
                 origin_y: {value: Number(item.dataset.boxY || sprites[0].height / 2)},
                 screen: {value: collection.game.screens[elt.dataset.screen]},
@@ -1968,7 +1584,7 @@ var Game = (function () {
                 sprites: {value: sprites},
                 sprite_height: {value: sprites[0].height},
                 sprite_width: {value: sprites[0].width},
-                stepScript: {value: elt.getElementsByClassName("step").item(0) ? elt.getElementsByClassName("step").item(0).text || elt.getElementsByClassName("step").item(0).textContent : ""},
+                step: {value: typeof elt.functions === "object" && (typeof elt.functions.step === "function" || elt.functions.step instanceof Function) ? elt.functions.step.bind(this) : null},
                 width: {value: Number(item.dataset.boxWidth || sprites[0].width)},
                 x: {
                     get: function () {return x},
@@ -1980,49 +1596,11 @@ var Game = (function () {
                 }
             });
 
-            //  Sets up the character as a Jelli:
-
-            Jelli.call(this, {
-                area: {value: collection.area},
-                collides: {value: this.collides},
-                dir: {
-                    get: function () {return dir},
-                    set: function (n) {dir = isNaN(n) ? String(n) : Number(n);}
-                },
-                frame: {
-                    get: function () {return frame},
-                    set: function (n) {if (!isNaN(n)) frame = Number(n);}
-                },
-                game: {value: collection.game},
-                height: {value: this.height},
-                origin_x: {value: this.origin_x},
-                origin_y: {value: this.origin_y},
-                screen_x: {get: (function () {return this.x - this.area.x}).bind(this)},
-                screen_y: {get: (function () {return this.y - this.area.y}).bind(this)},
-                sprite_height: {value: sprites[0].height},
-                sprite_width: {value: sprites[0].width},
-                width: {value: this.width},
-                x: {
-                    get: function () {return x},
-                    set: function (n) {if (!isNaN(n)) x = Number(n);}
-                },
-                y: {
-                    get: function () {return y},
-                    set: function (n) {if (!isNaN(n)) y = Number(n);}
-                }
-            }, {
-                setPosition: {value: this.setPosition},
-                target: {value: this.target},
-                targetBy: {value: this.targetBy}
-            });
-
-            for (items = elt.dataset.vars ? elt.dataset.vars.split(/\s+/) : [], i = 0; i < items.length; i++) {
-                this.declare(items[i]);
-            }
+            for (items = elt.dataset.vars ? elt.dataset.vars.split(/\s+/) : [], i = 0; i < items.length; i++) {Object.defineProperty(this, items[i], {writable: true, configurable: false, enumerable: true});}
 
             //  Initialization:
 
-            this.init();
+            if (this.init) this.init();
 
             //  Character sealing:
 
@@ -2032,7 +1610,7 @@ var Game = (function () {
 
         //  Character prototyping:
 
-        Character.prototype = Object.create(Jelli.prototype, {
+        Character.prototype = Object.create(Object.prototype, {
             draw: {
                 value: function () {
                     if (!(this.screen instanceof Screen)) return;
@@ -2067,14 +1645,12 @@ var Game = (function () {
                     }
                 }
             },
-            init: {value: function () {return Jelli.parseScript(this.initScript, this);}},
             setPosition: {
                 value: function (x, y) {
                     this.x = x;
                     this.y = y;
                 }
             },
-            step: {value: function () {return Jelli.parseScript(this.stepScript, this);}},
             target: {
                 value: function(cx, cy) {
                     var dx = cx - this.x - this.width / 2;
@@ -2138,7 +1714,7 @@ var Game = (function () {
                         }
                         this.area.characters.doForEach((function (some) {
                             if (this === some || some.collides === 0 || some.collides === "map") return;
-                            k = Math.floor(this.height / this.area.characters.__properties__[i].height) + 1;
+                            k = Math.floor(this.height / some.height) + 1;
                             for (j = 0; j <= k; j++) {
                                 tx = some.getCollisionEdge("right", this.x + ux - this.width / 2, this.y + (j - k / 2) * this.height / k);
                                 if (sx === undefined || sx < tx) sx = tx;
@@ -2209,62 +1785,45 @@ var Game = (function () {
                 game: {value: game},
                 nextIndex: {
                     get: function () {return nextIndex},
-                    set: function (n) {if (!isNaN(n)) nextIndex = Number(n);}
+                    set: function (n) {
+                        n = Number(n);
+                        if (n > nextIndex) nextIndex = n;
+                    }
                 },
                 parent: {value: parent}
-            });
-
-            Jelli.call(this, {
-                area: {value: area},
-                game: {value: game},
-                length: {get: (function () {return this[Object.keys(this).length];}).bind(this)},
-                nextIndex: {
-                    get: function () {return nextIndex},
-                    set: function (n) {if (!isNaN(n)) nextIndex = Number(n);}
-                },
-                parent: {value: parent}
-            }, {
-                loadNameless: {value: this.loadNameless}
-            }, {
-                load: {value: this.load}
             });
 
         }
 
         //  Collection prototyping:
 
-        Collection.prototype = Object.create(Jelli.prototype, {
+        Collection.prototype = Object.create(Object.prototype, {
             doForEach: {
                 value: function (fn) {
                     var i;
-                    for (i in this.__properties__) {
-                        if (!this.Type || this.__properties__[i] instanceof this.Type) fn(this.__properties__[i]);
-                    }
                     for (i in this) {
                         if (!this.Type || this[i] instanceof this.Type) fn(this[i]);
                     }
                 }
             },
-            kill: {
-                value: function (name) {
-                    if (this.hasOwnProperty(name)) delete this[name];
-                    else this.delete(name);
-                }
-            },
+            kill: {value: function (name) {if (this.hasOwnProperty(name)) delete this[name];}},
             load: {
                 value: function (name) {
                     var args = [null, this].concat(Array.prototype.slice.call(arguments));
-                    this.declare(name);
-                    if (typeof this.Type === "function" || this.Type instanceof Function) this.set(name, new (this.Type.bind.apply(this.Type, args))());
-                    if (this.get(name).__functions__) Object.defineProperty(this.get(name).__functions__, "kill", {value: this.kill.bind(this, name)});
+                    this[name] = typeof this.Type === "function" || this.Type instanceof Function ? new (this.Type.bind.apply(this.Type, args))() : null;
+                    return Object.defineProperty(this[name], "kill", {
+                        value: this.kill.bind(this, name),
+                        writable: false
+                    });
                 }
             },
             loadNameless: {
                 value: function () {
                     var args = [null, this, this.nextIndex].concat(Array.prototype.slice.call(arguments));
+                    while (this.hasOwnProperty(this.nextIndex)) {this.nextIndex++;}
                     this[this.nextIndex] = typeof this.Type === "function" || this.Type instanceof Function ? new (this.Type.bind.apply(this.Type, args))() : null;
-                    if (this[this.nextIndex] && this[this.nextIndex].__functions__) Object.defineProperty(this[this.nextIndex].__functions__, "kill", {value: this.kill.bind(this, this.nextIndex)});
-                    this.nextIndex++;
+                    if (this[this.nextIndex]) Object.defineProperty(this[this.nextIndex], "kill", {value: this.kill.bind(this, this.nextIndex)});
+                    return this[this.nextIndex++];
                 }
             }
         });
@@ -2275,29 +1834,26 @@ var Game = (function () {
 
             //  Setting up variables:
 
-            var area = 0;
+            var area;
             var collection;
             var collection_2;
-            var datadoc;
+            var data;
             var i;
             var j;
-            var resized = 1;
+            var resized = true;
 
             //  Handling arguments and making sure modules are loaded:
 
-            if (!(doc instanceof Document) || doc.game || typeof Screen === "undefined" || !Screen || typeof Control === "undefined" || !Control || typeof PlacementImage === "undefined" || !PlacementImage || typeof Sheet === "undefined" || !Sheet || typeof Letters === "undefined" || !Letters || typeof Tileset === "undefined" || !Tileset || typeof Jelli === "undefined" || !Jelli) return;
+            if (!(doc instanceof Document) || doc.game || typeof Screen === "undefined" || !Screen || typeof Control === "undefined" || !Control || typeof PlacementImage === "undefined" || !PlacementImage || typeof Sheet === "undefined" || !Sheet || typeof Letters === "undefined" || !Letters || typeof Tileset === "undefined" || !Tileset) return;
             Object.defineProperty(doc, "game", {value: this});
 
             //  imported() and placed() functions:
 
-            function imported(node) {return (node instanceof Node) ? doc.importNode(node, true) : doc.importNode(datadoc.getElementById(node), true);}
-            function placed(node) {return (node instanceof Node) ? doc.body.appendChild(doc.importNode(node, true)) : doc.body.appendChild(doc.importNode(datadoc.getElementById(node), true));}
+            function placed(node) {return (node instanceof Node) ? doc.body.appendChild(node) : doc.body.appendChild(data.getElementsByTagName("*").namedItem(node));}
 
             //  Setting up the data document and clearing the body
 
-            datadoc = doc.implementation.createHTMLDocument("Jelli Data Document");
-            datadoc.body = datadoc.importNode(doc.body, true);
-            doc.body = doc.createElement("body");
+            data = doc.documentElement.replaceChild(doc.createElement("body"), doc.body);
             doc.body.style.visibility = "hidden";
 
             //  Defining properties:
@@ -2310,13 +1866,11 @@ var Game = (function () {
                         else this.loadArea(n);
                     }
                 },
-                click_functions: {value: {}},
                 clicks: {value: {}},
                 control: {value: new Control(true, doc)},
-                datadoc: {value: datadoc},
+                data: {value: data},
                 document: {value: doc},
                 images: {value: {}},
-                initScript: {value: doc.head.getElementsByClassName("init").item(0) ? doc.head.getElementsByClassName("init").item(0).text || doc.head.getElementsByClassName("init").item(0).textContent : ""},
                 letters: {value: {}},
                 resized: {
                     get: function () {return resized},
@@ -2324,96 +1878,38 @@ var Game = (function () {
                 },
                 screens: {value: {}},
                 sheets: {value: {}},
-                stepScript: {value: doc.head.getElementsByClassName("step").item(0) ? doc.head.getElementsByClassName("step").item(0).text || doc.head.getElementsByClassName("step").item(0).textContent : ""},
                 texts: {value: new Collection(this, Text)},
                 tilesets: {value: {}},
-                touch_functions: {value: {}},
                 touches: {value: {}},
                 window: {value: doc.defaultView ? doc.defaultView : window}
             });
 
-            //  Sets up the game as a Jelli:
-
-            Jelli.call(this, {
-                get: function () {return area},
-                set: (function (n) {
-                    if (n instanceof Area) area = n;
-                    else this.loadArea(n);
-                }).bind(this),
-                key_start: {get: (function () {return Number(this.control.isActive("start"));}).bind(this)},
-                key_select: {get: (function () {return Number(this.control.isActive("select"));}).bind(this)},
-                key_menu: {get: (function () {return Number(this.control.isActive("menu"));}).bind(this)},
-                key_look: {get: (function () {return Number(this.control.isActive("look"));}).bind(this)},
-                key_exit: {get: (function () {return Number(this.control.isActive("exit"));}).bind(this)},
-                key_action: {get: (function () {return Number(this.control.isActive("action"));}).bind(this)},
-                key_up: {get: (function () {return Number(this.control.isActive("up"));}).bind(this)},
-                key_down: {get: (function () {return Number(this.control.isActive("down"));}).bind(this)},
-                key_left: {get: (function () {return Number(this.control.isActive("left"));}).bind(this)},
-                key_right: {get: (function () {return Number(this.control.isActive("right"));}).bind(this)},
-                resized: {
-                    get: function () {return resized},
-                    set: function (n) {resized = Number(!!n);}
-                },
-                texts: {value: this.texts},
-                touch: {get: function () {return 0;}}  //  TK
-            }, {
-                clearScreen: {value: this.clearScreen},
-                loadArea: {value: this.loadArea}
-            });
-
-            this.control.add("action").addKeys("action", 0x58, "U+0058", "KeyX", "X", "x");
-            this.control.add("down").addKeys("down", 0x28, "ArrowDown", "Down");
-            this.control.add("exit").addKeys("exit", 0x5A, "U+005A", "KeyZ", "Z", "z");
-            this.control.add("left").addKeys("left", 0x25, "ArrowLeft", "Left");
-            this.control.add("look").addKeys("look", 0x53, "U+0053", "KeyS", "S", "s");
-            this.control.add("menu").addKeys("menu", 0x41, "U+0041", "KeyA", "A", "a");
-            this.control.add("right").addKeys("right", 0x27, "ArrowRight", "Right");
-            this.control.add("select").addKeys("select", 0x57, "U+0057", "KeyW", "W", "w");
-            this.control.add("start").addKeys("start", 0x51, "U+0051", "KeyQ", "Q", "q");
-            this.control.add("up").addKeys("up", 0x26, "ArrowUp", "Up");
-
-            //  Loading click/touch functions:
-
-            for (collection = doc.head.getElementsByClassName("click_function"), i = 0; i < collection.length; i++) {
-                for (collection_2 = collection.item(i).dataset.clickNumber ? collection.item(i).dataset.clickNumber.split(/\s+/) : [], j = 0; j < collection_2.length; j++) {
-                    Object.defineProperty(this.click_functions, collection_2[j], {value: collection.item(i).text || collection.item(i).textContent});
-                }
-            }
-            for (collection = doc.head.getElementsByClassName("touch_function"), i = 0; i < collection.length; i++) {
-                for (collection_2 = collection.item(i).dataset.touchNumber ? collection.item(i).dataset.touchNumber.split(/\s+/) : [], j = 0; j < collection_2.length; j++) {
-                    Object.defineProperty(this.touch_functions, collection_2[j], {value: collection.item(i).text || collection.item(i).textContent});
-                }
-            }
+            for (collection = data.dataset.vars ? data.dataset.vars.split(/\s+/) : [], i = 0; i < collection.length; i++) {Object.defineProperty(this, collection[i], {writable: true, configurable: false, enumerable: true});}
 
             //  Loading screens:
 
-            for (collection = datadoc.getElementsByTagName("canvas"), i = 0; i < collection.length; i++) {
-                Object.defineProperty(this.screens, collection.item(i).id, {value: new Screen(placed(collection.item(i)), "2d"), enumerable: true});
-                if (i === 0) Object.defineProperty(this, "placement_screen", {value: this.screens[collection.item(i).id]});
+            collection = data.getElementsByTagName("canvas");
+            while (collection.length) {
+                Object.defineProperty(this.screens, i = collection.item(0).id, {value: new Screen(placed(collection.item(0)), "2d"), enumerable: true});
+                if (!this.placement_screen) Object.defineProperty(this, "placement_screen", {value: this.screens[i]});
             }
 
             //  Loading images:
 
-            for (collection = datadoc.getElementsByClassName("image"), i = 0; i < collection.length; i++) {
-                Object.defineProperty(this.images, collection.item(i).id, {value: imported(collection.item(i))});
+            for (collection = data.getElementsByClassName("image"), i = 0; i < collection.length; i++) {
+                Object.defineProperty(this.images, collection.item(i).id, {value: collection.item(i)});
             }
 
             //  Sprite sheet setup:
 
-            for (collection = datadoc.getElementsByClassName("letters"), i = 0; i < collection.length; i++) {
-                Object.defineProperty(this.letters, collection.item(i).id, {value: new Letters(imported(collection.item(i)), Number(collection.item(i).dataset.spriteWidth), Number(collection.item(i).dataset.spriteHeight), doc)});
+            for (collection = data.getElementsByClassName("letters"), i = 0; i < collection.length; i++) {
+                Object.defineProperty(this.letters, collection.item(i).id, {value: new Letters(collection.item(i), collection.item(i).dataset.spriteWidth, collection.item(i).dataset.spriteHeight, doc)});
             }
-            for (collection = datadoc.getElementsByClassName("sheet"), i = 0; i < collection.length; i++) {
-                Object.defineProperty(this.sheets, collection.item(i).id, {value: new Sheet(imported(collection.item(i)), Number(collection.item(i).dataset.spriteWidth), Number(collection.item(i).dataset.spriteHeight))});
+            for (collection = data.getElementsByClassName("sheet"), i = 0; i < collection.length; i++) {
+                Object.defineProperty(this.sheets, collection.item(i).id, {value: new Sheet(collection.item(i), collection.item(i).dataset.spriteWidth, collection.item(i).dataset.spriteHeight)});
             }
-            for (collection = datadoc.getElementsByClassName("tileset"), i = 0; i < collection.length; i++) {
-                Object.defineProperty(this.tilesets, collection.item(i).id, {value: new Tileset(new Sheet(imported(collection.item(i)), Number(collection.item(i).dataset.spriteWidth), Number(collection.item(i).dataset.spriteHeight)), Number(collection.item(i).dataset.spriteWidth), Number(collection.item(i).dataset.spriteHeight), collection.item(i).dataset.collisions.trim(), Sheet.drawSheetAtIndex)});
-            }
-
-            //   Adding dataset variables:
-
-            for (collection = (document.documentElement.dataset.vars ? document.documentElement.dataset.vars.split(/\s+/) : []), i = 0; i < collection.length; i++) {
-                this.declare(collection[i]);
+            for (collection = data.getElementsByClassName("tileset"), i = 0; i < collection.length; i++) {
+                Object.defineProperty(this.tilesets, collection.item(i).id, {value: new Tileset(new Sheet(collection.item(i), collection.item(i).dataset.spriteWidth, collection.item(i).dataset.spriteHeight), collection.item(i).dataset.spriteWidth, collection.item(i).dataset.spriteHeight, collection.item(i).dataset.collisions.trim(), Sheet.drawSheetAtIndex)});
             }
 
             //  Game freezing:
@@ -2422,11 +1918,11 @@ var Game = (function () {
             Object.freeze(this.letters);
             Object.freeze(this.sheets);
             Object.freeze(this.tilesets);
-            Object.freeze(this);
+            Object.seal(this);
 
             //  Initializing the game code:
 
-            if (doc.head.getElementsByClassName("init").item(0)) Jelli.parseScript(doc.head.getElementsByClassName("init").item(0).text || doc.head.getElementsByClassName("init").item(0).textContent, this);
+            if (typeof data.functions === "object" && (typeof data.functions.init === "function" || data.functions.init instanceof Function)) data.functions.init.call(this);
 
             //  Adding event listeners:
 
@@ -2451,7 +1947,7 @@ var Game = (function () {
 
         //  Game prototyping:
 
-        Game.prototype = Object.create(Jelli.prototype, {
+        Game.prototype = Object.create(Object.prototype, {
             clearScreen: {
                 value: function (screen) {
                     if (!(screen instanceof Screen)) screen = this.screens[screen]
@@ -2481,10 +1977,10 @@ var Game = (function () {
                         }
                     }
                     if (this.area instanceof Area) this.area.draw();
-                    for (i in this.texts.__properties__) {
-                        this.texts.__properties__[i].draw()
+                    for (i in this.texts) {
+                        this.texts[i].draw()
                     }
-                    this.resized = 0;
+                    this.resized = false;
                     this.window.requestAnimationFrame(this.draw.bind(this));
                 }
             },
@@ -2502,7 +1998,7 @@ var Game = (function () {
                             k = e.code || e.key || e.keyIdentifier || e.keyCode;
                             if (this.document.documentElement.hasAttribute("data-touch")) {
                                 this.document.documentElement.removeAttribute("data-touch");
-                                this.set("resized", 1);
+                                this.resized = true;
                             }
                             if (k === "Tab" || k === "U+0009" || k === 0x09) {
                                 if (!(this.document.fullscreenElement || this.document.mozFullScreenElement || this.document.webkitFullscreenElement || this.document.msFullscreenElement)) {
@@ -2521,7 +2017,7 @@ var Game = (function () {
                             break;
                         case "mousedown":
                             e.preventDefault();
-                            this.clicks[[1, 3, 2, 4, 5][e.button]] = new Poke(this, e, i);
+                            this.clicks[e.button] = new Poke(this, e, e.button);
                             break;
                         case "mousemove":
                             e.preventDefault();
@@ -2531,10 +2027,10 @@ var Game = (function () {
                             break;
                         case "mouseup":
                             e.preventDefault();
-                            delete this.clicks[[1, 3, 2, 4, 5][e.button]];
+                            delete this.clicks[e.button];
                             break;
                         case "resize":
-                            this.set("resized", 1);
+                            this.resized = true;
                             break;
                         case "touchcancel":
                         case "touchend":
@@ -2555,9 +2051,9 @@ var Game = (function () {
                             e.preventDefault();
                             if (!this.document.documentElement.hasAttribute("data-touch")) {
                                 this.document.documentElement.setAttribute("data-touch", "");
-                                this.set("resized", 1);
+                                this.resized = true;
                             }
-                            j = 1;
+                            j = 0;
                             while (n !== j) {
                                 n = j;
                                 for (i in this.touches) {
@@ -2572,12 +2068,11 @@ var Game = (function () {
                     }
                 }
             },
-            init: {value: function () {return Jelli.parseScript(this.initScript, this);}},
             layout: {
                 value: function () {
                     var body_height;
                     var body_width;
-                    var border_img = this.datadoc.querySelector("img.gui-border");
+                    var border_img = this.data.querySelector("img.gui-border");
                     var border_height =  Number(border_img.dataset.spriteHeight);
                     var border_width =  Number(border_img.dataset.spriteWidth);
                     var canvas;
@@ -2644,32 +2139,10 @@ var Game = (function () {
             loadArea: {value: function (index) {this.area = new Area(this, index);}},
             step: {
                 value: function () {
-
-                    //  Variable setup:
-
                     var i;
-
-                    //  Click/touch stepping:
-
-                    for (i in this.clicks) {
-                        if (this.click_functions[i]) Jelli.parseScript(this.click_functions[i], this.clicks[i]);
-                    }
-                    for (i in this.touches) {
-                        if (this.touch_functions[this.touches[i].number]) Jelli.parseScript(this.touch_functions[this.touches[i].number], this.touches[i]);
-                    }
-
-                    //  Game stepping:
-
-                    Jelli.parseScript(this.stepScript, this);
-
-                    //  Area stepping:
-
+                    if (typeof this.data.functions === "object" && (typeof this.data.functions.step === "function" || this.data.functions.step instanceof Function)) this.data.functions.step.call(this);
                     if (this.area instanceof Area) this.area.step();
-
-                    //  setTimeout for that logic:
-
                     this.window.setTimeout(this.step.bind(this), 1000/60);
-
                 }
             }
         });
@@ -2708,36 +2181,14 @@ var Game = (function () {
 
             PlacementImage.call(this, elt, collection.game.screens[elt.dataset.screen].context, x, y, collection.area.x, collection.area.y, placed);
 
-            //  But it's actually a Jelli!
-
-            Jelli.call(this, {
-                area: {value: collection.area},
-                collection: {value: collection},
-                game: {value: collection.game},
-                placed: {
-                    get: (function () {return this.placed ? 1 : 0;}).bind(this),
-                    set: (function (n) {this.placed = n;}).bind(this)
-                },
-                screen_x: {get: (function () {return this.x - this.area.x}).bind(this)},
-                screen_y: {get: (function () {return this.y - this.area.y}).bind(this)},
-                x: {
-                    get: (function () {return this.x;}).bind(this),
-                    set: (function (n) {this.x = n;}).bind(this)
-                },
-                y: {
-                    get: (function () {return this.y;}).bind(this),
-                    set: (function (n) {this.y = n;}).bind(this)
-                },
-            }, {
-                setPlacement: {value: this.setPlacement},
-                setPosition: {value: this.setPosition},
-                togglePlacement: {value: this.togglePlacement}
-            });
-
             Object.defineProperties(this, {
                 area: {value: collection.area},
                 collection: {value: collection},
                 game: {value: collection.game},
+                kill: {  //  This gets overwritten by the collection after creation.
+                    value: null,
+                    writable: true
+                },
                 screen_x: {get: function () {return this.x - this.area.x}},
                 screen_y: {get: function () {return this.y - this.area.y}}
             });
@@ -2750,7 +2201,7 @@ var Game = (function () {
 
         //  Image prototyping:
 
-        JelliImage.prototype = Object.create(Jelli.prototype, {
+        JelliImage.prototype = Object.create(Object.prototype, {
             draw: {value: PlacementImage.prototype.draw},
             setPosition: {value: PlacementImage.prototype.setPosition},
             togglePlacement: {value: PlacementImage.prototype.togglePlacement}
@@ -2762,12 +2213,14 @@ var Game = (function () {
 
             //  Setting up variables:
 
-            var elt = game.placement_screen.canvas;
-            var rect = elt.getBoundingClientRect();
+            var elt;
+            var rect;
 
             //  Handling arguments:
 
             if (!(game instanceof Game) || typeof e !== "object") return;
+            elt = game.placement_screen.canvas;
+            rect = elt.getBoundingClientRect();
 
             //  Property definitions:
 
@@ -2787,22 +2240,11 @@ var Game = (function () {
                 }
             });
 
-            //  Setting up poke as a Jelli:
-
-            Jelli.call(this, {
-                game: {value: game},
-                number: {value: n},
-                start_x: {value: this.start_x},
-                start_y: {value: this.start_y},
-                x: {get: (function () {return this.x;}).bind(this)},
-                y: {get: (function () {return this.y;}).bind(this)},
-            });
-
         }
 
         //  Poke prototyping:
 
-        Poke.prototype = Object.create(Jelli.prototype, {
+        Poke.prototype = Object.create(Object.prototype, {
             updateWith: {value: function (e) {
                 if (!(this.target instanceof Element) || typeof e !== "object") return;
                 var rect = this.target.getBoundingClientRect();
@@ -2815,21 +2257,28 @@ var Game = (function () {
 
         function Text(collection, name, screen, letters_name, text, isBase64) {
 
-
             //  Setting up variables:
 
             var context;
             var letters;
+            var game;
 
             //  Handling arguments:
 
-            if (!(collection instanceof Collection) || !collection.game) return;
-            context = collection.game.screens[screen].context;
-            letters = collection.game.letters[letters_name];
-            if (isBase64) text = collection.game.window.atob(text);
+            if (!(collection instanceof Collection) || !(collection.game instanceof Game)) return;
+            game = collection.game;
+            context = game.screens[screen].context;
+            letters = game.letters[letters_name];
+            if (isBase64) text = game.window.atob(text);
 
+            Object.defineProperty(this, "block", {value: letters.createBlock.apply(letters, [context, 0, 0].concat(text.split(letters.source.dataset.linefeed)))});
             Object.defineProperties(this, {
-                block: {value: letters.createBlock.apply(letters, [context, 0, 0].concat(text.split(letters.source.dataset.linefeed)))},
+                advance: {value: this.block.advance.bind(this.block)},
+                clear: {value: this.block.clear.bind(this.block)},
+                color: {
+                    value: undefined,
+                    writable: true
+                },
                 context: {value: context},
                 delIndex: {
                     get: function () {return this.block.delIndex},
@@ -2839,10 +2288,17 @@ var Game = (function () {
                     get: function () {return this.block.drawIndex},
                     set: function (n) {this.block.drawIndex = n;}
                 },
+                fill: {value: this.block.fill.bind(this.block)},
                 index: {
                     get: function () {return this.block.index},
                     set: function (n) {this.block.index = n;}
                 },
+                item: {value: this.block.item.bind(this.block)},
+                kill: {  //  This gets overwritten by the collection after creation.
+                    value: null,
+                    writable: true
+                },
+                line: {value: this.block.line.bind(this.block)},
                 x: {
                     get: function () {return this.block.x;},
                     set: function (n) {this.block.x = n;}
@@ -2853,67 +2309,23 @@ var Game = (function () {
                 }
             });
 
-            //  Creating text as a Jelli:
-
-            Jelli.call(this, {
-                color: {
-                    value: 0,
-                    writable: true
-                },
-                context: {
-                    value: context
-                },
-                delIndex: {
-                    get: (function () {return this.block.delIndex;}).bind(this),
-                    set: (function (n) {this.block.delIndex = n;}).bind(this)
-                },
-                drawIndex: {
-                    get: (function () {return this.block.drawIndex;}).bind(this),
-                    set: (function (n) {this.block.drawIndex = n;}).bind(this)
-                },
-                height: {get: function () {return this.block.height;}},
-                index: {
-                    get: (function () {return this.block.index;}).bind(this),
-                    set: (function (n) {this.block.index = n;}).bind(this)
-                },
-                length: {get: function () {return this.block.length;}},
-                text: {value: text},
-                x: {
-                    get: (function () {return this.block.x;}).bind(this),
-                    set: (function (n) {this.block.x = n;}).bind(this)
-                },
-                y: {
-                    get: (function () {return this.block.y;}).bind(this),
-                    set: (function (n) {this.block.y = n;}).bind(this)
-                },
-            }, {
-                advance: {value: this.advance},
-                clear: {value: this.clear},
-                fill: {value: this.fill}
-            });
-
             //  Text freezing:
 
-            Object.freeze(this);
+            Object.seal(this);
 
         }
 
         //  Text prototyping:
 
-        Text.prototype = Object.create(Jelli.prototype, {
-            advance: {value: function (/*  Optional amount  */) {return this.block.advance.apply(this.block, arguments);}},
-            clear: {value: function () {return this.block.clear.apply(this.block, arguments);}},
+        Text.prototype = Object.create(Object.prototype, {
             draw: {
                 value: function () {
-                    var c = this.get("color");
+                    var c = this.color;
                     if (c) this.block.letters.setColor(this.block.letters.source.dataset["palette" + c[0].toUpperCase() + c.substr(1)]);
                     else this.block.letters.clearColor();
                     this.block.draw.call(this.block, this.context, this.x, this.y);
                 }
             },
-            fill: {value: function () {return this.block.fill.apply(this.block, arguments);}},
-            item: {value: function (n) {return this.block.item.apply(this.block, arguments);}},
-            line: {value: function (n) {return this.block.line.apply(this.block, arguments);}}
         });
 
         return Game;
