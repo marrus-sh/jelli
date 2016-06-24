@@ -244,7 +244,7 @@
                                     this.targetBy(dx, dy);
                                     this.timer++;
                                 }
-                                if (this.direction !== undefined) this.sprite = this.direction > 0 ? "rt" : "lf";
+                                if (this.direction && Math.abs(this.direction) < Math.PI) this.sprite = this.direction > 0 ? "rt" : "lf";
                                 if (!(this.timer %= 15)) this.frame = Number(!this.frame);
                             }
                         });

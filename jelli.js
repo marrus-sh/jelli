@@ -1727,7 +1727,7 @@ var Game = (function () {
                                 if (sx === undefined || sx > tx) sx = tx;
                             }
                         }).bind(this));
-                        if (sx !== undefined) this.x = sx - this.width / 2;
+                        if (sx !== undefined && (sx -= this.width / 2) > this.x) this.x = sx;
                     }
                     else if (dx < 0) {
                         for (i = 0; i < this.area.maps.length; i++) {
@@ -1745,7 +1745,7 @@ var Game = (function () {
                                 if (sx === undefined || sx < tx) sx = tx;
                             }
                         }).bind(this));
-                        if (sx !== undefined) this.x = sx + this.width / 2;
+                        if (sx !== undefined && (sx += this.width / 2) < this.x) this.x = sx;
                     }
                     if (dy > 0) {
                         for (i = 0; i < this.area.maps.length; i++) {
@@ -1763,7 +1763,7 @@ var Game = (function () {
                                 if (sy === undefined || sy > ty) sy = ty;
                             }
                         }).bind(this));
-                        if (sy !== undefined) this.y = sy - this.height / 2;
+                        if (sy !== undefined && (sy -= this.height / 2) > this.y) this.y = sy;
                     }
                     else if (dy < 0) {
                         for (i = 0; i < this.area.maps.length; i++) {
@@ -1781,7 +1781,7 @@ var Game = (function () {
                                 if (sy === undefined || sy < ty) sy = ty;
                             }
                         }).bind(this));
-                        if (sy !== undefined) this.y = sy + this.height / 2;
+                        if (sy !== undefined && (sy += this.height / 2) < this.y) this.y = sy;
                     }
                     dx = this.x - ix;
                     dy = this.y - iy;
