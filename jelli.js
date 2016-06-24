@@ -1917,10 +1917,13 @@ var Game = (function () {
 
             //  Loading screens:
 
-            collection = data.getElementsByTagName("canvas");
-            while (collection.length) {
-                Object.defineProperty(this.screens, i = collection.item(0).id, {value: new Screen(placed(collection.item(0)), "2d"), enumerable: true});
-                if (!this.placement_screen) Object.defineProperty(this, "placement_screen", {value: this.screens[i]});
+            for (collection = data.getElementsByTagName("canvas"), i = 0; i < collection.length; /*  Do nothing  */) {
+                if (!collection.item(i).classList.contains("screen")) {
+                    i++;
+                    continue;
+                }
+                Object.defineProperty(this.screens, j = collection.item(i).id, {value: new Screen(placed(collection.item(i)), "2d"), enumerable: true});
+                if (!this.placement_screen) Object.defineProperty(this, "placement_screen", {value: this.screens[j]});
             }
 
             //  Loading images:

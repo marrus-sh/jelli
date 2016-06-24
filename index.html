@@ -71,7 +71,7 @@
         <section>
             <h2>Screens</h2>
             <p>
-                The <code>&lt;canvas&gt;</code> element creates a screen where the game is actually drawn.
+                The <code>&lt;canvas class="screen"&gt;</code> element creates a screen where the game is actually drawn.
                 These elements should be listed in order, from back to front.
                 The <code>id</code> of these elements <strong>must</strong> be specified (and unique)&mdash;this is used as an identifier within the game's script.
             </p>
@@ -83,11 +83,11 @@
             </p>
             <section>
                 <h3>The canvases:</h3>
-                <canvas id="background" data-type="area" width="256" height="160">Map tiles go here.</canvas>
-                <canvas id="mainground" data-type="animation" width="256" height="160">Characters and particles go here.</canvas>
-                <canvas id="foreground" data-type="area" width="256" height="160">Structures go here.</canvas>
-                <canvas id="textground" width="256" height="160">Dialogue and the like goes here.</canvas>
-                <canvas id="menuground" width="256" height="160">HUDs and pause menus go here.</canvas>
+                <canvas id="background" class="screen" data-type="area" width="256" height="160">Map tiles go here.</canvas>
+                <canvas id="mainground" class="screen" data-type="animation" width="256" height="160">Characters and particles go here.</canvas>
+                <canvas id="foreground" class="screen" data-type="area" width="256" height="160">Structures go here.</canvas>
+                <canvas id="textground" class="screen" width="256" height="160">Dialogue and the like goes here.</canvas>
+                <canvas id="menuground" class="screen" width="256" height="160">HUDs and pause menus go here.</canvas>
             </section>
         </section>
         <section>
