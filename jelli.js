@@ -1511,18 +1511,20 @@ var Game = (function () {
 
         //  Character constructor:
 
-        function Character(collection, name /*  Optional x, y, dir, frame OR id, x, y, dir, frame  */) {
+        function Character(collection, name /*  Optional x, y, sprite OR id, x, y, sprite  */) {
 
             //  Setting up variables:
 
-            var dir;
+            var direction;
             var elt;
             var frame;
             var i;
             var id;
             var item;
             var items;
-            var sprites = {};
+            var sprite;
+            var sprites;
+            var velocity;
             var x;
             var y;
 
@@ -1532,15 +1534,13 @@ var Game = (function () {
                 id = name;
                 x = arguments[2];
                 if (isNaN(y = Number(arguments[3]))) y = undefined;
-                if (isNaN(dir = Number(arguments[4]))) dir = 0;
-                if (isNaN(frame = Number(arguments[5]))) frame = 0;
+                if (isNaN(sprite = Number(arguments[4]))) sprite = 0;
             }
             else {
                 id = arguments[2] ? arguments[2] : name;
                 if (isNaN(x = Number(arguments[3]))) x = undefined;
                 if (isNaN(y = Number(arguments[4]))) y = undefined;
-                if (isNaN(dir = Number(arguments[5]))) dir = 0;
-                if (isNaN(frame = Number(arguments[6]))) frame = 0;
+                if (isNaN(sprite = Number(arguments[5]))) sprite = 0;
             }
             if (!(collection instanceof Collection) || !collection.area || !collection.game) return;
             elt = collection.game.data.getElementsByTagName("*").namedItem(id);
@@ -1548,6 +1548,7 @@ var Game = (function () {
 
             //  Loading sprites:
 
+            sprites = {};
             item = (collection.game.data.getElementsByTagName("*").namedItem(elt.dataset.sprites) && collection.game.data.getElementsByTagName("*").namedItem(elt.dataset.sprites).className === "sprites") ? collection.game.data.getElementsByTagName("*").namedItem(elt.dataset.sprites) : null;
             for (items = item ? item.getElementsByClassName("sprite") : [], i = 0; i < items.length; i++) {
                 if (sprites[i] === undefined) Object.defineProperty(sprites, i, {value: collection.game.sheets[item.dataset.sheet] ? collection.game.sheets[item.dataset.sheet].getSprite(items.item(i).dataset.index, items.item(i).dataset.length ? items.item(i).dataset.length : 1) : null});
@@ -1556,14 +1557,20 @@ var Game = (function () {
             if (x === undefined) x = sprites[0].width / 2;
             if (y === undefined) y = sprites[0].height / 2;
 
+            //  Defaults:
+
+            direction = undefined;
+            frame = 0;
+            velocity = 0;
+
             //  Defining properties:
 
             Object.defineProperties(this, {
                 area: {value: collection.area},
                 collides : {value: elt.hasAttribute("data-collides") ? elt.dataset.collides : 0},
-                dir: {
-                    get: function () {return dir},
-                    set: function (n) {dir = isNaN(n) ? String(n) : Number(n);}
+                direction : {
+                    get: function () {return direction},
+                    set: function (n) {if (!isNaN(n)) direction = Number(n);}
                 },
                 frame: {
                     get: function () {return frame},
@@ -1571,6 +1578,10 @@ var Game = (function () {
                 },
                 game: {value: collection.game},
                 height: {value: Number(item.dataset.boxHeight || sprites[0].height)},
+                id : {
+                    enumerable: true,
+                    value: id
+                },
                 init: {value: typeof elt.functions === "object" && (typeof elt.functions.init === "function" || elt.functions.init instanceof Function) ? elt.functions.init.bind(this) : null},
                 kill: {  //  This gets overwritten by the collection after creation.
                     value: null,
@@ -1581,16 +1592,26 @@ var Game = (function () {
                 screen: {value: collection.game.screens[elt.dataset.screen]},
                 screen_x: {get: function () {return this.x - this.area.x}},
                 screen_y: {get: function () {return this.y - this.area.y}},
+                sprite: {
+                    get: function () {return sprite},
+                    set: function (n) {if (this.sprites[n]) sprite = n;}
+                },
                 sprites: {value: sprites},
                 sprite_height: {value: sprites[0].height},
                 sprite_width: {value: sprites[0].width},
                 step: {value: typeof elt.functions === "object" && (typeof elt.functions.step === "function" || elt.functions.step instanceof Function) ? elt.functions.step.bind(this) : null},
+                velocity: {
+                    get: function () {return velocity},
+                    set: function (n) {if (!isNaN(n)) velocity = Number(n);}
+                },
                 width: {value: Number(item.dataset.boxWidth || sprites[0].width)},
                 x: {
+                    enumerable: true,
                     get: function () {return x},
                     set: function (n) {if (!isNaN(n)) x = Number(n);}
                 },
                 y: {
+                    enumerable: true,
                     get: function () {return y},
                     set: function (n) {if (!isNaN(n)) y = Number(n);}
                 }
@@ -1614,7 +1635,7 @@ var Game = (function () {
             draw: {
                 value: function () {
                     if (!(this.screen instanceof Screen)) return;
-                    return this.sprites[this.dir].draw(this.screen.context, Math.round(this.x - this.origin_x - this.area.x), Math.round(this.y - this.origin_y - this.area.y), this.frame);
+                    return this.sprites[this.sprite].draw(this.screen.context, Math.round(this.x - this.origin_x - this.area.x), Math.round(this.y - this.origin_y - this.area.y), this.frame);
                 }
             },
             getCollisionEdge: {
@@ -1663,6 +1684,8 @@ var Game = (function () {
                     var c = false;
                     var d;
                     var i;
+                    var ix;
+                    var iy;
                     var j;
                     var k;
                     var ux;
@@ -1673,6 +1696,8 @@ var Game = (function () {
                     var ty;
                     d = Math.sqrt(dx * dx + dy * dy);
                     if (!(this.area instanceof Area) || !(this.area.characters instanceof Collection) || typeof this.area.maps !== "object" || !d) return;
+                    ix = this.x;
+                    iy = this.y;
                     if (d > 1) {
                         ux = dx / d;
                         uy = dy / d;
@@ -1758,6 +1783,10 @@ var Game = (function () {
                         }).bind(this));
                         if (sy !== undefined) this.y = sy + this.height / 2;
                     }
+                    dx = this.x - ix;
+                    dy = this.y - iy;
+                    this.direction = dy < 0 ? Math.tan(dx / -dy) : dy > 0 ? (dx >= 0 ? Math.tan(dx / -dy) + Math.PI : Math.tan(dx / -dy) - Math.PI) : dx > 0 ? Math.PI / 2 : dx < 0 ? -Math.PI / 2 : undefined;
+                    this.velocity = Math.sqrt(dx * dx + dy * dy);
                 }
             }
         });

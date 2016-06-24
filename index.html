@@ -224,7 +224,7 @@
                             init: function () {
                                 this.x = 16;
                                 this.y = 80;
-                                this.dir = "rt";
+                                this.sprite = "rt";
                                 this.timer = 0;
                             },
                             step: function () {
@@ -234,8 +234,6 @@
                                 var dy = .1;
                                 if (poke = game.touches[0] || game.clicks[0]) {
                                     this.target(poke.x + this.area.x, poke.y + this.area.y);
-                                    if (poke.x + this.area.x < this.x) this.dir = "lf";
-                                    if (poke.x + this.area.x > this.x) this.dir = "rt";
                                     this.timer++;
                                 }
                                 else {
@@ -244,10 +242,9 @@
                                     if (game.control.isActive("left")) dx--;
                                     if (game.control.isActive("right")) dx++;
                                     this.targetBy(dx, dy);
-                                    if (dx < 0) this.dir = "lf";
-                                    if (dx > 0) this.dir = "rt";
                                     this.timer++;
                                 }
+                                if (this.direction !== undefined) this.sprite = this.direction > 0 ? "rt" : "lf";
                                 if (!(this.timer %= 15)) this.frame = Number(!this.frame);
                             }
                         });
