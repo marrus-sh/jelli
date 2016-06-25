@@ -24,3 +24,5 @@ The modules at this time are:
 - `Game`
 
 You can view the source for each module by viewing the appropriately named `.litcoffee` file in this repositiory.
+
+> The transition from JavaScript to CoffeeScript is still underway, so many of the above modules have not yet been written. They are forthcoming.
