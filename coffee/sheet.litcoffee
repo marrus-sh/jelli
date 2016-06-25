@@ -33,7 +33,7 @@ If any of the other provided arguments aren't numbers, however, we can go ahead 
 
 Now we can increment `start_index` by `frame`'s value:
 
-        `start_index` += frame
+        start_index += frame
 
 Next, we need to find the horizontal (`i`) and vertical (`j`) position of the sprite on the sheet.
 We can get this information from `start_index` with a little math:
