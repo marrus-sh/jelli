@@ -2,8 +2,8 @@ Jelli Game Engine
 
 #  Sheet  #
 
-`Sheet()` generates sprite-sheets and manages their rendering on a `CanvasRenderingContext2D`.
-It is packaged with `Sprite()`, which describes a single sprite on the sheet.
+The `Sheet` constructor generates sprite-sheets and manages their rendering on a `CanvasRenderingContext2D`.
+It is packaged with `Sprite`, which describes a single sprite on the sheet.
 
 ##  General functions  ##
 
@@ -72,7 +72,7 @@ We also need to make sure that the sprite exists on the sheet:
     This makes sure that our indices are actually, y'know, numbers.
 
 -   `Number(width = sheet.sprite_width) and Number(height = sheet.sprite_height)`—
-    This makes sure that the `Sheet` has a non-zero width and height.
+    This makes sure that the sprites in the sheet have a non-zero width and height.
     It also sets the variables `width` and `height` to those values, for convenient access later.
 
 Finally, we can draw the sprite.
@@ -89,7 +89,7 @@ The constructor takes three arguments: `sheet`, which gives the sheet; `index`, 
 If `index` or `length` aren't numbers, then we go ahead and set them to `0` and `1`, respectively.
 
         if isNaN(index = Number(index)) then index = 0
-        if isNaN(length = Number(length)) then length = 0
+        if isNaN(length = Number(length)) then length = 1
 
 Now we can set the properties.
 Note that `draw` simply binds `drawSprite` to the given `Sheet` and `index`.
@@ -169,7 +169,7 @@ We freeze them:
 
         Object.freeze this
 
-For convenience's sake, two static method has been defined for `Sheet` to let you draw arbitrary sprites.
+For convenience's sake, two static methods have been defined for `Sheet` to let you draw arbitrary sprites.
 These are largely intended for use with callbacks.
 
 The first is called `draw`, and takes five arguments:
