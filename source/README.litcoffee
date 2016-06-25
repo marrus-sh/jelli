@@ -8,8 +8,8 @@ The code blocks (indented with four spaces) in each file are the CoffeeScript co
     THE JELLI GAME ENGINE
     Programmed by Margaret Russel
     -----------------------------
-    Programmed through several modules in Literate CoffeeScript.
-    Source code available at https://github.com/literallybenjam/jelli/.
+    Implemented through several modules in Literate CoffeeScript.
+    Source code and resources are available at https://github.com/literallybenjam/jelli/.
     ###
 
 The Jelli Game Engine is comprised of several modules, each seperately encapsulated for portability and reusability.
