@@ -19,7 +19,7 @@ Note `doc` is used here to store the owner document, which is not assumed to be 
         unless canvas instanceof HTMLCanvasElement
             doc = document
             canvas = doc.getElementById canvas
-            if not (canvas instanceof HTMLCanvasElement) then canvas = undefined
+            unless canvas instanceof HTMLCanvasElement then canvas = undefined
         else
             doc = canvas.ownerDocument
 
@@ -34,11 +34,11 @@ The width and height of the canvas are accessible through `Screen` attributes, b
 
         Object.defineProperties this, {
             height: {
-                get: () -> return if @canvas then @canvas.height
+                get: -> return if @canvas then @canvas.height
                 set: (n) -> if @canvas then @canvas.height = n
             }
             width: {
-                get: () -> return if @canvas then @canvas.width
+                get: -> return if @canvas then @canvas.width
                 set: (n) -> if @canvas then @canvas.width = n
             }
         }
@@ -57,7 +57,7 @@ Our first function clears the canvas.
 It supports both `"2d"` and `"webgl"` rendering contexts (but not `"webgl2"`, yet).
 If the canvas isn't a canvas element, then this function does nothing.
 
-        clear: () ->
+        clear: ->
             unless @canvas instanceof HTMLCanvasElement then return
             if @context instanceof CanvasRenderingContext2D then @context.clearRect 0, 0, @canvas.width, @canvas.height
             else if @context instanceof WebGLRenderingContext then @context.clear @context.COLOR_BUFFER_BIT | context.DEPTH_BUFFER_BIT
@@ -71,6 +71,6 @@ Again, the `Screen` prototype is immutable, so we freeze it:
 …And we're done!
 We want screen to be accessible to all the denizens out there, so we attach it to the window object:
 
-    this.Screen = Screen
+    window.Screen = Screen
 
 Happy screening!

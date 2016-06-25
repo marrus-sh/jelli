@@ -72,6 +72,6 @@ In several parts ;)
 
   Object.freeze(Screen.prototype);
 
-  this.Screen = Screen;
+  window.Screen = Screen;
 
 }).call(this);
