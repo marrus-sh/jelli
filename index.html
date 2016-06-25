@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html data-vars="poke_active poke2_active poke_x poke_y">
+<html>
     <head>
         <title>Jelli : A Game Engine</title>
         <meta charset="utf-8">
@@ -28,10 +28,6 @@
         </p>
         <section>
             <h2>Game setup</h2>
-            <p>
-                Certain attributes on the &lt;html&gt; element can be used to configure game settings.
-                The <code>data-vars</code> attribute declares global JelliScript variables which can be accessed from any JelliScript code.
-            </p>
             <p>
                 Sometimes the game itself needs scripting which cannot be achieved at a lower level.
                 This can be accomplished through <code>defineFunctions</code>, run somewhere inside the body outside of a character or area.
@@ -214,13 +210,19 @@
                 <div id="pointer" class="character"
                      data-sprites="jelly"
                      data-screen="mainground"
-                     data-vars="timer"
                      >
+                    <script type="text/javascript">
+                        defineFunctions({
+                            init: function () {
+                                //  Any variables that you're going to use need to be declared in your init function:
+                                this.timer = 0;
+                            }
+                        });
+                    </script>
                 </div>
                 <div id="player" class="character"
                      data-sprites="jelly"
                      data-screen="mainground"
-                     data-vars="timer"
                      data-collides
                      >
                     <script type="text/javascript">
@@ -279,7 +281,6 @@
             <section>
                 <h3>Some areas:</h3>
                 <div class="area" title="Splash screen"
-                     data-vars="title_timer"
                      >
                     I have used this area to demonstrate programmatic character loading and managing.
                     <span class="map"
@@ -297,7 +298,6 @@
                                 this.title_timer = 0;
                                 this.images.load("ctrlimg", 80, 32);
                                 this.characters.load("pointer", 88, 120, "lf");
-                                this.characters.pointer.timer = 0;
                                 title = this.game.texts.load("title", "textground", "letters", "Jelli Game Engine -- Demo");
                                 title.x = 78;
                                 title.y = 60;
