@@ -13,4 +13,8 @@ echo "
 //  Screen:
 " >> jelli.js
 cat compiled/screen.js >> jelli.js
+echo "
+//  Control:
+" >> jelli.js
+cat compiled/control.js >> jelli.js
 rm -rf compiled
