@@ -81,13 +81,13 @@ When a key is down, we want to toggle it to `true`…
 
                 when "keydown"
                     for key in [e.code, e.key, e.keyIdentifier, e.keyCode]
-                        if @isKeyDefined key then @toggleKey key, true
+                        if @isKeyDefined(key) then @toggleKey(key, true)
 
 …and when a key is up, we want to toggle it to `false`.
 
                 when "keyup"
                     for key in [e.code, e.key, e.keyIdentifier, e.keyCode]
-                        if @isKeyDefined key then @toggleKey key, false
+                        if @isKeyDefined(key) then @toggleKey(key, false)
 
 This function shouldn't return anything, because it's just an event handler.
 

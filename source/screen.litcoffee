@@ -65,8 +65,8 @@ If the canvas isn't a canvas element, then this function does nothing.
 
         clear: ->
             unless @canvas instanceof HTMLCanvasElement then return
-            if @context instanceof CanvasRenderingContext2D then @context.clearRect 0, 0, @canvas.width, @canvas.height
-            else if @context instanceof WebGLRenderingContext then @context.clear @context.COLOR_BUFFER_BIT | context.DEPTH_BUFFER_BIT
+            if @context instanceof CanvasRenderingContext2D then @context.clearRect(0, 0, @canvas.width, @canvas.height)
+            else if @context instanceof WebGLRenderingContext then @context.clear(@context.COLOR_BUFFER_BIT | context.DEPTH_BUFFER_BIT)
 
 Right now `clear()` is the only prototype function for `Screen`, but more may be added later.
 Again, the `Screen` prototype is immutable, so we freeze it:

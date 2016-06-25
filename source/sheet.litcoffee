@@ -50,7 +50,7 @@ Now we have all we need to draw the sprite!
 There is a HUGE `if`-statement that precedes the draw function, because we want to make sure that what we're drawing is actually there.
 If it isn't, then obviously we can't draw anything.
 
-        if (source instanceof HTMLImageElement and source.complete or source instanceof SVGImageElement or source instanceof HTMLCanvasElement or createImageBitmap? and (image instanceof ImageBitmap or source instanceof ImageBitmap)) and not isNaN(i) and not isNaN(j) and Number(width = sheet.sprite_width) and Number(height = sheet.sprite_height) then context.drawImage (if createImageBitmap? and image instanceof ImageBitmap then image else source), i * width, j * height, width, height, x, y, width, height
+        if (source instanceof HTMLImageElement and source.complete or source instanceof SVGImageElement or source instanceof HTMLCanvasElement or createImageBitmap? and (image instanceof ImageBitmap or source instanceof ImageBitmap)) and not isNaN(i) and not isNaN(j) and Number(width = sheet.sprite_width) and Number(height = sheet.sprite_height) then context.drawImage((if createImageBitmap? and image instanceof ImageBitmap then image else source), i * width, j * height, width, height, x, y, width, height)
 
 Let's go through what those did.
 First, we make sure that the `Sheet` actually has an image associated with it:
@@ -149,11 +149,11 @@ We now have everything we need to define the properties.
 Note that `width` and `height` are provided in sprite-units, not pixels.
 If `sprite_width` or `sprite_height` are `0`, then the corresponding `width` and `height` are obviously `NaN`.
 
-        @height = Math.floor source_height / sprite_height
+        @height = Math.floor(source_height / sprite_height)
         @source = source
         @sprite_height = sprite_height
         @sprite_width = sprite_width
-        @width = Math.floor source_width / sprite_width
+        @width = Math.floor(source_width / sprite_width)
 
 The `size` property is just `width` times `height`.
 
@@ -162,7 +162,7 @@ The `size` property is just `width` times `height`.
 `ImageBitmap`s are optimized for drawing to the canvas.
 If they are supported, we can pre-render the sprite-sheet and store this in the `image` property.
 
-        if createImageBitmap? then (createImageBitmap source).then (image) => @image = image
+        if createImageBitmap? then createImageBitmap(source).then((image) => @image = image)
 
 Because `Sheet`s contain static images, it doesn't make sense for them to change after creation.
 We freeze them:
@@ -182,7 +182,7 @@ The first is called `draw`, and takes five arguments:
 
 It maps onto `sprite.draw`:
 
-    Sheet.draw = (context, sprite, x, y, frame = 0) -> if sprite instanceof Sprite then sprite.draw context, x, y, frame
+    Sheet.draw = (context, sprite, x, y, frame = 0) -> if sprite instanceof Sprite then sprite.draw(context, x, y, frame)
 
 The second is called `drawSheetAtIndex`, and also takes five arguments:
 
@@ -194,7 +194,7 @@ The second is called `drawSheetAtIndex`, and also takes five arguments:
 
 It maps onto `sheet.drawIndex`:
 
-    Sheet.drawSheetAtIndex = (context, sheet, index, x, y) -> if sheet instanceof Sheet then sheet.drawIndex context, index, x, y
+    Sheet.drawSheetAtIndex = (context, sheet, index, x, y) -> if sheet instanceof Sheet then sheet.drawIndex(context, index, x, y)
 
 Finally, the `Sprite` constructor is added to `Sheet` for later access:
 
@@ -204,7 +204,7 @@ And now we can make `Sheet` available to the window:
 
     window.Sheet = Sheet
 
-##  The prototype  ##
+###  The prototype  ###
 
 The `Sheet` prototype is fairly minimal, consisting of only two functions.
 
@@ -213,13 +213,13 @@ The `Sheet` prototype is fairly minimal, consisting of only two functions.
 The first, `drawIndex`, draws the sprite located at the given `index`.
 It is little more than a repackaging of `drawSprite`.
 
-        drawIndex: (context, index, x, y) -> drawSprite this, index, context, x, y
+        drawIndex: (context, index, x, y) -> drawSprite(this, index, context, x, y)
 
 The second, `getSprite`, creates a new `Sprite` pointing to the given `index`.
 It is the most convenient way of creating `Sprite` objects.
 It takes two arguments, the `index` of the sprite, and the `length` of the animation.
 
-        getSprite: (index, length = 1) -> new Sprite this, index, length
+        getSprite: (index, length = 1) -> new Sprite(this, index, length)
 
 We can now freeze the prototype:
 
