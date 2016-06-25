@@ -1,25 +1,25 @@
 Jelli Game Engine
 
-#  Control()  #
+#  Control  #
 
-`Control()` provides mechanisms for tracking keyboard input.
+`Control` provides mechanisms for tracking keyboard input.
 
 ##  The constructor  ##
 
-The `Control()` constructor takes one argument: `doc`, which gives the owner `Document`.
+The `Control` constructor takes one argument: `doc`, which gives the owner `Document`.
 It defaults to `document`.
 
     "use strict";
 
     Control = (doc = document) ->
 
-Not much work happens in the `Control()` constructor itself; most of the heavy-lifting takes place in the prototype. But, here are our property definitions:
+Not much work happens in the `Control` constructor itself; most of the heavy-lifting takes place in the prototype. But, here are our property definitions:
 
         @controls = {}
         @ownerDocument = unless doc instanceof Document then document else doc
         @keys = {}
 
-We freeze `Control()` to make it formally immutable:
+We freeze `Control` to make it formally immutable:
 
         Object.freeze this
 
@@ -27,6 +27,10 @@ And we add some event listeners to track what's going on:
 
         doc.defaultView.addEventListener "keydown", this, false
         doc.defaultView.addEventListener "keyup", this, false
+
+Finally, we need to make `Control` transparent to the window:
+
+    window.Control = Control
 
 ##  The prorotype  ##
 
@@ -128,11 +132,10 @@ If not set, the second argument will just toggle the key to the opposite value.
 You will notice that the above functions do *not* return `this`!
 Rather, they return whatever value the control was toggled to.
 
-That's all the functions we have, so let's freeze that prototype and make the constructor transparent to the window:
+That's all the functions we have, so let's freeze that prototype:
 
     }
-    Object.freeze Control.prototype
 
-    window.Control = Control
+    Object.freeze Control.prototype
 
 We have assumed control!

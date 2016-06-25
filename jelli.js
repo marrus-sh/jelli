@@ -60,6 +60,8 @@ In several parts ;)
     return Object.freeze(this);
   };
 
+  window.Screen = Screen;
+
   Screen.prototype = {
     clear: function() {
       if (!(this.canvas instanceof HTMLCanvasElement)) {
@@ -74,8 +76,6 @@ In several parts ;)
   };
 
   Object.freeze(Screen.prototype);
-
-  window.Screen = Screen;
 
 }).call(this);
 
@@ -98,6 +98,8 @@ In several parts ;)
     doc.defaultView.addEventListener("keydown", this, false);
     return doc.defaultView.addEventListener("keyup", this, false);
   };
+
+  window.Control = Control;
 
   Control.prototype = {
     add: function(name) {
@@ -221,7 +223,5 @@ In several parts ;)
   };
 
   Object.freeze(Control.prototype);
-
-  window.Control = Control;
 
 }).call(this);

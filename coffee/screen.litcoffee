@@ -1,13 +1,13 @@
 Jelli Game Engine
 
-#  Screen()  #
+#  Screen  #
 
-`Screen()` is a very simple constructor.
+`Screen` is a very simple constructor.
 Its goal is to provide a simple means of accessing both the canvas and the context for an HTML canvas element.
 
 ##  The constructor  ##
 
-The `Screen()` constructor takes two arguments: `canvas`, of type `HTMLCanvasElement`, and `context`, which should be the string to pass to `canvas.getContext()`.
+The `Screen` constructor takes two arguments: `canvas`, of type `HTMLCanvasElement`, and `context`, which should be the string to pass to `canvas.getContext()`.
 The former of these arguments can also be passed as a string, in which case Screen will call `document.getElementById` to find the element.
 The latter of these arguments defaults to `"2d"`.
 
@@ -49,6 +49,10 @@ The width and height of the canvas are accessible through `Screen` attributes, b
 
         Object.freeze this
 
+We want screen to be accessible to all the denizens out there, so we attach it to the window object:
+
+    window.Screen = Screen
+
 ##  The prototype  ##
 
 The `Screen` prototype is very simple, and just provides a few convenience functions for dealing with canvases.
@@ -68,11 +72,8 @@ Right now `clear()` is the only prototype function for `Screen`, but more may be
 Again, the `Screen` prototype is immutable, so we freeze it:
 
     }
+
     Object.freeze Screen.prototype
 
 …And we're done!
-We want screen to be accessible to all the denizens out there, so we attach it to the window object:
-
-    window.Screen = Screen
-
 Happy screening!
