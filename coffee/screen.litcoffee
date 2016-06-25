@@ -11,6 +11,8 @@ The `Screen()` constructor takes two arguments: `canvas`, of type `HTMLCanvasEle
 The former of these arguments can also be passed as a string, in which case Screen will call `document.getElementById` to find the element.
 The latter of these arguments defaults to `"2d"`.
 
+    "use strict";
+
     Screen = (canvas, context = "2d") ->
 
 First we handle the arguments.
@@ -26,9 +28,9 @@ Note `doc` is used here to store the owner document, which is not assumed to be 
 Note in the above code that if no `HTMLCanvasElement` can be found, `canvas` is set to `undefined`.
 Now we go ahead and set the properties:
 
-        this.canvas = canvas
-        this.context = if canvas then canvas.getContext context
-        this.ownerDocument = doc
+        @canvas = canvas
+        @context = if canvas then canvas.getContext context
+        @ownerDocument = doc
 
 The width and height of the canvas are accessible through `Screen` attributes, but require some special getters and setters in case the canvas isn't defined.
 

@@ -8,7 +8,9 @@ echo "/*
 Compiled from CoffeeScript.
 In several parts ;)
 
-*/
-" > jelli.js
-cat compiled/* >> jelli.js
+*/" > jelli.js
+echo "
+//  Screen:
+" >> jelli.js
+cat compiled/screen.js >> jelli.js
 rm -rf compiled
