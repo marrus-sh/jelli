@@ -1343,7 +1343,6 @@ var Game = (function () {
                         for (i = 0; i < this.maps.length; i++) {
                             this.maps[i].origin_x = x;
                         }
-                        this.images.doForEach(function (image) {image.origin_x = x;});
                         this.clear = true;
                     }
                 },
@@ -1356,13 +1355,10 @@ var Game = (function () {
                         for (i = 0; i < this.maps.length; i++) {
                             this.maps[i].origin_y = y;
                         }
-                        this.images.doForEach(function (image) {image.origin_y = y;});
                         this.clear = true;
                     }
                 }
             });
-
-            for (items = elt.dataset.vars ? elt.dataset.vars.split(/\s+/) : [], i = 0; i < items.length; i++) {Object.defineProperty(this, items[i], {writable: true, configurable: false, enumerable: true});}
 
             //  Loading maps:
 
@@ -1370,6 +1366,7 @@ var Game = (function () {
                 item = items.item(i);
                 this.maps[i] = game.tilesets[item.dataset.tileset].getMap(game.screens[item.dataset.screen].context, item.textContent.trim(), item.dataset.mapwidth, isNaN(item.dataset.dx) ? 0 : item.dataset.dx, isNaN(item.dataset.dy) ? 0 : item.dataset.dy, this.x, this.y);
             }
+            Object.freeze(this.maps);
 
             //  Loading characters:
 
@@ -1382,14 +1379,13 @@ var Game = (function () {
             this.x = 0; //  This initializes the x value across the board
             this.y = 0; //  This initializes the y value across the board
 
-            //  Area sealing:
-
-            Object.freeze(this.maps);
-            Object.seal(this);
-
             //  Initialization:
 
             if (typeof this.functions === "object" && (typeof this.functions.init === "function" || this.functions.init instanceof Function)) this.functions.init.call(this);
+
+            //  Area sealing:
+
+            Object.seal(this);
 
         }
 
@@ -1802,8 +1798,6 @@ var Game = (function () {
                 window: {value: doc.defaultView ? doc.defaultView : window}
             });
 
-            for (collection = data.dataset.vars ? data.dataset.vars.split(/\s+/) : [], i = 0; i < collection.length; i++) {Object.defineProperty(this, collection[i], {writable: true, configurable: false, enumerable: true});}
-
             //  Loading screens:
 
             for (collection = data.getElementsByTagName("canvas"), i = 0; i < collection.length; /*  Do nothing  */) {
@@ -1814,6 +1808,7 @@ var Game = (function () {
                 Object.defineProperty(this.screens, j = collection.item(i).id, {value: new Screen(placed(collection.item(i)), "2d"), enumerable: true});
                 if (!this.placement_screen) Object.defineProperty(this, "placement_screen", {value: this.screens[j]});
             }
+            Object.freeze(this.screens);
 
             //  Loading images:
 
@@ -1826,24 +1821,25 @@ var Game = (function () {
             for (collection = data.getElementsByClassName("letters"), i = 0; i < collection.length; i++) {
                 Object.defineProperty(this.letters, collection.item(i).id, {value: new Letters(collection.item(i), collection.item(i).dataset.spriteWidth, collection.item(i).dataset.spriteHeight, doc)});
             }
+            Object.freeze(this.letters);
+
             for (collection = data.getElementsByClassName("sheet"), i = 0; i < collection.length; i++) {
                 Object.defineProperty(this.sheets, collection.item(i).id, {value: new Sheet(collection.item(i), collection.item(i).dataset.spriteWidth, collection.item(i).dataset.spriteHeight)});
             }
+            Object.freeze(this.sheets);
+
             for (collection = data.getElementsByClassName("tileset"), i = 0; i < collection.length; i++) {
                 Object.defineProperty(this.tilesets, collection.item(i).id, {value: new Tileset(new Sheet(collection.item(i), collection.item(i).dataset.spriteWidth, collection.item(i).dataset.spriteHeight), collection.item(i).dataset.spriteWidth, collection.item(i).dataset.spriteHeight, collection.item(i).dataset.collisions.trim(), Sheet.drawSheetAtIndex)});
             }
-
-            //  Game freezing:
-
-            Object.freeze(this.screens);
-            Object.freeze(this.letters);
-            Object.freeze(this.sheets);
             Object.freeze(this.tilesets);
-            Object.seal(this);
 
             //  Initializing the game code:
 
             if (typeof data.functions === "object" && (typeof data.functions.init === "function" || data.functions.init instanceof Function)) data.functions.init.call(this);
+
+            //  Game sealing:
+
+            Object.seal(this);
 
             //  Adding event listeners:
 
@@ -1857,7 +1853,6 @@ var Game = (function () {
             doc.documentElement.addEventListener("mousedown", this, false);
             doc.documentElement.addEventListener("mouseup", this, false);
             doc.documentElement.addEventListener("mousemove", this, false);
-
 
             //  Starting the render and logic processes:
 
