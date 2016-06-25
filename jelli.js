@@ -343,98 +343,6 @@ var Game = (function () {
 
     })();
 
-    //  Placement image:
-
-    var PlacementImage = (function () {
-
-        //  Placement image constructor
-
-        function PlacementImage(source, context, x, y /*  Optional origin_x, origin_y, placed  */) {
-
-            //  Variable setup:
-
-            var origin_x;
-            var origin_y
-            var source_width;
-            var source_height;
-            var placed = !!arguments[6];
-
-            //  Handling arguments:
-
-            if (!(source instanceof HTMLImageElement || source instanceof SVGImageElement || source instanceof HTMLCanvasElement || (typeof createImageBitmap !== "undefined" && source instanceof ImageBitmap))) source = undefined;
-            if (!(context instanceof CanvasRenderingContext2D)) return;
-            if (isNaN(x = Number(x))) x = 0;
-            if (isNaN(y = Number(x))) y = 0;
-            if (isNaN(origin_x = Number(arguments[4]))) origin_x = 0;
-            if (isNaN(origin_y = Number(arguments[5]))) origin_y = 0;
-
-            //  Getting width and height:
-
-            if (!source || isNaN(source_width = Number(source.naturalWidth !== undefined ? source.naturalWidth : source.width))) source_width = 0;
-            if (!source || isNaN(source_height = Number(source.naturalHeight !== undefined ? source.naturalHeight : source.height))) source_height = 0;
-
-            //  Adding properties:
-
-            Object.defineProperties(this, {
-                context: {value: context},
-                height: {value: source_height},
-                origin_x: {
-                    value: origin_x,
-                    writable: true
-                },
-                origin_y: {
-                    value: origin_y,
-                    writable: true
-                },
-                placed: {
-                    get: function () {return placed;},
-                    set: function (n) {placed = !!n;}
-                },
-                source: {value: source},
-                width: {value: source_width},
-                x: {
-                    value: x,
-                    writable: true
-                },
-                y: {
-                    value: y,
-                    writable: true
-                }
-            });
-
-        }
-
-        //  Placement image prototyping:
-
-        PlacementImage.prototype = Object.create(Object.prototype, {
-            draw: {
-                value: function () {
-                    if (this.source instanceof HTMLImageElement && !this.source.complete) return;
-                    if (this.placed) this.context.drawImage(this.source, Math.floor(this.x - this.origin_x), Math.floor(this.y - this.origin_y));
-                }
-            },
-            setPlacement: {
-                value: function (n) {
-                    this.placed = !!n;
-                }
-            },
-            setPosition: {
-                value: function (x, y) {
-                    if (!isNaN(x)) this.x = Number(x);
-                    if (!isNaN(y)) this.x = Number(y);
-                }
-            },
-            togglePlacement: {
-                value: function () {
-                    this.placed = !this.placed;
-                }
-            }
-        });
-
-        return PlacementImage;
-
-    })();
-
     //  Sheet:
 
     var Sheet = (function () {
@@ -1542,20 +1450,16 @@ var Game = (function () {
                 if (isNaN(y = Number(arguments[4]))) y = undefined;
                 if (isNaN(sprite = Number(arguments[5]))) sprite = 0;
             }
-            if (!(collection instanceof Collection) || !collection.area || !collection.game) return;
-            elt = collection.game.data.getElementsByTagName("*").namedItem(id);
-            if (!(elt instanceof Element)) return;
+            if (collection instanceof Collection && collection.game instanceof Game && collection.game.data instanceof Node) elt = collection.game.data.getElementsByTagName("*").namedItem(id);
 
             //  Loading sprites:
 
             sprites = {};
-            item = (collection.game.data.getElementsByTagName("*").namedItem(elt.dataset.sprites) && collection.game.data.getElementsByTagName("*").namedItem(elt.dataset.sprites).className === "sprites") ? collection.game.data.getElementsByTagName("*").namedItem(elt.dataset.sprites) : null;
+            item = (collection instanceof Collection && collection.game instanceof Game && collection.game.data instanceof Node && collection.game.data.getElementsByTagName("*").namedItem(elt.dataset.sprites) && collection.game.data.getElementsByTagName("*").namedItem(elt.dataset.sprites).className === "sprites") ? collection.game.data.getElementsByTagName("*").namedItem(elt.dataset.sprites) : null;
             for (items = item ? item.getElementsByClassName("sprite") : [], i = 0; i < items.length; i++) {
                 if (sprites[i] === undefined) Object.defineProperty(sprites, i, {value: collection.game.sheets[item.dataset.sheet] ? collection.game.sheets[item.dataset.sheet].getSprite(items.item(i).dataset.index, items.item(i).dataset.length ? items.item(i).dataset.length : 1) : null});
                 if (items.item(i).hasAttribute("title") && sprites[items.item(i).getAttribute("title")] === undefined) Object.defineProperty(sprites, items.item(i).getAttribute("title"), {value: sprites[i]});
             }
-            if (x === undefined) x = sprites[0].width / 2;
-            if (y === undefined) y = sprites[0].height / 2;
 
             //  Defaults:
 
@@ -1563,12 +1467,17 @@ var Game = (function () {
             frame = 0;
             velocity = 0;
 
+            //  Creating as a Jelli:
+
+            Jelli.call(this, collection instanceof Collection ? collection.area : undefined, collection instanceof Collection && collection.game instanceof Game && collection.game.screens ? collection.game.screens[elt.dataset.screen] : undefined, id, x, y, item && item.dataset.boxWidth ? item.dataset.boxWidth : sprites[0] ? sprites[0].width : undefined, item && item.dataset.boxHeight ? item.dataset.boxHeight : sprites[0] ? sprites[0].height : undefined, item ? item.dataset.originX : undefined, item ? item.dataset.originY : undefined);
+
             //  Defining properties:
 
             Object.defineProperties(this, {
-                area: {value: collection.area},
-                collides : {value: elt.hasAttribute("data-collides") ? elt.dataset.collides : 0},
-                direction : {
+                box_x: {value: isNaN(item.dataset.boxX) ? 0 : Number(item.dataset.boxX)},
+                box_y: {value: isNaN(item.dataset.boxY) ? 0 : Number(item.dataset.boxY)},
+                collides: {value: elt && elt.hasAttribute("data-collides") ? elt.dataset.collides : 0},
+                direction: {
                     get: function () {return direction},
                     set: function (n) {if (!isNaN(n)) direction = Number(n);}
                 },
@@ -1576,52 +1485,24 @@ var Game = (function () {
                     get: function () {return frame},
                     set: function (n) {if (!isNaN(n)) frame = Number(n);}
                 },
-                game: {value: collection.game},
-                height: {value: Number(item.dataset.boxHeight || sprites[0].height)},
-                id : {
-                    enumerable: true,
-                    value: id
-                },
-                init: {value: typeof elt.functions === "object" && (typeof elt.functions.init === "function" || elt.functions.init instanceof Function) ? elt.functions.init.bind(this) : null},
-                kill: {  //  This gets overwritten by the collection after creation.
-                    value: null,
-                    writable: true
-                },
-                origin_x: {value: Number(item.dataset.boxX || sprites[0].width / 2)},
-                origin_y: {value: Number(item.dataset.boxY || sprites[0].height / 2)},
-                screen: {value: collection.game.screens[elt.dataset.screen]},
-                screen_x: {get: function () {return this.x - this.area.x}},
-                screen_y: {get: function () {return this.y - this.area.y}},
+                init: {value: elt && typeof elt.functions === "object" && (typeof elt.functions.init === "function" || elt.functions.init instanceof Function) ? elt.functions.init.bind(this) : function () {}},
                 sprite: {
                     get: function () {return sprite},
                     set: function (n) {if (this.sprites[n]) sprite = n;}
                 },
-                sprites: {value: sprites},
                 sprite_height: {value: sprites[0].height},
                 sprite_width: {value: sprites[0].width},
-                step: {value: typeof elt.functions === "object" && (typeof elt.functions.step === "function" || elt.functions.step instanceof Function) ? elt.functions.step.bind(this) : null},
+                sprites: {value: sprites},
+                step: {value: elt && typeof elt.functions === "object" && (typeof elt.functions.step === "function" || elt.functions.step instanceof Function) ? elt.functions.step.bind(this) : function () {}},
                 velocity: {
                     get: function () {return velocity},
                     set: function (n) {if (!isNaN(n)) velocity = Number(n);}
-                },
-                width: {value: Number(item.dataset.boxWidth || sprites[0].width)},
-                x: {
-                    enumerable: true,
-                    get: function () {return x},
-                    set: function (n) {if (!isNaN(n)) x = Number(n);}
-                },
-                y: {
-                    enumerable: true,
-                    get: function () {return y},
-                    set: function (n) {if (!isNaN(n)) y = Number(n);}
                 }
             });
 
-            for (items = elt.dataset.vars ? elt.dataset.vars.split(/\s+/) : [], i = 0; i < items.length; i++) {Object.defineProperty(this, items[i], {writable: true, configurable: false, enumerable: true});}
-
             //  Initialization:
 
-            if (this.init) this.init();
+            this.init();
 
             //  Character sealing:
 
@@ -1631,11 +1512,11 @@ var Game = (function () {
 
         //  Character prototyping:
 
-        Character.prototype = Object.create(Object.prototype, {
+        Character.prototype = Object.create(Jelli.prototype, {
             draw: {
                 value: function () {
                     if (!(this.screen instanceof Screen)) return;
-                    return this.sprites[this.sprite].draw(this.screen.context, Math.round(this.x - this.origin_x - this.area.x), Math.round(this.y - this.origin_y - this.area.y), this.frame);
+                    return this.sprites[this.sprite].draw(this.screen.context, Math.round(this.edges.screen_left - this.box_x), Math.round(this.edges.screen_top - this.box_y), this.frame);
                 }
             },
             getCollisionEdge: {
@@ -1644,7 +1525,7 @@ var Game = (function () {
                     if (isNaN(x) || isNaN(y)) return undefined;
                     x = Number(x);
                     y = Number(y);
-                    if (this.collides === 0 || this.collides === "map" || x <= Math.round(this.x - this.width / 2) || x >= Math.round(this.x + this.width / 2) || y <= Math.round(this.y - this.height / 2) || y >= Math.round(this.y + this.height / 2)) {
+                    if (!this.collides && this.collides !== "" || this.collides === "map" || x <= Math.round(this.edges.left) || x >= Math.round(this.edges.right) || y <= Math.round(this.edges.top) || y >= Math.round(this.edges.bottom)) {
                         switch (dir) {
                             case "left":
                             case "right":
@@ -1656,32 +1537,26 @@ var Game = (function () {
                     }
                     switch (dir) {
                         case "left":
-                            return Math.round(this.x - this.width / 2);
+                            return Math.round(this.edges.left);
                         case "right":
-                            return Math.round(this.x + this.width / 2);
+                            return Math.round(this.edges.right);
                         case "top":
-                            return Math.round(this.y - this.height / 2);
+                            return Math.round(this.edges.top);
                         case "bottom":
-                            return Math.round(this.y + this.height / 2);
+                            return Math.round(this.edges.bottom);
                     }
-                }
-            },
-            setPosition: {
-                value: function (x, y) {
-                    this.x = x;
-                    this.y = y;
                 }
             },
             target: {
                 value: function(cx, cy) {
-                    var dx = cx - this.x - this.width / 2;
-                    var dy = cy - this.y - this.width / 2;
+                    var dx = cx - this.x;
+                    var dy = cy - this.y;
                     return this.targetBy(dx, dy);
                 }
             },
             targetBy: {
                 value: function(dx, dy) {
-                    var c = false;
+                    var c;
                     var d;
                     var i;
                     var ix;
@@ -1690,10 +1565,9 @@ var Game = (function () {
                     var k;
                     var ux;
                     var uy;
-                    var sx;
-                    var sy;
-                    var tx;
-                    var ty;
+                    var s;
+                    var t;
+                    c = !this.collides && this.collides !== "" ? 0 : this.collides === "map" ? 1 : this.collides === "character" ? 2 : 3;
                     d = Math.sqrt(dx * dx + dy * dy);
                     if (!(this.area instanceof Area) || !(this.area.characters instanceof Collection) || typeof this.area.maps !== "object" || !d) return;
                     ix = this.x;
@@ -1706,82 +1580,97 @@ var Game = (function () {
                         ux = dx;
                         uy = dy;
                     }
-                    if (this.collides === 0 || this.collides === "character") {
-                        this.x += ux;
-                        this.y += uy;
-                        return;
-                    }
                     if (dx > 0) {
-                        for (i = 0; i < this.area.maps.length; i++) {
-                            k = Math.floor(this.height / (this.area.maps[i].tile_height / 2)) + 1;
-                            for (j = 0; j <= k; j++) {
-                                tx = this.area.maps[i].getCollisionEdge("left", this.x + ux + this.width / 2, this.y + (j - k / 2) * this.height / k);
-                                if (sx === undefined || sx > tx) sx = tx;
+                        s = this.edges.right + ux;
+                        if (c & 1) {
+                            for (i = 0; i < this.area.maps.length; i++) {
+                                k = Math.floor(this.height / (this.area.maps[i].tile_height / 2)) + 1;
+                                for (j = 0; j <= k; j++) {
+                                    t = this.area.maps[i].getCollisionEdge("left", this.edges.right + ux, this.edges.top + j * this.height / k);
+                                    if (s > t) s = t;
+                                }
                             }
                         }
-                        this.area.characters.doForEach((function (some) {
-                            if (this === some || some.collides === 0 || some.collides === "map") return;
-                            k = Math.floor(this.height / some.height) + 1;
-                            for (j = 0; j <= k; j++) {
-                                tx = some.getCollisionEdge("left", this.x + ux + this.width / 2, this.y + (j - k / 2) * this.height / k);
-                                if (sx === undefined || sx > tx) sx = tx;
-                            }
-                        }).bind(this));
-                        if (sx !== undefined && (sx -= this.width / 2) > this.x) this.x = sx;
+                        if (c & 2) {
+                            this.area.characters.doForEach((function (some) {
+                                if (this === some || some.collides === 0 || some.collides === "map") return;
+                                k = Math.floor(this.height / some.height) + 1;
+                                for (j = 0; j <= k; j++) {
+                                    t = some.getCollisionEdge("left", this.edges.right + ux, this.edges.top + j * this.height / k);
+                                    if (s > t) s = t;
+                                }
+                            }).bind(this));
+                        }
+                        if (s > this.edges.right) this.edges.right = s;
                     }
                     else if (dx < 0) {
-                        for (i = 0; i < this.area.maps.length; i++) {
-                            k = Math.floor(this.height / (this.area.maps[i].tile_height / 2)) + 1;
-                            for (j = 0; j <= k; j++) {
-                                tx = this.area.maps[i].getCollisionEdge("right", this.x + ux - this.width / 2, this.y + (j - k / 2) * this.height / k);
-                                if (sx === undefined || sx < tx) sx = tx;
+                        s = this.edges.left + ux;
+                        if (c & 1) {
+                            for (i = 0; i < this.area.maps.length; i++) {
+                                k = Math.floor(this.height / (this.area.maps[i].tile_height / 2)) + 1;
+                                for (j = 0; j <= k; j++) {
+                                    t = this.area.maps[i].getCollisionEdge("right", this.edges.left + ux, this.edges.top + j * this.height / k);
+                                    if (s < t) s = t;
+                                }
                             }
                         }
-                        this.area.characters.doForEach((function (some) {
-                            if (this === some || some.collides === 0 || some.collides === "map") return;
-                            k = Math.floor(this.height / some.height) + 1;
-                            for (j = 0; j <= k; j++) {
-                                tx = some.getCollisionEdge("right", this.x + ux - this.width / 2, this.y + (j - k / 2) * this.height / k);
-                                if (sx === undefined || sx < tx) sx = tx;
-                            }
-                        }).bind(this));
-                        if (sx !== undefined && (sx += this.width / 2) < this.x) this.x = sx;
+                        if (c & 2) {
+                            this.area.characters.doForEach((function (some) {
+                                if (this === some || some.collides === 0 || some.collides === "map") return;
+                                k = Math.floor(this.height / some.height) + 1;
+                                for (j = 0; j <= k; j++) {
+                                    t = some.getCollisionEdge("right", this.edges.left + ux, this.edges.top + j * this.height / k);
+                                    if (s < t) s = t;
+                                }
+                            }).bind(this));
+                        }
+                        if (s < this.edges.left) this.edges.left = s;
                     }
                     if (dy > 0) {
-                        for (i = 0; i < this.area.maps.length; i++) {
-                            k = Math.floor(this.width / (this.area.maps[i].tile_width / 2)) + 1;
-                            for (j = 0; j <= k; j++) {
-                                ty = this.area.maps[i].getCollisionEdge("top", this.x + (j - k / 2) * this.width / k, this.y + uy + this.height / 2);
-                                if (sy === undefined || sy > ty) sy = ty;
+                        s = this.edges.bottom + uy;
+                        if (c & 1) {
+                            for (i = 0; i < this.area.maps.length; i++) {
+                                k = Math.floor(this.width / (this.area.maps[i].tile_width / 2)) + 1;
+                                for (j = 0; j <= k; j++) {
+                                    t = this.area.maps[i].getCollisionEdge("top", this.edges.left + j * this.width / k, this.edges.bottom + uy);
+                                    if (s > t) s = t;
+                                }
                             }
                         }
-                        this.area.characters.doForEach((function (some) {
-                            if (this === some || some.collides === 0 || some.collides === "map") return;
-                            k = Math.floor(this.width /some.width) + 1;
-                            for (j = 0; j <= k; j++) {
-                                ty = some.getCollisionEdge("top", this.x + (j - k / 2) * this.width / k, this.y + uy + this.height / 2);
-                                if (sy === undefined || sy > ty) sy = ty;
-                            }
-                        }).bind(this));
-                        if (sy !== undefined && (sy -= this.height / 2) > this.y) this.y = sy;
+                        if (c & 2) {
+                            this.area.characters.doForEach((function (some) {
+                                if (this === some || some.collides === 0 || some.collides === "map") return;
+                                k = Math.floor(this.width /some.width) + 1;
+                                for (j = 0; j <= k; j++) {
+                                    t = some.getCollisionEdge("top", this.edges.left + j * this.width / k, this.edges.bottom + uy);
+                                    if (s > t) s = t;
+                                }
+                            }).bind(this));
+                        }
+                        if (s > this.edges.bottom) this.edges.bottom = s;
                     }
                     else if (dy < 0) {
-                        for (i = 0; i < this.area.maps.length; i++) {
-                            k = Math.floor(this.width / (this.area.maps[i].tile_width / 2)) + 1;
-                            for (j = 0; j <= k; j++) {
-                                ty = this.area.maps[i].getCollisionEdge("bottom", this.x + (j - k / 2) * this.width / k, this.y + uy - this.height / 2);
-                                if (sy === undefined || sy < ty) sy = ty;
+                        s = this.edges.top + uy;
+                        if (c & 1) {
+                            for (i = 0; i < this.area.maps.length; i++) {
+                                k = Math.floor(this.width / (this.area.maps[i].tile_width / 2)) + 1;
+                                for (j = 0; j <= k; j++) {
+                                    t = this.area.maps[i].getCollisionEdge("bottom", this.edges.left + j * this.width / k, this.edges.top + uy);
+                                    if (s < t) s = t;
+                                }
                             }
                         }
-                        this.area.characters.doForEach((function (some) {
-                            if (this === some || some.collides === 0 || some.collides === "map") return;
-                            k = Math.floor(this.width / some.width) + 1;
-                            for (j = 0; j <= k; j++) {
-                                ty = some.getCollisionEdge("bottom", this.x + (j - k / 2) * this.width / k, this.y + uy - this.height / 2);
-                                if (sy === undefined || sy < ty) sy = ty;
-                            }
-                        }).bind(this));
-                        if (sy !== undefined && (sy += this.height / 2) < this.y) this.y = sy;
+                        if (c & 2) {
+                            this.area.characters.doForEach((function (some) {
+                                if (this === some || !this.collides && this.collides !== "" || some.collides === "map") return;
+                                k = Math.floor(this.width / some.width) + 1;
+                                for (j = 0; j <= k; j++) {
+                                    t = some.getCollisionEdge("bottom", this.edges.left + j * this.width / k, this.edges.top + uy);
+                                    if (s < t) s = t;
+                                }
+                            }).bind(this));
+                        }
+                        if (s < this.edges.top) this.edges.top = s;
                     }
                     dx = this.x - ix;
                     dy = this.y - iy;
@@ -1873,7 +1762,7 @@ var Game = (function () {
 
             //  Handling arguments and making sure modules are loaded:
 
-            if (!(doc instanceof Document) || doc.game || typeof Screen === "undefined" || !Screen || typeof Control === "undefined" || !Control || typeof PlacementImage === "undefined" || !PlacementImage || typeof Sheet === "undefined" || !Sheet || typeof Letters === "undefined" || !Letters || typeof Tileset === "undefined" || !Tileset) return;
+            if (!(doc instanceof Document) || doc.game || typeof Screen === "undefined" || !Screen || typeof Control === "undefined" || !Control || typeof Sheet === "undefined" || !Sheet || typeof Letters === "undefined" || !Letters || typeof Tileset === "undefined" || !Tileset) return;
             Object.defineProperty(doc, "game", {value: this});
 
             //  imported() and placed() functions:
@@ -2104,9 +1993,6 @@ var Game = (function () {
                 value: function () {
                     var body_height;
                     var body_width;
-                    var border_img = this.data.querySelector("img.gui-border");
-                    var border_height =  Number(border_img.dataset.spriteHeight);
-                    var border_width =  Number(border_img.dataset.spriteWidth);
                     var canvas;
                     var i;
                     var scaled_height;
@@ -2134,7 +2020,6 @@ var Game = (function () {
                     this.document.body.style.margin = "0";
                     this.document.body.style.border = "none";
                     this.document.body.style.padding = "0";
-                    this.document.body.style.background = border_img.dataset.systemBackground;
                     body_width = this.document.body.clientWidth;
                     body_height = this.document.body.clientHeight;
                     canvas = this.placement_screen
@@ -2153,15 +2038,11 @@ var Game = (function () {
                         canvas.style.display = "block";
                         canvas.style.position = "absolute";
                         canvas.style.margin = 0;
-                        canvas.style.borderStyle = "solid";
-                        canvas.style.borderTopWidth = canvas.style.borderBottomWidth = border_height + "px";
-                        canvas.style.borderLeftWidth = canvas.style.borderRightWidth = border_width + "px";
+                        canvas.style.borderStyle = "none";
+                        canvas.style.borderWidth = "0";
                         canvas.style.borderColor = "transparent";
-                        canvas.style.borderRadius = border_width + "px " + border_height + "px";
-                        canvas.style.borderImage = "url(" + border_img.src + ") " + border_width + " " + border_height + " repeat";
-                        if (!i) canvas.style.background = border_img.dataset.screenBackground;
-                        canvas.style.top = "calc(50% - " + (scaled_height / 2 + border_height) + "px)";
-                        canvas.style.left = "calc(50% - " + (scaled_width / 2 + border_width) + "px)";
+                        canvas.style.top = "calc(50% - " + (scaled_height / 2) + "px)";
+                        canvas.style.left = "calc(50% - " + (scaled_width / 2) + "px)";
                         canvas.style.width = scaled_width + "px";
                         canvas.style.height = scaled_height + "px";
                     }
@@ -2179,6 +2060,112 @@ var Game = (function () {
             }
         });
 
+        //  Jelli constructor:
+
+        function Jelli(area, screen, id, x, y, width, height /*  Optional origin_x, origin_y  */) {
+
+            //  Setting up variables:
+
+            var origin_x;
+            var origin_y
+
+            //  Argument handling:
+
+            if (isNaN(width = Number(width))) width = 0;
+            if (isNaN(height = Number(height))) height = 0;
+            if (isNaN(origin_x = Number(arguments[7]))) origin_x = width / 2;
+            if (isNaN(origin_y = Number(arguments[8]))) origin_y = height / 2;
+            if (isNaN(x = Number(x))) x = origin_x;
+            if (isNaN(y = Number(y))) y = origin_y;
+
+            Object.defineProperties(this, {
+                area: {value: area instanceof Area ? area : undefined},
+                edges: {
+                    value: Object.create(null, {
+                        bottom: {
+                            get: (function () {return y - this.origin_y + this.height;}).bind(this),
+                            set: (function (n) {if (!isNaN(n)) y = Number(n) - this.height + this.origin_y;}).bind(this)
+                        },
+                        left: {
+                            get: (function () {return x - this.origin_x;}).bind(this),
+                            set: (function (n) {if (!isNaN(n)) x = Number(n) + this.origin_x;}).bind(this)
+                        },
+                        right: {
+                            get: (function () {return x - this.origin_x + this.width;}).bind(this),
+                            set: (function (n) {if (!isNaN(n)) x = Number(n) - this.width + this.origin_x;}).bind(this)
+                        },
+                        screen_bottom: {
+                            get: (function () {return y - this.origin_y + this.height - this.area.y;}).bind(this),
+                            set: (function (n) {if (!isNaN(n)) y = Number(n) - this.height + this.origin_y + this.area.y;}).bind(this)
+                        },
+                        screen_left: {
+                            get: (function () {return x - this.origin_x - this.area.x;}).bind(this),
+                            set: (function (n) {if (!isNaN(n)) x = Number(n) + this.origin_x + this.area.x;}).bind(this)
+                        },
+                        screen_right: {
+                            get: (function () {return x - this.origin_x + this.width - this.area.x;}).bind(this),
+                            set: (function (n) {if (!isNaN(n)) x = Number(n) - this.width + this.origin_x + this.area.x;}).bind(this)
+                        },
+                        screen_top: {
+                            get: (function () {return y - this.origin_y - this.area.y;}).bind(this),
+                            set: (function (n) {if (!isNaN(n)) y = Number(n) + this.origin_y + this.area.y;}).bind(this)
+                        },
+                        top: {
+                            get: (function () {return y - this.origin_y;}).bind(this),
+                            set: (function (n) {if (!isNaN(n)) y = Number(n) + this.origin_y;}).bind(this)
+                        }
+                    })
+                },
+                game: {value: area instanceof Area && area.game instanceof Game ? area.game : undefined},
+                height: {value: height},
+                id: {
+                    value: id,
+                    enumerable: true
+                },
+                kill: {
+                    value: null,
+                    writable: true
+                },
+                origin_x: {value: origin_x},
+                origin_y: {value: origin_y},
+                screen: {value: screen},
+                screen_x: {
+                    get: function () {return x - this.area.x},
+                    set: function (n) {if (!isNaN(n)) x = Number(n) + this.area.y}
+                },
+                screen_y: {
+                    get: function () {return y - this.area.y},
+                    set: function (n) {if (!isNaN(n)) x = Number(n) + this.area.y}
+                },
+                width: {value: width},
+                x: {
+                    enumerable: true,
+                    get: function () {return x},
+                    set: function (n) {if (!isNaN(n)) x = Number(n);}
+                },
+                y: {
+                    enumerable: true,
+                    get: function () {return y},
+                    set: function (n) {if (!isNaN(n)) y = Number(n);}
+                }
+            });
+
+        }
+
+        //  Jelli prototyping:
+
+        Jelli.prototype = Object.create(Object.prototype, {
+            draw: {
+                value: function () {}
+            },
+            setPosition: {
+                value: function (x, y) {
+                    this.x = x;
+                    this.y = y;
+                }
+            }
+        });
+
         //  Image constructor:
 
         function JelliImage(collection, name /*  Optional x, y, placed OR id, x, y, placed  */) {
@@ -2188,6 +2175,8 @@ var Game = (function () {
             var elt;
             var id;
             var placed;
+            var source_width;
+            var source_height;
             var x;
             var y;
 
@@ -2205,24 +2194,22 @@ var Game = (function () {
                 if (isNaN(y = Number(arguments[4]))) y = undefined;
                 placed = !!arguments[5];
             }
-            if (!(collection instanceof Collection) || !collection.area || !collection.game) return;
-            elt = collection.game.images[id];
-            if (!(elt instanceof Element)) return;
+            if (collection instanceof Collection && collection.game instanceof Game && collection.game.images) elt = collection.game.images[id];
+            if (!(elt instanceof HTMLImageElement || elt instanceof SVGImageElement || elt instanceof HTMLCanvasElement || (typeof createImageBitmap !== "undefined" && elt instanceof ImageBitmap))) elt = undefined;
+            else {
+                if (isNaN(source_width = Number(elt.naturalWidth !== undefined ? elt.naturalWidth : elt.width))) source_width = 0;
+                if (isNaN(source_height = Number(elt.naturalHeight !== undefined ? elt.naturalHeight : elt.height))) source_height = 0;
+            }
 
-            //  Defining image as placement image:
+            //  Creating as a Jelli:
 
-            PlacementImage.call(this, elt, collection.game.screens[elt.dataset.screen].context, x, y, collection.area.x, collection.area.y, placed);
+            Jelli.call(this, collection instanceof Collection ? collection.area : undefined, collection instanceof Collection && collection.game instanceof Game && collection.game.screens ? collection.game.screens[elt.dataset.screen] : undefined, id, x, y, source_width, source_height, elt && elt.dataset.originX ? elt.dataset.originX : source_width / 2, elt && elt.dataset.originY ? elt.dataset.originY : source_height / 2);
 
             Object.defineProperties(this, {
-                area: {value: collection.area},
-                collection: {value: collection},
-                game: {value: collection.game},
-                kill: {  //  This gets overwritten by the collection after creation.
-                    value: null,
-                    writable: true
-                },
-                screen_x: {get: function () {return this.x - this.area.x}},
-                screen_y: {get: function () {return this.y - this.area.y}}
+                placed: {
+                    get: function () {return placed;},
+                    set: function (n) {placed = !!n;}
+                }
             });
 
             //  Image sealing:
@@ -2234,9 +2221,22 @@ var Game = (function () {
         //  Image prototyping:
 
         JelliImage.prototype = Object.create(Object.prototype, {
-            draw: {value: PlacementImage.prototype.draw},
-            setPosition: {value: PlacementImage.prototype.setPosition},
-            togglePlacement: {value: PlacementImage.prototype.togglePlacement}
+            draw: {
+                value: function () {
+                    if (!(this.screen instanceof Screen) || (this.source instanceof HTMLImageElement && !this.source.complete)) return;
+                    if (this.placed) this.screen.context.drawImage(this.source, Math.floor(this.edges.screen_left), Math.floor(this.edges.screen_top));
+                }
+            },
+            setPlacement: {
+                value: function (n) {
+                    this.placed = !!n;
+                }
+            },
+            togglePlacement: {
+                value: function () {
+                    this.placed = !this.placed;
+                }
+            }
         });
 
         //  Poke constructor:
@@ -2259,15 +2259,15 @@ var Game = (function () {
             Object.defineProperties(this, {
                 game: {value: game},
                 number: {value: n},
-                start_x: {value: (e.pageX - rect.left + elt.clientLeft) * elt.width / elt.clientWidth,},
-                start_y: {value: (e.pageY - rect.top + elt.clientTop) * elt.width / elt.clientWidth,},
+                start_x: {value: (e.pageX - rect.left) * elt.width / elt.clientWidth,},
+                start_y: {value: (e.pageY - rect.top) * elt.width / elt.clientWidth,},
                 target: {value: game.placement_screen.canvas,},
                 x: {
-                    value: (e.pageX - rect.left + elt.clientLeft) * elt.width / elt.clientWidth,
+                    value: (e.pageX - rect.left) * elt.width / elt.clientWidth,
                     writable: true
                 },
                 y: {
-                    value: (e.pageY - rect.top + elt.clientTop) * elt.width / elt.clientWidth,
+                    value: (e.pageY - rect.top) * elt.width / elt.clientWidth,
                     writable: true
                 }
             });

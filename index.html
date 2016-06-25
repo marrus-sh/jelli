@@ -158,8 +158,10 @@
                 It specifies which <code>sheet</code> to draw the sprites from.
             </p>
             <p>
-                The <code>data-box-x</code>, <code>data-box-y</code>, <code>data-box-width</code>, and <code>data-box-height</code> attributes set the center and dimensions of the sprite bounding box (for collision checking).
+                The <code>data-box-x</code>, <code>data-box-y</code>, <code>data-box-width</code>, and <code>data-box-height</code> attributes set the top-left corner and dimensions of the sprite bounding box (for collision checking).
                 If not set, the box will fill the entire sprite.
+                The <code>data-origin-x</code> and <code>data-origin-y</code> attributes specify the origin of the sprite, relative to the bounding box.
+                If not set, they default to the bounding box's center.
             </p>
             <p>
                 The sprites themselves take a couple of attributes:
@@ -171,10 +173,12 @@
                 <h3>Sprite collections:</h3>
                 <div id="jelly" class="sprites"
                      data-sheet="characters"
-                     data-box-x="8"
-                     data-box-y="8"
+                     data-box-x="3"
+                     data-box-y="3"
                      data-box-width="10"
-                     data-box-height="10">
+                     data-box-height="10"
+                     data-origin-x="5"
+                     data-origin-y="5">
                     <span class="sprite"
                           title="lf"
                           data-index="0"
@@ -341,7 +345,7 @@
                                     game.area = 1;
                                 }
                                 if (game.touches[1]) this.images.ctrlimg.placed = true;
-                                else {
+                                else if (this.images.ctrlimg.placed) {
                                     this.images.ctrlimg.placed = false;
                                     game.clearScreen("menuground");
                                 }
