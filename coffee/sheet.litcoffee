@@ -10,7 +10,7 @@ It is packaged with `Sprite()`, which describes a single sprite on the sheet.
 The function `drawSprite()` is called by `Sprite`s and `Sheet`s in order to draw their images.
 It is not exposed to the window.
 
-    drawSprite = (sheet, start_index, context, x, y, frame = 0) ->
+    drawSprite = (sheet, start_index, context, x, y, frame = 1) ->
 
 …That's a lot of arguments. Let's go through them:
 
@@ -19,7 +19,7 @@ It is not exposed to the window.
 - `context` is the `CanvasRenderingContext2D` on which to draw the sprite
 - `x` is the x-coordinate of the top-left corner of the sprite
 - `y` is the y-coordinate of the top-left corner of the sprite
-- `frame` is merely there as a convenience: It increments start_index by its value
+- `frame` is merely there as a convenience: It increments `start_index` by its value
 
 The first thing we do is make sure everything is typed correctly.
 The `sheet` and `context`, clearly, need to be of a certain type in order for this to work.
@@ -30,6 +30,10 @@ If any of the other provided arguments aren't numbers, however, we can go ahead 
         if isNaN(x = Number(x)) then x = 0
         if isNaN(y = Number(y)) then y = 0
         if isNaN(frame = Number(frame)) then frame = 0
+
+Now we can increment `start_index` by `frame`'s value:
+
+        `start_index` += frame
 
 Next, we need to find the horizontal (`i`) and vertical (`j`) position of the sprite on the sheet.
 We can get this information from `start_index` with a little math:
