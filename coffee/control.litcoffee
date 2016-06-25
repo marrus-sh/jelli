@@ -99,9 +99,9 @@ Both take a single argument, the `name` of the control.
 It's equally possible, though, that you don't have the `name` of the control but rather only that of an associated `key`.
 `isKeyActive()` and `isKeyDefined()` do the same as the above, only with an argument of a `key`.
 
-        isActive: (key) -> unless key? and (name = @keys[key])? and @controls[name]? then return else !!@controls[name]
+        isKeyActive: (key) -> unless key? and (name = @keys[key])? and @controls[name]? then return else !!@controls[name]
 
-        isDefined: (key) -> unless key? and (name = @keys[key])? then return else @controls[name]?
+        isKeyDefined: (key) -> unless key? and (name = @keys[key])? then return else @controls[name]?
 
 If we can add controls, we should be able to remove them!
 

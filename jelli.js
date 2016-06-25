@@ -165,7 +165,7 @@ In several parts ;)
         return controls[name] != null;
       }
     },
-    isActive: function(key) {
+    isKeyActive: function(key) {
       var name;
       if (!((key != null) && ((name = this.keys[key]) != null) && (this.controls[name] != null))) {
 
@@ -173,7 +173,7 @@ In several parts ;)
         return !!this.controls[name];
       }
     },
-    isDefined: function(key) {
+    isKeyDefined: function(key) {
       var name;
       if (!((key != null) && ((name = this.keys[key]) != null))) {
 
