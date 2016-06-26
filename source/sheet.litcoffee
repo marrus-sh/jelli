@@ -1,4 +1,12 @@
-Jelli Game Engine
+    "use strict";
+
+    ###
+    SHEET
+    Sprite-sheet managing
+    ---------------------
+    ###
+
+- - -
 
 #  Sheet  #
 
@@ -25,11 +33,11 @@ The first thing we do is make sure everything is typed correctly.
 The `sheet` and `context`, clearly, need to be of a certain type in order for this to work.
 If any of the other provided arguments aren't numbers, however, we can go ahead and reset them to zero.
 
-        unless sheet instanceof Sheet and start_index < sheet.size and context instanceof CanvasRenderingContext2D then return
-        if isNaN(start_index = Number(start_index)) then start_index = 0
-        if isNaN(x = Number(x)) then x = 0
-        if isNaN(y = Number(y)) then y = 0
-        if isNaN(frame = Number(frame)) then frame = 0
+        return unless sheet instanceof Sheet and start_index < sheet.size and context instanceof CanvasRenderingContext2D
+        start_index = 0 if isNaN(start_index = Number(start_index))
+        x = 0 if isNaN(x = Math.round(x))
+        y = 0 if isNaN(y = Math.round(y))
+        frame = 0 if isNaN(frame = Number(frame))
 
 Now we can increment `start_index` by `frame`'s value:
 
@@ -39,7 +47,7 @@ Next, we need to find the horizontal (`i`) and vertical (`j`) position of the sp
 We can get this information from `start_index` with a little math:
 
         i = start_index % sheet.width
-        j = Math.floor start_index / sheet.width
+        j = Math.floor(start_index / sheet.width)
 
 These two lines just make the image a little easier to access:
 
@@ -47,12 +55,14 @@ These two lines just make the image a little easier to access:
         image = sheet.image
 
 Now we have all we need to draw the sprite!
-There is a HUGE `if`-statement that precedes the draw function, because we want to make sure that what we're drawing is actually there.
+There is a HUGE `if`-statement associated with the draw function, because we want to make sure that what we're drawing is actually there.
 If it isn't, then obviously we can't draw anything.
 
-        if (source instanceof HTMLImageElement and source.complete or source instanceof SVGImageElement or source instanceof HTMLCanvasElement or createImageBitmap? and (image instanceof ImageBitmap or source instanceof ImageBitmap)) and not isNaN(i) and not isNaN(j) and (width = Number(sheet.sprite_width)) and (height = Number(sheet.sprite_height)) then context.drawImage((if createImageBitmap? and image instanceof ImageBitmap then image else source), i * width, j * height, width, height, x, y, width, height)
+Remember also that `image` is preferenced if defined.
 
-Let's go through what those did.
+        context.drawImage((if createImageBitmap? and image instanceof ImageBitmap then image else source), i * width, j * height, width, height, x, y, width, height) if (source instanceof HTMLImageElement and source.complete or source instanceof SVGImageElement or source instanceof HTMLCanvasElement or createImageBitmap? and (image instanceof ImageBitmap or source instanceof ImageBitmap)) and not isNaN(i) and not isNaN(j) and (width = Number(sheet.sprite_width)) and (height = Number(sheet.sprite_height))
+
+Let's go through what that `if`-statement actually did.
 First, we make sure that the `Sheet` actually has an image associated with it:
 
 -   `source instanceof HTMLImageElement and source.complete`—
@@ -75,9 +85,6 @@ We also need to make sure that the sprite exists on the sheet:
     This makes sure that the sprites in the sheet have a non-zero width and height.
     It also sets the variables `width` and `height` to those values, for convenient access later.
 
-Finally, we can draw the sprite.
-Again, we preference `image` if it is defined.
-
 ##  Sprite  ##
 
 The `Sprite` constructor creates a reference to a sprite on a sheet.
@@ -89,9 +96,9 @@ The constructor takes three arguments: `sheet`, which gives the sheet; `index`, 
 If `index` or `length` aren't numbers, then we go ahead and set them to `0` and `1`, respectively.
 If `sheet` isn't a `Sheet`, then we set it to be null.
 
-        unless sheet instanceof Sheet then sheet = null
-        if isNaN(index = Number(index)) then index = 0
-        if isNaN(length = Number(length)) then length = 1
+        sheet = null unless sheet instanceof Sheet
+        index = 0 if isNaN(index = Number(index))
+        length = 1 if isNaN(length = Number(length)) or length <= 0
 
 Now we can set the properties.
 Note that `draw` simply binds `drawSprite` to the given `Sheet` and `index`.
@@ -132,9 +139,9 @@ If `source` isn't an image type that we recognize, we go ahead and set it to `nu
 And if the `sprite_width` or `sprite_height` aren't recognizable as numbers, we set them to 0.
 (Note from the above that a `Sheet` with zero `sprite_width` or `sprite_height` cannot be drawn.)
 
-        unless source instanceof HTMLImageElement or source instanceof SVGImageElement or source instanceof HTMLCanvasElement or createImageBitmap? and source instanceof ImageBitmap then source = null
-        if isNaN(sprite_width = Number(sprite_width)) then sprite_width = 0
-        if isNaN(sprite_height = Number(sprite_height)) then sprite_height = 0
+        source = null unless source instanceof HTMLImageElement or source instanceof SVGImageElement or source instanceof HTMLCanvasElement or createImageBitmap? and source instanceof ImageBitmap
+        sprite_width = 0 if isNaN(sprite_width = Number(sprite_width))
+        sprite_height = 0 if isNaN(sprite_height = Number(sprite_height))
 
 Recall that we need to check for `createImageBitmap` before checking to see if the source is an `ImageBitmap`.
 
@@ -144,8 +151,8 @@ However, `HTMLImageElement`s also have `naturalWidth` and `naturalHeight` proper
 
 If for some reason we can't get *either* of these properties, then the `source_width` and `source_height` are set to zero.
 
-        unless source? and not isNaN(source_width = Number(if source.naturalWidth? then source.naturalWidth else source.width)) then source_width = 0
-        unless source? and not isNaN(source_height = Number(if source.naturalHeight? then source.naturalHeight else source.height)) then source_height = 0
+        source_width = 0 unless source? and not isNaN(source_width = Number(if source.naturalWidth? then source.naturalWidth else source.width))
+        source_height = 0 unless source? and not isNaN(source_height = Number(if source.naturalHeight? then source.naturalHeight else source.height))
 
 We now have everything we need to define the properties.
 Note that `width` and `height` are provided in sprite-units, not pixels.
@@ -161,10 +168,15 @@ The `size` property is just `width` times `height`.
 
         @size = @width * @height
 
+The `image` property is defined using a getter in order to allow the `createImageBitmap` callback to change it.
+
+        image = null
+        Object.defineProperty(this, "image", {get: -> image})
+
 `ImageBitmap`s are optimized for drawing to the canvas.
 If they are supported, we can pre-render the sprite-sheet and store this in the `image` property.
 
-        if createImageBitmap? then createImageBitmap(source).then((image) => @image = image)
+        createImageBitmap(source).then((img) -> image = img) if createImageBitmap?
 
 Because `Sheet`s contain static images, it doesn't make sense for them to change after creation.
 We freeze them:
@@ -184,7 +196,7 @@ The first is called `draw`, and takes five arguments:
 
 It maps onto `sprite.draw`:
 
-    Sheet.draw = (context, sprite, x, y, frame = 0) -> if sprite instanceof Sprite then sprite.draw(context, x, y, frame)
+    Sheet.draw = (context, sprite, x, y, frame = 0) -> sprite.draw(context, x, y, frame) if sprite instanceof Sprite
 
 The second is called `drawSheetAtIndex`, and also takes five arguments:
 
@@ -196,7 +208,7 @@ The second is called `drawSheetAtIndex`, and also takes five arguments:
 
 It maps onto `sheet.drawIndex`:
 
-    Sheet.drawSheetAtIndex = (context, sheet, index, x, y) -> if sheet instanceof Sheet then sheet.drawIndex(context, index, x, y)
+    Sheet.drawSheetAtIndex = (context, sheet, index, x, y) -> sheet.drawIndex(context, index, x, y) if sheet instanceof Sheet
 
 Finally, the `Sprite` constructor is added to `Sheet` for later access:
 

@@ -1,4 +1,12 @@
-Jelli Game Engine
+    "use strict";
+
+    ###
+    LETTERS
+    Sprite-based text processing and rendering
+    ------------------------------------------
+    ###
+
+- - -
 
 #  Letters  #
 
@@ -17,10 +25,10 @@ It is not exposed to the window.
 First, we need to make sure our arguments are what we expect them to be.
 If `index`, `x`, or `y` don't resolve to numbers, we can simply set them to `0` instead, but with `letters` and `context`, if they aren't of the right type we will have to abort.
 
-        unless letters instanceof Letters and index < letters.size and context instanceof CanvasRenderingContext2D then return
-        if isNaN(index = Number(index)) then index = 0
-        if isNaN(x = Number(x)) then x = 0
-        if isNaN(y = Number(y)) then y = 0
+        return unless letters instanceof Letters and index < letters.size and context instanceof CanvasRenderingContext2D
+        index = 0 if isNaN(index = Number(index))
+        x = 0 if isNaN(x = Math.round(x))
+        y = 0 if isNaN(y = Math.round(y))
 
 Next, we need to find the horizontal (`i`) and vertical (`j`) position of the letter in the `Letters` sheet.
 We can get this information from `index` with a little math:
@@ -32,7 +40,7 @@ Finally, we can draw the letter.
 Of course, first we must ensure that everything is as we expect: that `letters.canvas` is an `HTMLCanvasElement`, that `i` and `j` are numbers, and that `letter_width` and `letter_height` are nonzero.
 This all happens in the next line:
 
-        if letters.canvas instanceof HTMLCanvasElement and not isNaN(i) and not isNaN(j) and (width = Number(letters.letter_width)) and height = (Number(letters.letter_height)) then context.drawImage(letters.canvas, i * width, j * height, width, height, x, y, width, height)
+        context.drawImage(letters.canvas, i * width, j * height, width, height, x, y, width, height) if letters.canvas instanceof HTMLCanvasElement and not isNaN(i) and not isNaN(j) and (width = Number(letters.letter_width)) and height = (Number(letters.letter_height))
 
 ##  Letter  ##
 
@@ -44,8 +52,8 @@ The constructor takes two arguments, the `letters` (of type `Letters`), and the 
 
 First we need to make sure that the arguments are what we expect:
 
-        unless letters instanceof Letters then letters = null
-        if isNaN(index = Number(index)) then index = 0
+        letters = null unless letters instanceof Letters
+        index = 0 if isNaN(index = Number(index))
 
 We can now define the letter properties.
 As you can see, `Letter` is a very simple constructor.
@@ -78,15 +86,14 @@ They are essentialy composed of lines of `LetterStrings`, which contain the text
 
 We first need to make sure that the variables are of the proper type, and if not, set them to their defaults.
 
-        unless context instanceof CanvasRenderingContext2D then context = null
-        unless letters instanceof Letters then letters = null
-        if isNaN(x = Number(x)) then x = 0
-        if isNaN(y = Number(y)) then y = 0
+        context = null unless context instanceof CanvasRenderingContext2D
+        letters = null unless letters instanceof Letters
+        x = 0 if isNaN(x = Math.round(x))
+        y = 0 if isNaN(y = Math.round(y))
 
 We can now go ahead and assign the strings to numeric indices in the `LetterBlock` object:
 
-        for string, index in strings
-            this[index] = if string instanceof LetterString then string else new LetterString(letters, string)
+        this[index] = (if string instanceof LetterString then string else new LetterString(letters, string)) for string, index in strings
 
 There are several other properties that we also set for convenient access.
 We use `Object.defineProperties` because these values should **not** be enumerated:
@@ -109,8 +116,8 @@ They all follow basically the same form, so I went ahead and defined it as its o
 
 If the property value is equal to the length of the line, then continue on to the next line, incrementing `n` by that length:
 
-            while i++ < @height and this[i][prop] is this[i].length
-                n += this[i].length
+            n += this[i].length while i++ < @height and this[i][prop] is this[i].length
+
 
 Otherwise, we've reached the last line where the property is set, so we can calculate the total value:
 
@@ -124,23 +131,21 @@ Again, `i` keeps track of the current line, but this time `n` is passed in as an
 It should still be a number though:
 
             i = 0
-            if isNaN(n = Number(n)) then n = 0
+            n = 0 if isNaN(n = Number(n))
 
 If `n` is bigger than the length of the line, we overflow to the next line, decrementing `n` by that length:
 
-            while i++ < @height and n > this[i].length
-                n -= this[i][prop] = this[i].length
+            n -= this[i][prop] = this[i].length while i++ < @height and n > this[i].length
 
 Otherwise, we've reached the last line, and we set the property to `n`'s remaining value:
 
-            if i < @height then this[i][prop] = n
+            this[i][prop] = n if i < @height
 
 And then we set the property for any further lines to `0`.
 
-            while ++i < @height
-                this[i][prop] = 0
+            this[i][prop] = 0 while ++i < @height
 
-We can now define bind these functions to our properties:
+We can now bind these functions to our properties:
 
         Object.defineProperties this, {
             delIndex: {
@@ -165,8 +170,7 @@ The `length` property only has a getter; it just adds up all the lengths of each
             get: ->
                 i = 0
                 n = 0
-                while i++ < @height
-                    n += this[i].length
+                n += this[i].length while i++ < @height
                 return n
         }
 
@@ -232,10 +236,9 @@ It is very similar to our `multiGetter` function above:
         item: {
             value: (n) ->
                 i = 0
-                if isNaN(n = Number(n)) then return null
-                while i++ < @height and n > this[i].length
-                    n -= this[i].length
-                return if i < @height then this[i].item(n) else null
+                return null if isNaN(n = Number(n))
+                n -= this[i].length while this[i++]? and n > this[i].length
+                return if this[i]? then this[i].item(n) else null
         }
 
 Finally, the `line()` function gives us the entire `LetterSting` of a given line.
@@ -266,7 +269,7 @@ Right now, each character in this string is interpreted as a code-point between 
 If `data` isn't a string, we need to make it one.
 And of course, if `letters` isn't a `Letters` we'd better set it to `null`.
 
-        unless letters instanceof Letters then letters = null
+        letters = null unless letters instanceof Letters
         data = String(data)
 
 `index` gives the current logical position within the string, while `drawIndex` gives the current drawing position.
@@ -280,15 +283,15 @@ These are all defined using getters and setters to ensure that they always provi
         Object.defineProperties this, {
             delIndex: {
                 get: -> delIndex
-                set: (n) -> unless isNaN(n = Math.round(n)) then delIndex = n
+                set: (n) -> delIndex = n unless isNaN(n = Math.round(n))
             }
             drawIndex: {
                 get: -> drawIndex
-                set: (n) -> unless isNaN(n = Math.round(n)) then drawIndex = n
+                set: (n) -> drawIndex = n unless isNaN(n = Math.round(n))
             }
             index: {
                 get: -> index
-                set: (n) -> unless isNaN(n = Math.round(n)) then index = n
+                set: (n) -> index = n unless isNaN(n = Math.round(n))
             }
         }
 
@@ -303,8 +306,7 @@ These are non-enumerated and non-writable.
 
 Finally, we can add the individual `Letter`s to the `LetterString`.
 
-        for letter, index in data
-            this[index] = letters?.item(data.charCodeAt(i))
+        this[index] = letters?.item(data.charCodeAt(i)) for letter, index in data
 
 `LetterString`s are immutable, so we can freeze them:
 
@@ -331,7 +333,8 @@ Otherwise, we just increment by `1`.
 
 We want to make sure our index is within our bounds: nonnegative and less-than–or–equal-to the length of the block.
 
-            if i < 0 then i = 0 else if i > @length then i = @length
+            i = 0 if i < 0
+            i = @length if i > @length
 
 We can now set the `index`:
 
@@ -339,7 +342,7 @@ We can now set the `index`:
 
 If our index moved backwards, we also need to set the `delIndex`:
 
-            if @delIndex > i then @delIndex = i
+            @delIndex = i if @delIndex > i
 
 This function returns the final index position:
 
@@ -362,19 +365,19 @@ If `delIndex` is less than `drawIndex`, it deletes these characters and sets bac
 First we ensure that our arguments are correct, and we can actually draw the string.
 If `x` and `y` aren't numbers, they default to `0`.
 
-            if isNaN(x = Number(x)) then x = 0
-            if isNaN(y = Number(y)) then y = 0
-            unless context instanceof CanvasRenderingContext2D and @letters instanceof Letters and (width = Number(@letters.letter_width)) and (height = Number(@letters_letter_height)) then return
+            return unless context instanceof CanvasRenderingContext2D and @letters instanceof Letters and (width = Number(@letters.letter_width)) and (height = Number(@letters_letter_height))
+            x = 0 if isNaN(x = Math.round(x))
+            y = 0 if isNaN(y = Math.round(y))
 
 You may recognize that `unless`-statement from `drawLetter`, above.
 
 Next, we make sure our indices are logical (between `0` and `length`).
 Additionally, `delIndex` can't exceed `index`.
 
-            if @drawIndex > @length then @drawIndex = @length
-            if @drawIndex < 0 then @drawIndex = 0
-            if @delIndex > @index then @delIndex = @index
-            if @delIndex < 0 then @delIndex = 0
+            @drawIndex = @length if @drawIndex > @length
+            @drawIndex = 0 if @drawIndex < 0
+            @delIndex = @index if @delIndex > @index
+            @delIndex = 0 if @delIndex < 0
 
 If `drawIndex` is bigger than `delIndex`, then we have some letters to delete:
 
@@ -390,7 +393,7 @@ You will note from the above that letters are given a 1px padding (on the bottom
 We can now draw the letters from `drawIndex` to `index`:
 
             while @drawIndex < @length and @drawIndex < @index
-                unless this[@drawIndex] instanceof Letter then continue
+                continue unless this[@drawIndex] instanceof Letter
                 this[@drawIndex].draw(context, x + @drawIndex * (width + 1), y)
                 @drawIndex++
 
@@ -433,14 +436,14 @@ Fortunately, the `Letters` constructor does this automatically.
 As always, we start by checking that the arguments we received are what we expected: a supported image type, a number, another number, and a `Document`.
 (The supported image types are the same as those in [Sheet](sheet.litcoffee).)
 
-        unless source instanceof HTMLImageElement or source instanceof SVGImageElement or source instanceof HTMLCanvasElement or createImageBitmap? and source instanceof ImageBitmap then source = undefined
-        if isNaN(letter_width = Number(letter_width)) then letter_width = 0
-        if isNaN(letter_height = Number(letter_height)) then letter_height = 0
-        unless doc instanceof Document then doc = document
+        source = undefined unless source instanceof HTMLImageElement or source instanceof SVGImageElement or source instanceof HTMLCanvasElement or createImageBitmap? and source instanceof ImageBitmap
+        letter_width = 0 if isNaN(letter_width = Number(letter_width))
+        letter_height = 0 if isNaN(letter_height = Number(letter_height))
+        doc = document unless doc instanceof Document
 
 Here we import the `source` if it doesn't belong to `doc`:
 
-        if source instanceof Element and source.ownerDocument isnt doc then source = doc.importNode(source, true)
+        source = doc.importNode(source, true) if source instanceof Element and source.ownerDocument isnt doc
 
 We can get the width and height of the image from one of two sources, depending on the source type.
 All of the accepted types have `width` and `height` properties, which specify their dimensions.
@@ -448,8 +451,8 @@ However, `HTMLImageElement`s also have `naturalWidth` and `naturalHeight` proper
 
 If for some reason we can't get *either* of these properties, then the `source_width` and `source_height` are set to zero.
 
-        unless source? and not isNaN(source_width = Number(if source.naturalWidth? then source.naturalWidth else source.width)) then source_width = 0
-        unless source? and not isNaN(source_height = Number(if source.naturalHeight? then source.naturalHeight else source.height)) then source_height = 0
+        source_width = 0 unless source? and not isNaN(source_width = Number(if source.naturalWidth? then source.naturalWidth else source.width))
+        source_height = 0 unless source? and not isNaN(source_height = Number(if source.naturalHeight? then source.naturalHeight else source.height))
 
 As stated before, the `Letters` sprite-sheet exists on its own special `<canvas>` element.
 Provided that a valid `source` has been provided, we create that `<canvas>` here.
@@ -459,7 +462,7 @@ Provided that a valid `source` has been provided, we create that `<canvas>` here
             canvas.width = source_width
             canvas.height = source_height
             context = canvas.getContext("2d")
-            unless source instanceof HTMLImageElement and source.complete then context.drawImage(source, 0, 0)
+            context.drawImage(source, 0, 0) unless source instanceof HTMLImageElement and not source.complete
 
 (The `unless` statement of that last line ensures that the `<img>` element is actually fully loaded before drawing the image. If not, the image can always be redrawn with `clearColor()`.)
 
@@ -490,7 +493,7 @@ Note that setting `color` to `null` or `undefined` is an alias for calling `clea
             get: -> return color
             set: (n) ->
                 color = if n? then String(n) else null
-                unless n? this.clearColor()
+                this.clearColor() unless n?
                 else if @context instanceof CanvasRenderingContext2D
                     @context.globalCompositeOperation = "source-in"
                     @context.context.fillStyle = color
@@ -508,10 +511,7 @@ In order to allow object freezing, this memorization takes place in a separate a
         getIndex: (i) ->
             return if memory[i]? then memory[i] else memory[i] = new Letter(this, i)
 
-        while (index-- > 0)
-            Object.defineProperty(this, index, {
-                get: getIndex.bind(this, index)
-            })
+        Object.defineProperty(this, index, {get: getIndex.bind(this, index)}) while (index-- > 0)
 
 `Letters` objects are immutable, so we can now freeze the object:
 
@@ -534,10 +534,10 @@ The `Letters` prototype includes all of the functions one might need to create a
 First, we have the `clearColor()` function, which resets `color` to `null` and redraws the image onto the `<canvas>`.
 This can also be used if the image wasn't drawn properly onto the `<canvas>` the first time; for example, if the image hadn't yet loaded.
 
-        clearColor: () ->
+        clearColor: ->
             if @context instanceof CanvasRenderingContext2D
                 @context.clearRect(0, 0, @context.canvas.width, @context.canvas.height)
-                if @source instanceof HTMLImageElement and @source.complete or @source instanceof SVGImageElement or @source instanceof HTMLCanvasElement or createImageBitmap? and @source instanceof ImageBitmap then @context.drawImage(@source, 0, 0)
+                @context.drawImage(@source, 0, 0) if @source instanceof HTMLImageElement and @source.complete or @source instanceof SVGImageElement or @source instanceof HTMLCanvasElement or createImageBitmap? and @source instanceof ImageBitmap
             @color = null
 
 Next, we have the `createBlock()`, `createString()`, and `item()` functions, which return a new `LetterBlock`, `LetterString`, and `Letter`, respectively.

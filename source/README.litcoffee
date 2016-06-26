@@ -1,8 +1,4 @@
-#  Jelli Game Engine  #
-
-This folder contains all of the source code for the Jelli Game Engine.
-Jelli is written in Literate CoffeeScript, which means that each source file can be read as Markdown.
-The code blocks (indented with four spaces) in each file are the CoffeeScript code.
+    "use strict";
 
     ###
     THE JELLI GAME ENGINE
@@ -12,16 +8,24 @@ The code blocks (indented with four spaces) in each file are the CoffeeScript co
     Source code and resources are available at https://github.com/literallybenjam/jelli/.
     ###
 
+- - -
+
+#  Jelli Game Engine  #
+
+This folder contains all of the source code for the Jelli Game Engine.
+Jelli is written in Literate CoffeeScript, which means that each source file can be read as Markdown.
+The code blocks (indented with four spaces) in each file are the CoffeeScript code.
+
 The Jelli Game Engine is comprised of several modules, each seperately encapsulated for portability and reusability.
 Only the `Game` module depends on the others.
 The modules at this time are:
 
-- `Screen`
-- `Control`
-- `Sheet`
-- `Letters`
-- `Tileset`
-- `Game`
+- [`Screen`](screen.litcoffee)
+- [`Keyboard`](keyboard.litcoffee) [formerly, `Control`]
+- [`Sheet`](sheet.litcoffee)
+- [`Letters`](letters.litcoffee)
+- [`Tileset`](tileset.litcoffee)
+- [`Game`](game.litcoffee)
 
 You can view the source for each module by viewing the appropriately named `.litcoffee` file in this repositiory.
 
@@ -54,3 +58,29 @@ The Jelli Game Engine is licensed under an MIT License, provided below:
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
     ###
+
+##  Usage  ##
+
+Simply include [`jelli.js`](../jelli.js) in the `<head>` of your document to load the script.
+
+    ###
+    How To Use:
+
+    The `Game` constructor creates a new game, which is automatically assigned to `document.game`.
+    You can choose a different document for game rendering by passing it in as an attribute.
+    A document can have only one game assigned to it at a time, and this game is non-configurable.
+
+    A sample loading script might look like this:
+        window.addEventListener("load", function () {new Game(document);}, false);
+    ###
+
+##  Naming conventions  ##
+
+- `snake_case` is used for variable and property names.
+- `SCREAMING_SNAKE_CASE` is used for symbols and special static values.
+- `camelCase` is used for function names
+- `PascalCase` (`UpperCamelCase`) is used for object constructors.
+
+With `data-*` attributes, `runningtext` is used for variable names, but these are *often* given semantic prefixes.
+So you will have `data-bitdepth` but also `data-sprite-width`
+In JavaScript, these become `dataset.bitdepth` and `dataset.spriteWidth`, respectively.
