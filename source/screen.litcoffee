@@ -38,10 +38,12 @@ The width and height of the canvas are accessible through `Screen` attributes, b
             height: {
                 get: -> return if @canvas then @canvas.height
                 set: (n) -> if @canvas then @canvas.height = n
+                enumerated: yes
             }
             width: {
                 get: -> return if @canvas then @canvas.width
                 set: (n) -> if @canvas then @canvas.width = n
+                enumerated: yes
             }
         }
 

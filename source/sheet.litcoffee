@@ -50,7 +50,7 @@ Now we have all we need to draw the sprite!
 There is a HUGE `if`-statement that precedes the draw function, because we want to make sure that what we're drawing is actually there.
 If it isn't, then obviously we can't draw anything.
 
-        if (source instanceof HTMLImageElement and source.complete or source instanceof SVGImageElement or source instanceof HTMLCanvasElement or createImageBitmap? and (image instanceof ImageBitmap or source instanceof ImageBitmap)) and not isNaN(i) and not isNaN(j) and Number(width = sheet.sprite_width) and Number(height = sheet.sprite_height) then context.drawImage((if createImageBitmap? and image instanceof ImageBitmap then image else source), i * width, j * height, width, height, x, y, width, height)
+        if (source instanceof HTMLImageElement and source.complete or source instanceof SVGImageElement or source instanceof HTMLCanvasElement or createImageBitmap? and (image instanceof ImageBitmap or source instanceof ImageBitmap)) and not isNaN(i) and not isNaN(j) and (width = Number(sheet.sprite_width)) and (height = Number(sheet.sprite_height)) then context.drawImage((if createImageBitmap? and image instanceof ImageBitmap then image else source), i * width, j * height, width, height, x, y, width, height)
 
 Let's go through what those did.
 First, we make sure that the `Sheet` actually has an image associated with it:
@@ -71,7 +71,7 @@ We also need to make sure that the sprite exists on the sheet:
 -   `not isNaN(i) and not isNaN(j)`—
     This makes sure that our indices are actually, y'know, numbers.
 
--   `Number(width = sheet.sprite_width) and Number(height = sheet.sprite_height)`—
+-   `(width = Number(sheet.sprite_width)) and (height = Number(sheet.sprite_height))`—
     This makes sure that the sprites in the sheet have a non-zero width and height.
     It also sets the variables `width` and `height` to those values, for convenient access later.
 
@@ -87,7 +87,9 @@ The constructor takes three arguments: `sheet`, which gives the sheet; `index`, 
     Sprite = (sheet, index, length = 1) ->
 
 If `index` or `length` aren't numbers, then we go ahead and set them to `0` and `1`, respectively.
+If `sheet` isn't a `Sheet`, then we set it to be null.
 
+        unless sheet instanceof Sheet then sheet = null
         if isNaN(index = Number(index)) then index = 0
         if isNaN(length = Number(length)) then length = 1
 
@@ -95,11 +97,11 @@ Now we can set the properties.
 Note that `draw` simply binds `drawSprite` to the given `Sheet` and `index`.
 
         @draw = drawSprite.bind(null, sheet, index)
-        @height = if sheet instanceof Sheet then sheet.sprite_height else 0
+        @height = if sheet then sheet.sprite_height else 0
         @index = index
         @frames = length
-        @sheet = if sheet instanceof Sheet then sheet else null
-        @width = if sheet instanceof Sheet then sheet.sprite_width else 0
+        @sheet = sheet
+        @width = if sheet then sheet.sprite_width else 0
 
 Since `Sprite`s are just static references, they should be immutable:
 
