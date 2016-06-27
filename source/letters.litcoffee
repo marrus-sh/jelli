@@ -69,9 +69,12 @@ As you can see, `Letter` is a very simple constructor.
 
         Object.freeze this
 
+###  The prototype  ###
+
 `Letter` doesn't really have a prototype, but I went ahead and set a simple one anyway:
 
     Letter.prototype = {draw: ->}
+    Object.freeze Letter.prototype
 
 ##  LetterBlock  ##
 
@@ -485,20 +488,30 @@ Note that `height` and `width` refer to how many sprites wide and tall the canva
         })
 
 Colour handling takes place using the getters and setters of the `color` attribute.
-Note that setting `color` to `null` or `undefined` is an alias for calling `clearColor`.
 
-        color = null
+        color = Letters.NO_COLOR
 
         Object.defineProperty(this, "color", {
             get: -> return color
             set: (n) ->
-                color = if n? then String(n) else null
-                this.clearColor() unless n?
-                else if @context instanceof CanvasRenderingContext2D
-                    @context.globalCompositeOperation = "source-in"
-                    @context.context.fillStyle = color
-                    @context.fillRect(0, 0, @context.canvas.width, @context.canvas.height)
-                    @context.globalCompositeOperation = "source-over"
+
+If the `color` is set to `Letters.NO_COLOR`, we clear the `context` and redraw the image:
+
+                if n is Letters.NO_COLOR
+                    color = n
+                    if @context instanceof CanvasRenderingContext2D
+                        @context.clearRect(0, 0, @context.canvas.width, @context.canvas.height)
+                        @context.drawImage(@source, 0, 0) unless @source instanceof HTMLImageElement and not @source.complete
+
+Otherwise, we use a composite operation to change the color of everything in the `context`
+
+                else
+                    color = String(n)
+                    if @context instanceof CanvasRenderingContext2D
+                        @context.globalCompositeOperation = "source-in"
+                        @context.context.fillStyle = color
+                        @context.fillRect(0, 0, @context.canvas.width, @context.canvas.height)
+                        @context.globalCompositeOperation = "source-over"
         })
 
 Next, we create `Letter` objects for each letter on the canvas.
@@ -517,28 +530,16 @@ In order to allow object freezing, this memorization takes place in a separate a
 
         Object.freeze this
 
-`Letters` provides our point-of-access for letter-related constructors, so let's append them as static methods and attach `Letters` to the window:
-
-    Letters.Block = LetterBlock
-    Letters.Letter = Letter
-    Letters.String = LetterString
-
-    window.Letters = Letters
-
 ###  The prototype  ###
 
 The `Letters` prototype includes all of the functions one might need to create and use the various letter-objects, as well as functions for managing the current colour.
 
     Letters.prototype = {
 
-First, we have the `clearColor()` function, which resets `color` to `null` and redraws the image onto the `<canvas>`.
-This can also be used if the image wasn't drawn properly onto the `<canvas>` the first time; for example, if the image hadn't yet loaded.
+First, we have the `clearColor()` function, which just sets `color` to `Letters.NO_COLOR`, but might be a little more comfortable than using the setter.
 
         clearColor: ->
-            if @context instanceof CanvasRenderingContext2D
-                @context.clearRect(0, 0, @context.canvas.width, @context.canvas.height)
-                @context.drawImage(@source, 0, 0) if @source instanceof HTMLImageElement and @source.complete or @source instanceof SVGImageElement or @source instanceof HTMLCanvasElement or createImageBitmap? and @source instanceof ImageBitmap
-            @color = null
+            @color = Letters.NO_COLOR
 
 Next, we have the `createBlock()`, `createString()`, and `item()` functions, which return a new `LetterBlock`, `LetterString`, and `Letter`, respectively.
 
@@ -564,5 +565,20 @@ Now we can finally freeze it and be done!
     }
 
     Object.freeze this
+
+###  Final touches  ###
+
+First and foremost, we need to define the special constant `Letters.NO_COLOR`, referenced above.
+If available, we will use the new symbol primitive; otherwise, an object with `null` prototype is just as unique and compact.
+
+    Object.defineProperty(Letters, "NO_COLOR", {value: if Symbol? then Symbol("none") else Object.freeze(Object.create(null))})
+
+`Letters` provides our point-of-access for letter-related constructors, so let's freeze them, append them as static methods, and attach `Letters` to the window:
+
+    Letters.Block = Object.freeze(LetterBlock)
+    Letters.Letter = Object.freeze(Letter)
+    Letters.String = Object.freeze(LetterString)
+
+    window.Letters = Object.freeze(Letters)
 
 Happy lettering!

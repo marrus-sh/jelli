@@ -56,10 +56,6 @@ The width and height of the canvas are accessible through `Screen` attributes, b
 
         Object.freeze this
 
-We want screen to be accessible to all the denizens out there, so we attach it to the window object:
-
-    window.Screen = Screen
-
 ##  The prototype  ##
 
 The `Screen` prototype is very simple, and just provides a few convenience functions for dealing with canvases.
@@ -72,8 +68,9 @@ If the canvas isn't a canvas element, then this function does nothing.
 
         clear: ->
             return unless @canvas instanceof HTMLCanvasElement
-            @context.clearRect(0, 0, @canvas.width, @canvas.height) if @context instanceof CanvasRenderingContext2D
-            else @context.clear(@context.COLOR_BUFFER_BIT | context.DEPTH_BUFFER_BIT) if @context instanceof WebGLRenderingContext
+            switch
+                when @context instanceof CanvasRenderingContext2D then @context.clearRect(0, 0, @canvas.width, @canvas.height)
+                when @context instanceof WebGLRenderingContext then @context.clear(@context.COLOR_BUFFER_BIT | context.DEPTH_BUFFER_BIT)
 
 Right now `clear()` is the only prototype function for `Screen`, but more may be added later.
 Again, the `Screen` prototype is immutable, so we freeze it:
@@ -81,6 +78,15 @@ Again, the `Screen` prototype is immutable, so we freeze it:
     }
 
     Object.freeze Screen.prototype
+
+##  Final touches  ##
+
+We want screen to be accessible to all the denizens out there, so we attach it to the window object.
+However, we don't want them extending the `Screen` constructor willy-nilly.
+Such behaviours wouldn't break any of the above code, but it might mess with other scripts that expect `Screen` to only have certain properties defined.
+So, to enforce this, we'll go ahead and freeze the whole thing:
+
+    window.Screen = Object.freeze(Screen)
 
 …And we're done!
 Happy screening!

@@ -116,7 +116,9 @@ Since `Sprite`s are just static references, they should be immutable:
 
 And we're done!
 
-`Sprite`s are very simple, and because the `draw` function is bound above, they don't have a prototype.
+###  The prototype  ###
+
+`Sprite`s are very simple, and because the `draw` function is bound above, they don't really have a prototype.
 For purposes of inheritance, however, I've thrown this minimal one together:
 
     Sprite.prototype = {draw: ->}
@@ -183,6 +185,31 @@ We freeze them:
 
         Object.freeze this
 
+###  The prototype  ###
+
+The `Sheet` prototype is fairly minimal, consisting of only two functions.
+
+    Sheet.prototype = {
+
+The first, `drawIndex`, draws the sprite located at the given `index`.
+It is little more than a repackaging of `drawSprite`.
+
+        drawIndex: (context, index, x, y) -> drawSprite(this, index, context, x, y)
+
+The second, `getSprite`, creates a new `Sprite` pointing to the given `index`.
+It is the most convenient way of creating `Sprite` objects.
+It takes two arguments, the `index` of the sprite, and the `length` of the animation.
+
+        getSprite: (index, length = 1) -> new Sprite(this, index, length)
+
+We can now freeze the prototype:
+
+    }
+
+    Object.freeze Sheet.prototype
+
+###  Final touches  ###
+
 For convenience's sake, two static methods have been defined for `Sheet` to let you draw arbitrary sprites.
 These are largely intended for use with callbacks.
 
@@ -210,35 +237,10 @@ It maps onto `sheet.drawIndex`:
 
     Sheet.drawSheetAtIndex = (context, sheet, index, x, y) -> sheet.drawIndex(context, index, x, y) if sheet instanceof Sheet
 
-Finally, the `Sprite` constructor is added to `Sheet` for later access:
+With those functions defined, we can add the `Sprite` constructor to `Sheet` for later access, and then make `Sheet` available to the window.
+We go ahead and freeze both to keep them safe.
 
-    Sheet.Sprite = Sprite
-
-And now we can make `Sheet` available to the window:
-
-    window.Sheet = Sheet
-
-###  The prototype  ###
-
-The `Sheet` prototype is fairly minimal, consisting of only two functions.
-
-    Sheet.prototype = {
-
-The first, `drawIndex`, draws the sprite located at the given `index`.
-It is little more than a repackaging of `drawSprite`.
-
-        drawIndex: (context, index, x, y) -> drawSprite(this, index, context, x, y)
-
-The second, `getSprite`, creates a new `Sprite` pointing to the given `index`.
-It is the most convenient way of creating `Sprite` objects.
-It takes two arguments, the `index` of the sprite, and the `length` of the animation.
-
-        getSprite: (index, length = 1) -> new Sprite(this, index, length)
-
-We can now freeze the prototype:
-
-    }
-
-    Object.freeze Sheet.prototype
+    Sheet.Sprite = Object.freeze(Sprite)
+    window.Sheet = Object.freeze(Sheet)
 
 …And that's the end!

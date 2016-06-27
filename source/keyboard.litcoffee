@@ -34,10 +34,6 @@ And we add some event listeners to track what's going on:
         doc.defaultView.addEventListener "keydown", this, false
         doc.defaultView.addEventListener "keyup", this, false
 
-Finally, we need to make `Keyboard` transparent to the window:
-
-    window.Keyboard = Keyboard
-
 ##  The prorotype  ##
 
 The `Keyboard` prototype is where the magic happens.
@@ -49,7 +45,7 @@ It only takes one argument, `name`, which should be a string.
 If `name` is not provided, the function does nothing.
 
         add: (name) ->
-            @controls[name] = false if name?
+            @controls[name] = off if name?
             return this
 
 You will note that the above function returned `this` – that is, the current `Keyboard` object.
@@ -80,17 +76,17 @@ It uses a `switch` statement to process them all, taking in the event itself as 
             return unless e instanceof Event
             switch e.type
 
-When a key is down, we want to toggle it to `true`…
+When a key is down, we want to toggle it to `on`…
 
                 when "keydown"
                     for code in [e.code, e.key, e.keyIdentifier, e.keyCode]
-                        @toggleCode(code, true) if @isCodeDefined(code)
+                        @toggleCode(code, on) if @isCodeDefined(code)
 
 …and when a key is up, we want to toggle it to `false`.
 
                 when "keyup"
                     for code in [e.code, e.key, e.keyIdentifier, e.keyCode]
-                        @toggleCode(code, false) if @isCodeDefined(code)
+                        @toggleCode(code, off) if @isCodeDefined(code)
 
 This function shouldn't return anything, because it's just an event handler.
 
@@ -138,5 +134,11 @@ That's all the functions we have, so let's freeze that prototype:
     }
 
     Object.freeze Keyboard.prototype
+
+##  Final touches  ##
+
+Finally, we need to make `Keyboard` transparent to the window, and freeze it against meddling interlopers:
+
+    window.Keyboard = Object.freeze(Keyboard)
 
 We have assumed control!
