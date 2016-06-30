@@ -52,7 +52,6 @@ The modules at this time are:
 
 - [`Screen`](modules/Screen.litcoffee)
 - [`Control`](modules/Control.litcoffee)
-- [`Poke`](modules/Poke.litcoffee)
 - [`Sheet`](modules/Sheet.litcoffee)
 - [`Letters`](modules/Letters.litcoffee)
 - [`Tileset`](modules/Tileset.litcoffee)
@@ -74,6 +73,7 @@ At this time, the list of these components is as follows:
 5. [`Unit`](engine/05 Unit.litcoffee)
 6. [`PlacementImage`](engine/06 PlacementImage.litcoffee)
 7. [`Character`](engine/07 Character.litcoffee)
+8. [`Text`](engine/08 Text.litcoffee)
 
 Documentation for each engine module is available in the [engine](engine) directory.
 
