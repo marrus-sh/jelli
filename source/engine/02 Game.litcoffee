@@ -43,7 +43,7 @@ Finally, we set the `visibility` CSS property of `doc.body` to `hidden`, keeping
 
 The `placed()` function, only available from inside the `Game` constructor, places a node into `doc` from `data`, by either name or value.
 
-        placed = (node) -> if node instanceof Node then doc.body.appendChild(node) else doc.body.appendChild(data.getElementsByTagName("*").namedItem(node))
+        placed = (node) -> if node instanceof Node then doc.body.appendChild(node) else doc.body.appendChild(@getDataElement("", node))
 
 We can now set up containers for our various `Game` properties.
 We use `Object.defineProperties` because these should not be enumerable.
@@ -176,6 +176,20 @@ Finally, we reset `resized` and call for the next frame:
 
                 @resized = false
                 @window.requestAnimationFrame @draw.bind(this)
+
+####  getDataElement  ####
+
+Safari unfortunately returns a `NodeList` instead of an `HTMLCollection` when using `getElementsByClassName()` or `getElementsByTagName()`, so `getDataElement` takes account of that when trying to access named items.
+It takes two arguments: `class`, which is the class of the desired element, and `id`, which is its index or id.
+
+        getDataElement:
+            value: (className, id) ->
+                elts = if className then @data.getElementsByClassName(className) else @data.getElementsByTagName("*")
+                elt = elts.item(id) if typeof id is "number" or id instanceof Number
+                return elt if elt?
+                qs = if className then "#" + id + "." + className else "#" + id
+                return if elts instanceof HTMLCollection and (typeof elts.namedItem is "function" or elts.namedItem instanceof Function) then elts.namedItem(id) else @data.querySelector(qs)
+
 
 ####  handleEvent()  ####
 

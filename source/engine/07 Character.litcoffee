@@ -70,13 +70,13 @@ For convenience, we get `game` and `area` from `collection`:
 
 We also need to get the `CHARACTER` element:
 
-        elt = if typeof id is "number" or id instanceof Number then game?.data.getElementsByClassName("CHARACTER").item(id) || null else game?.data.getElementsByClassName("CHARACTER").namedItem(id) || null
+        elt = game?.getDataElement("CHARACTER", id) || null
 
 We can now load the `Character` sprites.
 The `data-sprites` attribute on the `CHARACTER` element gives us the `SPRITELIST` element which contains them.
 
         sprites = {}
-        sprite_list = if game?.data instanceof Node then game.data.getElementsByClassName("SPRITELIST").namedItem(elt?.dataset.sprites) || null else null
+        sprite_list = game?.getDataElement("SPRITELIST", elt?.getAttribute("data-sprites")) || null
 
 We can then load the sprites from the `SPRITELIST`.
 Sprites can be referenced both by either index or name, so we define the latter to be an alias for the former.

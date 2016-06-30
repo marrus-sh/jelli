@@ -1601,7 +1601,7 @@
       if (node instanceof Node) {
         return doc.body.appendChild(node);
       } else {
-        return doc.body.appendChild(data.getElementsByTagName("*").namedItem(node));
+        return doc.body.appendChild(this.getDataElement("", node));
       }
     };
     Object.defineProperties(this, {
@@ -1742,6 +1742,24 @@
         return this.window.requestAnimationFrame(this.draw.bind(this));
       }
     },
+    getDataElement: {
+      value: function(className, id) {
+        var elt, elts, qs;
+        elts = className ? this.data.getElementsByClassName(className) : this.data.getElementsByTagName("*");
+        if (typeof id === "number" || id instanceof Number) {
+          elt = elts.item(id);
+        }
+        if (elt != null) {
+          return elt;
+        }
+        qs = className ? "#" + id + "." + className : "#" + id;
+        if (elts instanceof HTMLCollection && (typeof elts.namedItem === "function" || elts.namedItem instanceof Function)) {
+          return elts.namedItem(id);
+        } else {
+          return this.data.querySelector(qs);
+        }
+      }
+    },
     handleEvent: {
       value: function(e) {
         switch (e.type) {
@@ -1837,10 +1855,7 @@
     if (!(game instanceof Game)) {
       game = null;
     }
-    elt = typeof id === "number" || id instanceof Number ? game != null ? game.data.getElementsByClassName("AREA").item(id) : void 0 : game != null ? game.data.getElementsByClassName("AREA").namedItem(id) : void 0;
-    if (elt == null) {
-      elt = null;
-    }
+    elt = (game != null ? game.getDataElement("AREA", id) : void 0) || null;
     Object.defineProperty(this, "game", {
       value: game
     });
@@ -2406,7 +2421,7 @@
     }
     game = collection != null ? collection.game : null;
     area = collection != null ? collection.area : null;
-    elt = typeof id === "number" || id instanceof Number ? (game != null ? game.data.getElementsByClassName("IMAGE").item(id) : void 0) || null : (game != null ? game.data.getElementsByClassName("IMAGE").namedItem(id) : void 0) || null;
+    elt = (game != null ? game.getDataElement("IMAGE", id) : void 0) || null;
     if (!(elt instanceof HTMLImageElement || elt instanceof SVGImageElement || elt instanceof HTMLCanvasElement || (typeof createImageBitmap !== "undefined" && createImageBitmap !== null) && elt instanceof ImageBitmap)) {
       elt = null;
     }
@@ -2436,7 +2451,7 @@
   PlacementImage.prototype = Object.create(Unit.prototype, {
     draw: {
       value: function() {
-        if (this.placed && this.screen instanceof Screen && (this.source instanceof HTMLImageElement && source.complete || this.source instanceof SVGImageElement || this.source instanceof HTMLCanvasElement || (typeof createImageBitmap !== "undefined" && createImageBitmap !== null) && (image instanceof ImageBitmap || this.source instanceof ImageBitmap))) {
+        if (this.placed && this.screen instanceof Screen && (this.source instanceof HTMLImageElement && this.source.complete || this.source instanceof SVGImageElement || this.source instanceof HTMLCanvasElement || (typeof createImageBitmap !== "undefined" && createImageBitmap !== null) && (image instanceof ImageBitmap || this.source instanceof ImageBitmap))) {
           return this.screen.context.drawImage(this.source, Math.floor(this.edges.screen_left), Math.floor(this.edges.screen_top));
         }
       }
@@ -2516,9 +2531,9 @@
     }
     game = collection != null ? collection.game : null;
     area = collection != null ? collection.area : null;
-    elt = typeof id === "number" || id instanceof Number ? (game != null ? game.data.getElementsByClassName("CHARACTER").item(id) : void 0) || null : (game != null ? game.data.getElementsByClassName("CHARACTER").namedItem(id) : void 0) || null;
+    elt = (game != null ? game.getDataElement("CHARACTER", id) : void 0) || null;
     sprites = {};
-    sprite_list = (game != null ? game.data : void 0) instanceof Node ? game.data.getElementsByClassName("SPRITELIST").namedItem(elt != null ? elt.dataset.sprites : void 0) || null : null;
+    sprite_list = (game != null ? game.getDataElement("SPRITELIST", elt != null ? elt.getAttribute("data-sprites") : void 0) : void 0) || null;
     ref = (sprite_list != null ? sprite_list.getElementsByClassName("SPRITE") : void 0) || [];
     for (index = i = 0, len = ref.length; i < len; index = ++i) {
       sprite = ref[index];

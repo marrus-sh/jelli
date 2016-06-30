@@ -31,8 +31,7 @@ If you prefer, you may use a numerical index for `id` instead.
 First, we need to ensure that a `Game` was provided, and that our `id` resolves to an `AREA` element.
 
         game = null unless game instanceof Game
-        elt = if typeof id is "number" or id instanceof Number then game?.data.getElementsByClassName("AREA").item(id) else game?.data.getElementsByClassName("AREA").namedItem(id)
-        elt = null unless elt?
+        elt = game?.getDataElement("AREA", id) || null
 
 We can now define the properties of the `Area`.
 These properties are not enumerable and often should not be overwritten, so we use `Object.defineProperty` and `Object.defineProperties`.
