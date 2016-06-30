@@ -2859,7 +2859,6 @@
         dx = this.x - ix;
         dy = this.y - iy;
         this.direction = Math.atan2(dx, -dy);
-        console.log(dx, dy, this.direction);
         return this.velocity = Math.sqrt(dx * dx + dy * dy);
       }
     }

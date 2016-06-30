@@ -368,8 +368,6 @@ This is an angle in radians, clockwise from due north:
 
                 @direction = Math.atan2(dx, -dy)
 
-                console.log dx, dy, @direction
-
 `velocity` uses the same magnitude function we used to calculate `d`:
 
                 @velocity = Math.sqrt(dx * dx + dy * dy)
