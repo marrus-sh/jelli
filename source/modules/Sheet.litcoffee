@@ -1,3 +1,14 @@
+#  SHEET  #
+Sprite-sheet managing
+
+- - -
+
+##  Introduction  ##
+
+>   *To come.*
+
+##  Implementation  ##
+
     "use strict";
 
     ###
@@ -6,14 +17,10 @@
     ---------------------
     ###
 
-- - -
-
-#  Sheet  #
-
 The `Sheet` constructor generates sprite-sheets and manages their rendering on a `CanvasRenderingContext2D`.
 It is packaged with `Sprite`, which describes a single sprite on the sheet.
 
-##  General functions  ##
+###  General functions:  ###
 
 The function `drawSprite()` is called by `Sprite`s and `Sheet`s in order to draw their images.
 It is not exposed to the window.
@@ -85,10 +92,13 @@ We also need to make sure that the sprite exists on the sheet:
     This makes sure that the sprites in the sheet have a non-zero width and height.
     It also sets the variables `width` and `height` to those values, for convenient access later.
 
-##  Sprite  ##
+###  Sprite:  ###
 
-The `Sprite` constructor creates a reference to a sprite on a sheet.
+`Sprite` creates a reference to a sprite on a sheet.
 For efficiency's sake, it does *not* actually contain any of the image data associated with that sprite.
+
+####  The constructor  ####
+
 The constructor takes three arguments: `sheet`, which gives the sheet; `index`, which is the index of the sprite on the sheet; and `length`, which for animated sprites gives the length of the animation.
 
     Sprite = (sheet, index, length = 1) ->
@@ -116,7 +126,7 @@ Since `Sprite`s are just static references, they should be immutable:
 
 And we're done!
 
-###  The prototype  ###
+####  The prototype  ####
 
 `Sprite`s are very simple, and because the `draw` function is bound above, they don't really have a prototype.
 For purposes of inheritance, however, I've thrown this minimal one together:
@@ -124,11 +134,11 @@ For purposes of inheritance, however, I've thrown this minimal one together:
     Sprite.prototype = {draw: ->}
     Object.freeze Sprite.prototype
 
-##  Sheet  ##
+###  Sheet:  ###
 
 `Sheet`s associate images with data and methods to make them easily referencable as sprite-sheets.
 
-###  The constructor  ###
+####  The constructor  ####
 
 The `Sheet` constructor only takes three arguments: `source`, which gives the source image for the sheet, `sprite_width`, which gives the width of the sprites, and `sprite_height`, which gives their height.
 In doing so, it makes the assumption that sprites and sprite-sheets do not have any borders or padding.
@@ -185,11 +195,11 @@ We freeze them:
 
         Object.freeze this
 
-###  The prototype  ###
+####  The prototype  ####
 
 The `Sheet` prototype is fairly minimal, consisting of only two functions.
 
-    Sheet.prototype = {
+    Sheet.prototype =
 
 The first, `drawIndex`, draws the sprite located at the given `index`.
 It is little more than a repackaging of `drawSprite`.
@@ -204,11 +214,9 @@ It takes two arguments, the `index` of the sprite, and the `length` of the anima
 
 We can now freeze the prototype:
 
-    }
-
     Object.freeze Sheet.prototype
 
-###  Final touches  ###
+####  Final touches  ####
 
 For convenience's sake, two static methods have been defined for `Sheet` to let you draw arbitrary sprites.
 These are largely intended for use with callbacks.
@@ -241,6 +249,6 @@ With those functions defined, we can add the `Sprite` constructor to `Sheet` for
 We go ahead and freeze both to keep them safe.
 
     Sheet.Sprite = Object.freeze(Sprite)
-    window.Sheet = Object.freeze(Sheet)
+    @Sheet = Object.freeze(Sheet)
 
 …And that's the end!
