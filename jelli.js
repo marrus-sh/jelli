@@ -1584,26 +1584,23 @@
   var Game;
 
   Game = function(doc) {
-    var area, data, elts, i, item, j, k, l, len, len1, len2, placed, ref, ref1, ref2, ref3, resized;
+    var area, data, item, j, k, l, len, len1, len2, len3, len4, m, name, o, ref, ref1, ref2, ref3, ref4, ref5, ref6, resized, screen, view;
     if (doc == null) {
       doc = document;
     }
     Jelli.call(this);
-    if (!(doc instanceof Document) || (doc.game != null)) {
+    if (!(doc instanceof Document && (doc.game == null))) {
       return;
     }
     Object.defineProperty(doc, "game", {
       value: this
     });
-    data = doc.documentElement.replaceChild(doc.createElement("body"), doc.body);
-    doc.body.style.visibility = "hidden";
-    placed = function(node) {
-      if (node instanceof Node) {
-        return doc.body.appendChild(node);
-      } else {
-        return doc.body.appendChild(this.getDataElement("", node));
-      }
-    };
+    data = doc.createElement("div");
+    ref = doc.getElementsByClassName("DATA");
+    for (j = 0, len = ref.length; j < len; j++) {
+      item = ref[j];
+      data.appendChild(item);
+    }
     Object.defineProperties(this, {
       data: {
         value: data
@@ -1612,7 +1609,7 @@
         value: doc
       },
       functions: {
-        value: data.functions
+        value: document.body.functions
       },
       letters: {
         value: {}
@@ -1627,6 +1624,9 @@
         value: new Collection(this, Text)
       },
       tilesets: {
+        value: {}
+      },
+      views: {
         value: {}
       },
       window: {
@@ -1657,40 +1657,34 @@
         }
       }
     });
-    i = 0;
-    elts = data.getElementsByTagName("canvas");
-    while ((item = elts.item(i))) {
-      if (item.classList.contains("SCREEN")) {
-        this.screens[item.id] = new Screen(placed(item), "2d");
-        if (this.placement_screen == null) {
-          Object.defineProperty(this, "placement_screen", {
-            value: this.screens[item.id]
-          });
-        }
-      } else {
-        i++;
+    ref1 = doc.getElementsByClassName("VIEW");
+    for (k = 0, len1 = ref1.length; k < len1; k++) {
+      view = ref1[k];
+      this.views[view.id] = new View(this, view);
+      ref2 = this.views[view.id].screens;
+      for (name in ref2) {
+        screen = ref2[name];
+        this.screens[name] = screen;
       }
     }
+    Object.freeze(this.views);
     Object.freeze(this.screens);
-    Object.defineProperty(this, "control", {
-      value: new Control(this.placement_screen.canvas)
-    });
-    ref = data.getElementsByClassName("LETTERS");
-    for (j = 0, len = ref.length; j < len; j++) {
-      item = ref[j];
+    ref3 = data.getElementsByClassName("LETTERS");
+    for (l = 0, len2 = ref3.length; l < len2; l++) {
+      item = ref3[l];
       this.letters[item.id] = new Letters(item, item.getAttribute("data-sprite-width"), item.getAttribute("data-sprite-height"), doc);
     }
     Object.freeze(this.letters);
-    ref1 = data.getElementsByClassName("SHEET");
-    for (k = 0, len1 = ref1.length; k < len1; k++) {
-      item = ref1[k];
+    ref4 = data.getElementsByClassName("SHEET");
+    for (m = 0, len3 = ref4.length; m < len3; m++) {
+      item = ref4[m];
       this.sheets[item.id] = new Sheet(item, item.getAttribute("data-sprite-width"), item.getAttribute("data-sprite-height"));
     }
     Object.freeze(this.sheets);
-    ref2 = data.getElementsByClassName("TILESET");
-    for (l = 0, len2 = ref2.length; l < len2; l++) {
-      item = ref2[l];
-      this.tilesets[item.id] = new Tileset(new Sheet(item, item.getAttribute("data-sprite-width"), item.getAttribute("data-sprite-height")), item.getAttribute("data-sprite-width"), item.getAttribute("data-sprite-height"), (ref3 = item.getAttribute("data-collisions")) != null ? ref3.trim() : void 0, Sheet.drawSheetAtIndex);
+    ref5 = data.getElementsByClassName("TILESET");
+    for (o = 0, len4 = ref5.length; o < len4; o++) {
+      item = ref5[o];
+      this.tilesets[item.id] = new Tileset(new Sheet(item, item.getAttribute("data-sprite-width"), item.getAttribute("data-sprite-height")), item.getAttribute("data-sprite-width"), item.getAttribute("data-sprite-height"), (ref6 = item.getAttribute("data-collisions")) != null ? ref6.trim() : void 0, Sheet.drawSheetAtIndex);
     }
     Object.freeze(this.tilesets);
     this.run("init");
@@ -1708,13 +1702,17 @@
     },
     draw: {
       value: function() {
-        var i, ref, ref1, screen, text;
+        var i, ref, ref1, ref2, screen, text, view;
         if (this.resized) {
-          this.layout();
+          ref = this.views;
+          for (i in ref) {
+            view = ref[i];
+            view.layout();
+          }
         }
-        ref = this.screens;
-        for (i in ref) {
-          screen = ref[i];
+        ref1 = this.screens;
+        for (i in ref1) {
+          screen = ref1[i];
           if (screen.canvas.hasAttribute("data-clear")) {
             screen.clear();
             screen.canvas.removeAttribute("data-clear");
@@ -1733,9 +1731,9 @@
         if (this.area instanceof Area) {
           this.area.draw();
         }
-        ref1 = this.texts;
-        for (i in ref1) {
-          text = ref1[i];
+        ref2 = this.texts;
+        for (i in ref2) {
+          text = ref2[i];
           text.draw();
         }
         this.resized = false;
@@ -1758,6 +1756,25 @@
         } else {
           return this.data.querySelector(qs);
         }
+        return this.window.requestAnimationFrame(this.draw.bind(this));
+      }
+    },
+    getDocElement: {
+      value: function(className, id) {
+        var elt, elts, qs;
+        elts = className ? document.getElementsByClassName(className) : document.getElementsByTagName("*");
+        if (typeof id === "number" || id instanceof Number) {
+          elt = elts.item(id);
+        }
+        if (elt != null) {
+          return elt;
+        }
+        qs = className ? "#" + id + "." + className : "#" + id;
+        if (elts instanceof HTMLCollection && (typeof elts.namedItem === "function" || elts.namedItem instanceof Function)) {
+          return elts.namedItem(id);
+        } else {
+          return document.querySelector(qs);
+        }
       }
     },
     handleEvent: {
@@ -1766,55 +1783,6 @@
           case "resize":
             return this.resized = true;
         }
-      }
-    },
-    layout: {
-      value: function() {
-        var body_height, body_width, canvas, i, ref, scaled_height, scaled_width, screen;
-        this.document.documentElement.style.margin = "0";
-        this.document.documentElement.style.padding = "0";
-        this.document.documentElement.style.background = "black";
-        this.document.documentElement.style.msInterpolationMode = "nearest-neighbor";
-        this.document.documentElement.style.imageRendering = "-webkit-optimize-contrast";
-        this.document.documentElement.style.imageRendering = "-moz-crisp-edges";
-        this.document.documentElement.style.imageRendering = "pixelated";
-        this.document.documentElement.style.WebkitTouchCallout = "none";
-        this.document.documentElement.style.webkitTouchCallout = "none";
-        this.document.documentElement.style.WebkitUserSelect = "none";
-        this.document.documentElement.style.webkitUserSelect = "none";
-        this.document.documentElement.style.msUserSelect = "none";
-        this.document.documentElement.style.MozUserSelect = "none";
-        this.document.documentElement.style.userSelect = "none";
-        this.document.body.style.position = "absolute";
-        this.document.body.style.top = "0";
-        this.document.body.style.bottom = "0";
-        this.document.body.style.left = "0";
-        this.document.body.style.right = "0";
-        this.document.body.style.margin = "0";
-        this.document.body.style.border = "none";
-        this.document.body.style.padding = "0";
-        body_width = this.document.body.clientWidth;
-        body_height = this.document.body.clientHeight;
-        ref = this.screens;
-        for (i in ref) {
-          screen = ref[i];
-          canvas = screen.canvas;
-          if (body_width / body_height > canvas.width / canvas.height) {
-            scaled_height = body_height < canvas.height ? body_height : canvas.height * Math.floor(body_height / canvas.height);
-            scaled_width = Math.floor(canvas.width * scaled_height / canvas.height);
-          } else {
-            scaled_width = body_width < canvas.width ? body_width : canvas.width * Math.floor(body_width / canvas.width);
-            scaled_height = Math.floor(canvas.height * scaled_width / canvas.width);
-          }
-          canvas.style.display = "block";
-          canvas.style.position = "absolute";
-          canvas.style.margin = "0";
-          canvas.style.top = "calc(50% - " + (scaled_height / 2) + "px)";
-          canvas.style.left = "calc(50% - " + (scaled_width / 2) + "px)";
-          canvas.style.width = scaled_width + "px";
-          canvas.style.height = scaled_height + "px";
-        }
-        this.document.body.style.visibility = "";
       }
     },
     loadArea: {
@@ -1932,7 +1900,7 @@
     ref = (elt != null ? elt.getElementsByClassName("MAP") : void 0) || [];
     for (i = j = 0, len = ref.length; j < len; i = ++j) {
       map = ref[i];
-      this.maps[i] = game != null ? (ref1 = game.tilesets[map.getAttribute("data-tileset")]) != null ? ref1.getMap(game != null ? (ref2 = game.screens[map.dataset.screen]) != null ? ref2.context : void 0 : void 0, map.textContent.trim(), map.getAttribute("data-mapwidth"), map.getAttribute("data-dx"), map.getAttribute("data-dy"), x, y) : void 0 : void 0;
+      this.maps[i] = game != null ? (ref1 = game.tilesets[map.getAttribute("data-tileset")]) != null ? ref1.getMap(game != null ? (ref2 = game.screens[map.getAttribute("data-screen")]) != null ? ref2.context : void 0 : void 0, map.textContent.trim(), map.getAttribute("data-mapwidth"), map.getAttribute("data-dx"), map.getAttribute("data-dy"), x, y) : void 0 : void 0;
     }
     Object.freeze(this.maps);
     ref4 = (elt != null ? (ref3 = elt.getAttribute("data-characters")) != null ? ref3.split(/\s+/) : void 0 : void 0) || [];
@@ -2432,7 +2400,7 @@
     if (!((elt != null) && !isNaN(source_height = Number(elt.naturalHeight != null ? elt.naturalHeight : source.height)))) {
       source_height = 0;
     }
-    Unit.call(this, area, game.screens[elt != null ? elt.dataset.screen : void 0], id, x, y, source_width, source_height, elt != null ? elt.getAttribute("data-origin-x") : void 0, elt != null ? elt.getAttribute("data-origin-y") : void 0);
+    Unit.call(this, area, game.screens[elt.getAttribute("data-screen")], id, x, y, source_width, source_height, elt != null ? elt.getAttribute("data-origin-x") : void 0, elt != null ? elt.getAttribute("data-origin-y") : void 0);
     Object.defineProperties(this, {
       placed: {
         get: function() {
@@ -2544,7 +2512,7 @@
       }
     }
     Object.freeze(sprites);
-    Unit.call(this, area, game.screens[elt != null ? elt.dataset.screen : void 0], id, x, y, (sprite_list != null ? sprite_list.dataset.boxWidth : void 0) || ((ref2 = sprites[0]) != null ? ref2.width : void 0), (sprite_list != null ? sprite_list.dataset.boxHeight : void 0) || ((ref3 = sprites[0]) != null ? ref3.height : void 0), sprite_list != null ? sprite_list.dataset.originX : void 0, sprite_list != null ? sprite_list.dataset.originY : void 0);
+    Unit.call(this, area, game.screens[elt != null ? elt.getAttribute("data-screen") : void 0], id, x, y, (sprite_list != null ? sprite_list.dataset.boxWidth : void 0) || ((ref2 = sprites[0]) != null ? ref2.width : void 0), (sprite_list != null ? sprite_list.dataset.boxHeight : void 0) || ((ref3 = sprites[0]) != null ? ref3.height : void 0), sprite_list != null ? sprite_list.dataset.originX : void 0, sprite_list != null ? sprite_list.dataset.originY : void 0);
     Object.defineProperties(this, {
       box_x: {
         value: isNaN(sprite_list != null ? sprite_list.dataset.boxX : void 0) ? 0 : Number(sprite_list != null ? sprite_list.dataset.boxX : void 0)
@@ -3007,5 +2975,100 @@
   Object.freeze(Text.prototype);
 
   this.Text = Object.freeze(Text);
+
+}).call(this);
+// Generated by CoffeeScript 1.10.0
+(function() {
+  "use strict";
+
+  /*
+  VIEW
+  The Jelli Game Engine
+  ---------------------
+   */
+  var View;
+
+  View = function(game, elt) {
+    var i, len, name, ref, ref1, screen;
+    if (!(game instanceof Game)) {
+      game = null;
+    }
+    if (!(elt instanceof Element)) {
+      elt = (game != null ? game.getDocElement(elt) : void 0) || null;
+    }
+    this.control = new Control(elt);
+    if (isNaN(this.height = Number(elt != null ? elt.getAttribute("data-height") : void 0))) {
+      this.height = 0;
+    }
+    this.screens = {};
+    this.target = elt;
+    if (isNaN(this.width = Number(elt != null ? elt.getAttribute("data-width") : void 0))) {
+      this.width = 0;
+    }
+    if (elt != null) {
+      elt.textContent = "";
+    }
+    elt.style.visibility = "hidden";
+    ref1 = (elt != null ? (ref = elt.getAttribute("data-screens")) != null ? ref.split(/\s+/) : void 0 : void 0) || [];
+    for (i = 0, len = ref1.length; i < len; i++) {
+      name = ref1[i];
+      screen = game != null ? game.getDataElement("SCREEN", name) : void 0;
+      if (screen) {
+        this.screens[name] = new Screen(elt.appendChild(screen), "2d");
+      }
+    }
+    Object.freeze(this.screens);
+    return Object.freeze(this);
+  };
+
+  View.prototype = Object.create(Object.prototype, {
+    layout: {
+      value: function() {
+        var canvas, client_height, client_width, name, ref, scaled_height, scaled_width, screen;
+        if (!(this.target instanceof Element)) {
+          return;
+        }
+        if (this.target.ownerDocument.defaultView.getComputedStyle(this.target).position === "static") {
+          this.target.style.position = "relative";
+        }
+        this.target.style.minWidth = this.width + "px";
+        this.target.style.minHeight = this.height + "px";
+        client_width = this.target.clientWidth;
+        client_height = this.target.clientHeight;
+        ref = this.screens;
+        for (name in ref) {
+          screen = ref[name];
+          canvas = screen.canvas;
+          if (canvas.width !== this.width) {
+            canvas.width = this.width;
+          }
+          if (canvas.height !== this.height) {
+            canvas.height = this.height;
+          }
+          if (client_width / client_height < this.width / this.height) {
+            scaled_width = client_width < this.width ? client_width : this.width * Math.floor(client_width / this.width);
+            scaled_height = Math.floor(this.height * scaled_width / this.width);
+          } else {
+            scaled_height = client_height < this.height ? client_height : this.height * Math.floor(client_height / this.height);
+            scaled_width = Math.floor(this.width * scaled_height / this.height);
+          }
+          canvas.style.display = "block";
+          canvas.style.position = "absolute";
+          canvas.style.margin = "0";
+          canvas.style.border = "none";
+          canvas.style.padding = "0";
+          canvas.style.width = scaled_width + "px";
+          canvas.style.height = scaled_height + "px";
+          canvas.style.top = "calc(50% - " + (scaled_height / 2) + "px)";
+          canvas.style.left = "calc(50% - " + (scaled_width / 2) + "px)";
+        }
+        this.target.style.visibility = "";
+      }
+    }
+  });
+
+  Object.freeze(View.prototype);
+
+  this.View = Object.freeze(View);
 
 }).call(this);

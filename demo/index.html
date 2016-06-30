@@ -5,6 +5,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="user-scalable=no,width=device-width">
         <link rel="icon" href="icon.png">
+        <link rel="stylesheet" type="text/css" href="style.css">
         <script type="text/javascript" src="../jelli.js"></script>
         <script type="text/javascript">
             /*
@@ -14,365 +15,375 @@
             window.addEventListener("load", function () {new Game(document);}, false);
         </script>
     </head>
-    <body hidden style="display: none;">
-        <h1>Jelli : A Game Engine</h1>
-        <p>
-            Any content you place in here remains hidden unless it is assigned the proper class for handling by the script.
-            By editing this file, you can program your game.
-        </p>
-        <p>
-            Be sure to keep the <code>hidden</code> attribute on the <code>&lt;body&gt;</code> element, and to load the jelli script in the <code>&lt;head&gt;</code>.
-            Alternatively, you can place all of the game-specific code in its own <code>hidden</code> <code>&lt;div&gt;</code>, and use the visible portion of <code>&lt;body&gt;</code> to display a loading or splash screen.
-            (However, upon running <code>new Game()</code> the <code>&lt;body&gt;</code> is replaced with the game.)
-            <code>&lt;meta name="viewport" content="user-scalable=no,width=device-width"&gt;</code> is also helpful.
-        </p>
-        <section>
-            <h2>Game setup</h2>
+    <body id="scrn_01" class="VIEW"
+        data-width="256"
+        data-height="160"
+        data-screens="background mainground foreground textground menuground">
+        <article class="DATA">
+            <h1>Jelli : A Game Engine</h1>
             <p>
-                Sometimes the game itself needs scripting which cannot be achieved at a lower level.
-                This can be accomplished through <code>defineFunctions</code>, run somewhere inside the body outside of a character or area.
-            </p>
-            <script type="text/javascript">
-                defineFunctions({
-                    init: function () {
-                        //  Setting up controls:
-                        this.control.add("down").addCodes("down", 0x28, "ArrowDown", "Down");
-                        this.control.add("left").addCodes("left", 0x25, "ArrowLeft", "Left");
-                        this.control.add("right").addCodes("right", 0x27, "ArrowRight", "Right");
-                        this.control.add("up").addCodes("up", 0x26, "ArrowUp", "Up");
-                        //  Loading the first area:
-                        this.area = 0;
-                    },
-                    step: function () {/*  No step code needed at this level.  */}
-                });
-            </script>
-        </section>
-        <section>
-            <h2>Screens</h2>
-            <p>
-                The <code>&lt;canvas class="SCREEN"&gt;</code> element creates a screen where the game is actually drawn.
-                These elements should be listed in order, from back to front.
-                The <code>id</code> of these elements <strong>must</strong> be specified (and unique)&mdash;this is used as an identifier within the game's script.
+                Any content you place in here remains hidden unless it is assigned the proper class for handling by the script.
+                By editing this file, you can program your game.
             </p>
             <p>
-                The <code>data-type</code> attribute lets the game know how often the canvas should be cleared.
-                <code>area</code> canvases are only cleared on area change, and are a good place to draw tiles.
-                <code>animation</code> canvases, on the other hand, are cleared every frame, and are intended for animations.
-                Canvases without this attribute must be cleared manually.
+                <strong>NONE OF THIS IS REALLY ACCURATE ANYMORE PROBABLY. Read the source at <a href="https://github.com/literallybenjam/jelli/source/">https://github.com/literallybenjam/jelli/source/</a> instead!!!</strong>
+            </p>
+            <p>
+                Be sure to keep the <code>hidden</code> attribute on the <code>&lt;body&gt;</code> element, and to load the jelli script in the <code>&lt;head&gt;</code>.
+                Alternatively, you can place all of the game-specific code in its own <code>hidden</code> <code>&lt;div&gt;</code>, and use the visible portion of <code>&lt;body&gt;</code> to display a loading or splash screen.
+                (However, upon running <code>new Game()</code> the <code>&lt;body&gt;</code> is replaced with the game.)
+                <code>&lt;meta name="viewport" content="user-scalable=no,width=device-width"&gt;</code> is also helpful.
             </p>
             <section>
-                <h3>The canvases:</h3>
-                <canvas id="background" class="SCREEN" data-type="area" width="256" height="160">Map tiles go here.</canvas>
-                <canvas id="mainground" class="SCREEN" data-type="animation" width="256" height="160">Characters and particles go here.</canvas>
-                <canvas id="foreground" class="SCREEN" data-type="area" width="256" height="160">Structures go here.</canvas>
-                <canvas id="textground" class="SCREEN" width="256" height="160">Dialogue and the like goes here.</canvas>
-                <canvas id="menuground" class="SCREEN" width="256" height="160">HUDs and pause menus go here.</canvas>
-            </section>
-        </section>
-        <section>
-            <h2>Images</h2>
-            <p>
-                When you don't need sprite-based rendering but just want to paste a whole image to the canvas, elements with class <code>IMAGE</code> is how you do that.
-                The <code>id</code> of these elements <strong>must</strong> be specified (and unique)&mdash;this is used as an identifier within the game's script.
-            </p>
-            <p>
-                Images are screen-specific, and you can specify which screen you want to draw them to with the <code>data-screen</code> attribute.
-            </p>
-            <section>
-                <h3>An image:</h3>
-                <img id="ctrlimg" class="IMAGE" alt="This is just used as a sample, lol" src="images/ctrl.png"
-                     data-screen="menuground"
-                     >
-            </section>
-        </section>
-        <section>
-            <h2>Sprite sheets</h2>
-            <p>
-                These elements contain the sprites used throughout the game.
-                Their type is identified via their class: <code>LETTERS</code> identifies an alphabet, <code>TILESET</code> represents a tileset, and <code>SHEET</code> represents any other spritesheet, such as one for use with characters.
-                The <code>id</code> of these elements <strong>must</strong> be specified (and unique)&mdash;this is used as an identifier within the game's script.
-            </p>
-            <p>
-                <code>TILESET</code> sprite sheets <strong>must</strong> be provided with a <code>data-collisions</code> attribute, whose value is Base64-encoded binary collision data.
-                This data should be a sequence of 4-bit bytes, one for each tile in the set, indicating which parts of the tile prevent objects from passing through.
-                The least significant bit notes the top-left corner, the next the top-right, then the bottom-left, and the most significant bit indicates the bottom-right.
-                Thus, a tile which has been assigned the bit <code>0x7</code> = <code>0111</code> (big endian) only allows objects through its bottom-right corner, while the bit <code>0x8</code> = <code>1000</code> permits the opposite.
-            </p>
-            <p>
-                <code>LETTERS</code> sprite sheets may optionally have any number of <code>data-palette-*</code> attributes assigned, these specify options for text colour.
-            </p>
-            <section>
-                <h3>The letters:</h3>
-                <img id="letters" class="LETTERS" alt="Letters" src="letters/letters.png"
-                     data-sprite-width="3"
-                     data-sprite-height="5"
-                     data-linefeed="&#x0A;"
-                     data-palette-black="#0c0c0c"
-                     data-palette-red="#e83f2c"
-                     data-palette-sea="#31b9db"
-                     >
+                <h2>Game setup</h2>
+                <p>
+                    Sometimes the game itself needs scripting which cannot be achieved at a lower level.
+                    This can be accomplished through <code>defineFunctions</code>, run somewhere inside the body outside of a character or area.
+                </p>
+                <script type="text/javascript">
+                    defineFunctions({
+                        init: function () {
+                            //  Setting up controls:
+                            this.views.scrn_01.control.add("down").addCodes("down", 0x28, "ArrowDown", "Down");
+                            this.views.scrn_01.control.add("left").addCodes("left", 0x25, "ArrowLeft", "Left");
+                            this.views.scrn_01.control.add("right").addCodes("right", 0x27, "ArrowRight", "Right");
+                            this.views.scrn_01.control.add("up").addCodes("up", 0x26, "ArrowUp", "Up");
+                            //  Loading the first area:
+                            this.area = 0;
+                        },
+                        step: function () {/*  No step code needed at this level.  */}
+                    });
+                </script>
             </section>
             <section>
-                <h3>The tilesets:</h3>
-                <img id="tiles" class="TILESET" alt="Tiles" src="tilesets/tiles.png"
-                     data-sprite-width="16"
-                     data-sprite-height="16"
-                     data-collisions="///APw=="
-                     >
+                <h2>Screens</h2>
+                <p>
+                    The <code>&lt;canvas class="SCREEN"&gt;</code> element creates a screen where the game is actually drawn.
+                    These elements should be listed in order, from back to front.
+                    The <code>id</code> of these elements <strong>must</strong> be specified (and unique)&mdash;this is used as an identifier within the game's script.
+                </p>
+                <p>
+                    The <code>data-type</code> attribute lets the game know how often the canvas should be cleared.
+                    <code>area</code> canvases are only cleared on area change, and are a good place to draw tiles.
+                    <code>animation</code> canvases, on the other hand, are cleared every frame, and are intended for animations.
+                    Canvases without this attribute must be cleared manually.
+                </p>
+                <section>
+                    <h3>The canvases:</h3>
+                    <canvas id="background" class="SCREEN" data-type="area">Map tiles go here.</canvas>
+                    <canvas id="mainground" class="SCREEN" data-type="animation">Characters and particles go here.</canvas>
+                    <canvas id="foreground" class="SCREEN" data-type="area">Structures go here.</canvas>
+                    <canvas id="textground" class="SCREEN">Dialogue and the like goes here.</canvas>
+                    <canvas id="menuground" class="SCREEN">HUDs and pause menus go here.</canvas>
+                </section>
             </section>
             <section>
-                <h3>Other sheets:</h3>
-                <img id="characters" class="SHEET" alt="Jelly" src="sheets/characters.png"
-                     data-sprite-width="16"
-                     data-sprite-height="16"
-                     >
+                <h2>Images</h2>
+                <p>
+                    When you don't need sprite-based rendering but just want to paste a whole image to the canvas, elements with class <code>IMAGE</code> is how you do that.
+                    The <code>id</code> of these elements <strong>must</strong> be specified (and unique)&mdash;this is used as an identifier within the game's script.
+                </p>
+                <p>
+                    Images are screen-specific, and you can specify which screen you want to draw them to with the <code>data-screen</code> attribute.
+                </p>
+                <section>
+                    <h3>An image:</h3>
+                    <img id="ctrlimg" class="IMAGE" alt="This is just used as a sample, lol" src="images/ctrl.png"
+                         data-screen="menuground"
+                         >
+                </section>
             </section>
-        </section>
-        <section>
-            <h2>Sprites</h2>
-            <p>
-                Game characters are rendered using collections of sprites, which are given the class <code>SPRITELIST</code> and contain sprites of class <code>SPRITE</code>.
-                The <code>id</code>s of sprite collections <strong>must</strong> be specified (and unique)&mdash;they are used as an identifier within the game's script.
-                Additionally, the <code>data-sheet</code> attribute needs to be defined:
-                It specifies which <code>SHEET</code> to draw the sprites from.
-            </p>
-            <p>
-                The <code>data-box-x</code>, <code>data-box-y</code>, <code>data-box-width</code>, and <code>data-box-height</code> attributes set the top-left corner and dimensions of the sprite bounding box (for collision checking).
-                If not set, the box will fill the entire sprite.
-                The <code>data-origin-x</code> and <code>data-origin-y</code> attributes specify the origin of the sprite, relative to the bounding box.
-                If not set, they default to the bounding box's center.
-            </p>
-            <p>
-                The sprites themselves take a couple of attributes:
-                <code>title</code> names the sprite&mdash;these need to be unique within a given sprite collection but not necessarily across the document.
-                These can be referenced as strings via the <code>dir</code> property of characters.
-                <code>data-index</code> (required) specifies the starting index for the sprite, and <code>data-length</code> specifies the length of the animation (this defaults to 1).
-            </p>
             <section>
-                <h3>Sprite collections:</h3>
-                <div id="jelly" class="SPRITELIST"
-                     data-sheet="characters"
-                     data-box-x="3"
-                     data-box-y="3"
-                     data-box-width="10"
-                     data-box-height="10"
-                     data-origin-x="5"
-                     data-origin-y="5">
-                    <span class="SPRITE"
-                          title="lf"
-                          data-index="0"
-                          data-length="2"
-                          ></span>
-                    <span class="SPRITE"
-                          title="rt"
-                          data-index="2"
-                          data-length="2"
-                          ></span>
-                </div>
+                <h2>Sprite sheets</h2>
+                <p>
+                    These elements contain the sprites used throughout the game.
+                    Their type is identified via their class: <code>LETTERS</code> identifies an alphabet, <code>TILESET</code> represents a tileset, and <code>SHEET</code> represents any other spritesheet, such as one for use with characters.
+                    The <code>id</code> of these elements <strong>must</strong> be specified (and unique)&mdash;this is used as an identifier within the game's script.
+                </p>
+                <p>
+                    <code>TILESET</code> sprite sheets <strong>must</strong> be provided with a <code>data-collisions</code> attribute, whose value is Base64-encoded binary collision data.
+                    This data should be a sequence of 4-bit bytes, one for each tile in the set, indicating which parts of the tile prevent objects from passing through.
+                    The least significant bit notes the top-left corner, the next the top-right, then the bottom-left, and the most significant bit indicates the bottom-right.
+                    Thus, a tile which has been assigned the bit <code>0x7</code> = <code>0111</code> (big endian) only allows objects through its bottom-right corner, while the bit <code>0x8</code> = <code>1000</code> permits the opposite.
+                </p>
+                <p>
+                    <code>LETTERS</code> sprite sheets may optionally have any number of <code>data-palette-*</code> attributes assigned, these specify options for text colour.
+                </p>
+                <section>
+                    <h3>The letters:</h3>
+                    <img id="letters" class="LETTERS" alt="Letters" src="letters/letters.png"
+                         data-sprite-width="3"
+                         data-sprite-height="5"
+                         data-linefeed="&#x0A;"
+                         data-palette-black="#0c0c0c"
+                         data-palette-red="#e83f2c"
+                         data-palette-sea="#31b9db"
+                         >
+                </section>
+                <section>
+                    <h3>The tilesets:</h3>
+                    <img id="tiles" class="TILESET" alt="Tiles" src="tilesets/tiles.png"
+                         data-sprite-width="16"
+                         data-sprite-height="16"
+                         data-collisions="///APw=="
+                         >
+                </section>
+                <section>
+                    <h3>Other sheets:</h3>
+                    <img id="characters" class="SHEET" alt="Jelly" src="sheets/characters.png"
+                         data-sprite-width="16"
+                         data-sprite-height="16"
+                         >
+                </section>
             </section>
-        </section>
-        <section>
-            <h2>Characters</h2>
-            <p>
-                Characters are used to insert any interactive element&mdash;including NPCs and player characters, but also potentially other elements, like doors&mdash;into the game.
-                They have the class <code>CHARACTER</code>, and should a couple of scripts.
-                The <code>data-sprites</code> attribute tells which sprite collection to use with the character.
-                The <code>data-collides</code> attribute determines whether the sprite is involved in collisions; if present, it should have a value of either <code>map</code>, <code>character</code>, or <code>all</code>.
-                An element without a <code>data-collides</code> attribute is not involved in any collisions, and if this attribute is present but no value is provided, it defaults to <code>all</code>.
-            </p>
-            <p>
-                Characters generally need scripting.
-                This can be accomplished through <code>defineFunctions</code>, run somewhere inside the character element.
-            </p>
-            <p>
-                Characters are destroyed when an area is unloaded, and the values of their variables are not stored.
-            </p>
             <section>
-                <h3>Some characters:</h3>
-                <div id="pointer" class="CHARACTER"
-                     data-sprites="jelly"
-                     data-screen="mainground"
-                     >
-                    <script type="text/javascript">
-                        defineFunctions({
-                            init: function () {
-                                //  Any variables that you're going to use need to be declared in your init function:
-                                this.timer = 0;
-                            }
-                        });
-                    </script>
-                </div>
-                <div id="player" class="CHARACTER"
-                     data-sprites="jelly"
-                     data-screen="mainground"
-                     data-collides
-                     >
-                    <script type="text/javascript">
-                        defineFunctions({
-                            init: function () {
-                                this.x = 16;
-                                this.y = 80;
-                                this.sprite = "rt";
-                                this.timer = 0;
-                            },
-                            step: function () {
-                                var game = this.game;
-                                var poke;
-                                var dx = 0;
-                                var dy = .1;
-                                if (poke = game.control.touches.item(0) || game.control.clicks.item(0)) {
-                                    this.target(poke.x + this.area.x, poke.y + this.area.y);
-                                    this.timer++;
-                                }
-                                else {
-                                    if (game.control.isActive("up")) dy--;
-                                    if (game.control.isActive("down")) dy++;
-                                    if (game.control.isActive("left")) dx--;
-                                    if (game.control.isActive("right")) dx++;
-                                    this.targetBy(dx, dy);
-                                    this.timer++;
-                                }
-                                if (this.direction && Math.abs(this.direction) < Math.PI) this.sprite = this.direction > 0 ? "rt" : "lf";
-                                if (!(this.timer %= 15)) this.frame = Number(!this.frame);
-                            }
-                        });
-                    </script>
-                </div>
+                <h2>Sprites</h2>
+                <p>
+                    Game characters are rendered using collections of sprites, which are given the class <code>SPRITELIST</code> and contain sprites of class <code>SPRITE</code>.
+                    The <code>id</code>s of sprite collections <strong>must</strong> be specified (and unique)&mdash;they are used as an identifier within the game's script.
+                    Additionally, the <code>data-sheet</code> attribute needs to be defined:
+                    It specifies which <code>SHEET</code> to draw the sprites from.
+                </p>
+                <p>
+                    The <code>data-box-x</code>, <code>data-box-y</code>, <code>data-box-width</code>, and <code>data-box-height</code> attributes set the top-left corner and dimensions of the sprite bounding box (for collision checking).
+                    If not set, the box will fill the entire sprite.
+                    The <code>data-origin-x</code> and <code>data-origin-y</code> attributes specify the origin of the sprite, relative to the bounding box.
+                    If not set, they default to the bounding box's center.
+                </p>
+                <p>
+                    The sprites themselves take a couple of attributes:
+                    <code>title</code> names the sprite&mdash;these need to be unique within a given sprite collection but not necessarily across the document.
+                    These can be referenced as strings via the <code>dir</code> property of characters.
+                    <code>data-index</code> (required) specifies the starting index for the sprite, and <code>data-length</code> specifies the length of the animation (this defaults to 1).
+                </p>
+                <section>
+                    <h3>Sprite collections:</h3>
+                    <div id="jelly" class="SPRITELIST"
+                         data-sheet="characters"
+                         data-box-x="3"
+                         data-box-y="3"
+                         data-box-width="10"
+                         data-box-height="10"
+                         data-origin-x="5"
+                         data-origin-y="5">
+                        <span class="SPRITE"
+                              title="lf"
+                              data-index="0"
+                              data-length="2"
+                              ></span>
+                        <span class="SPRITE"
+                              title="rt"
+                              data-index="2"
+                              data-length="2"
+                              ></span>
+                    </div>
+                </section>
             </section>
-        </section>
-        <section>
-            <h2>Areas</h2>
-            <p>
-                Areas are used to generate a static background and/or foreground on which a section of the game takes place.
-                Areas are given the class <code>AREA</code>, and should contain maps of the class <code>MAP</code>.
-                Areas are referred to by index:
-                The first area you define will have index 0, and the numbers will increase from there.
-                (It makes sense to have area 0 be a splash screen).
-            </p>
-            <p>
-                Maps tell the game how to render tiles on the screen.
-                They are Base64-encoded strings, which should decode into 8-bit binary data.
-                Each byte provides the index of the appropriate tile for that square in the map grid.
-                The <code>data-tileset</code> attribute identifies the tileset from which to draw the tile, and the <code>data-mapwidth</code> attribute should tell how many tiles the map is wide.
-                The <code>data-canvas</code> attribute should identify the canvas on which the map should be drawn.
-            </p>
-            <p>
-                Characters can be loaded by referencing their <code>id</code>s in the <code>data-characters</code> attribute, or by passing a string to the <code>characters.load</code> function.
-                Characters can be deleted with the <code>characters.kill</code> function.
-            </p>
             <section>
-                <h3>Some areas:</h3>
-                <div class="AREA" title="Splash screen"
-                     >
-                    I have used this area to demonstrate programmatic character loading and managing.
-                    <span class="MAP"
-                          data-tileset="tiles"
-                          data-mapwidth="16"
-                          data-screen="background"
-                          >AAEAAQABAAEAAQABAAEAAQIDAgMCAwIDAgMCAwIDAgMAAQABAAEAAQABAAEAAQABAgMCAwIDAgMCAwIDAgMCAwABAAEAAQABAAEAAQABAAECAwIDAgMCAwIDAgMCAwIDAAEAAQABAAEAAQABAAEAAQIDAgMCAwIDAgMCAwIDAgMAAQABAAEAAQABAAEAAQABAgMCAwIDAgMCAwIDAgMCAw==</span>
-                    <script type="text/javascript">
-                        defineFunctions({
-                            init: function () {
-                                var menu1;
-                                var menu2;
-                                var texts = this.game.texts;
-                                var title;
-                                this.title_timer = 0;
-                                this.images.load("ctrlimg", 80, 32);
-                                this.characters.load("pointer", 88, 120, "lf");
-                                title = this.game.texts.load("title", "textground", "letters", "Jelli Game Engine -- Demo");
-                                title.x = 78;
-                                title.y = 60;
-                                title.color = "sea";
-                                menu1 = this.game.texts.load("menu1", "textground", "letters", "Use arrow keys to move");
-                                menu1.x = 96;
-                                menu1.y = 120;
-                                menu1.color = "red";
-                                menu1.fill();
-                                menu2 = this.game.texts.load("menu2", "textground", "letters", "Press right, touch, or click to begin");
-                                menu2.x = 96;
-                                menu2.y = 136;
-                                menu2.color = "black";
-                                menu2.fill();
-                            },
-                            step: function () {
-                                var game = this.game;
-                                var texts = this.game.texts;
-                                if (!this.title_timer) texts.title.advance();
-                                this.title_timer++;
-                                this.title_timer %= 30;
-                                if (game.control.isActive("up")) {
-                                    this.characters.pointer.y = 120;
-                                    texts.menu1.clear();
-                                    texts.menu1.color = "red";
-                                    texts.menu1.fill();
-                                    texts.menu2.clear();
-                                    texts.menu2.color = "black";
-                                    texts.menu2.fill();
+                <h2>Characters</h2>
+                <p>
+                    Characters are used to insert any interactive element&mdash;including NPCs and player characters, but also potentially other elements, like doors&mdash;into the game.
+                    They have the class <code>CHARACTER</code>, and should a couple of scripts.
+                    The <code>data-sprites</code> attribute tells which sprite collection to use with the character.
+                    The <code>data-collides</code> attribute determines whether the sprite is involved in collisions; if present, it should have a value of either <code>map</code>, <code>character</code>, or <code>all</code>.
+                    An element without a <code>data-collides</code> attribute is not involved in any collisions, and if this attribute is present but no value is provided, it defaults to <code>all</code>.
+                </p>
+                <p>
+                    Characters generally need scripting.
+                    This can be accomplished through <code>defineFunctions</code>, run somewhere inside the character element.
+                </p>
+                <p>
+                    Characters are destroyed when an area is unloaded, and the values of their variables are not stored.
+                </p>
+                <section>
+                    <h3>Some characters:</h3>
+                    <div id="pointer" class="CHARACTER"
+                         data-sprites="jelly"
+                         data-screen="mainground"
+                         >
+                        <script type="text/javascript">
+                            defineFunctions({
+                                init: function () {
+                                    //  Any variables that you're going to use need to be declared in your init function:
+                                    this.timer = 0;
                                 }
-                                if (game.control.isActive("down")) {
-                                    this.characters.pointer.y = 136;
-                                    texts.menu1.clear();
-                                    texts.menu1.color = "black";
-                                    texts.menu1.fill();
-                                    texts.menu2.clear();
-                                    texts.menu2.color = "red";
-                                    texts.menu2.fill();
+                            });
+                        </script>
+                    </div>
+                    <div id="player" class="CHARACTER"
+                         data-sprites="jelly"
+                         data-screen="mainground"
+                         data-collides
+                         >
+                        <script type="text/javascript">
+                            defineFunctions({
+                                init: function () {
+                                    this.x = 16;
+                                    this.y = 80;
+                                    this.sprite = "rt";
+                                    this.timer = 0;
+                                },
+                                step: function () {
+                                    var game = this.game;
+                                    var view = game.views.scrn_01;
+                                    var poke;
+                                    var dx = 0;
+                                    var dy = .1;
+                                    if (poke = view.control.touches.item(0) || view.control.clicks.item(0)) {
+                                        this.target(poke.x + this.area.x, poke.y + this.area.y);
+                                        this.timer++;
+                                    }
+                                    else {
+                                        if (view.control.isActive("up")) dy--;
+                                        if (view.control.isActive("down")) dy++;
+                                        if (view.control.isActive("left")) dx--;
+                                        if (view.control.isActive("right")) dx++;
+                                        this.targetBy(dx, dy);
+                                        this.timer++;
+                                    }
+                                    if (this.direction && Math.abs(this.direction) < Math.PI) this.sprite = this.direction > 0 ? "rt" : "lf";
+                                    if (!(this.timer %= 15)) this.frame = Number(!this.frame);
                                 }
-                                if (game.control.isActive("right") || game.control.touches.item(0) && !game.control.touches.item(1) || game.control.clicks.item(0)) {
-                                    texts.title.kill();
-                                    texts.menu1.kill();
-                                    texts.menu2.kill();
-                                    game.clearScreen("textground");
-                                    game.area = 1;
-                                }
-                                if (game.control.clicks.item(2)) this.images.ctrlimg.placed = true;
-                                else if (this.images.ctrlimg.placed) {
-                                    this.images.ctrlimg.placed = false;
-                                    game.clearScreen("menuground");
-                                }
-                                this.characters.pointer.timer++;
-                                if (!(this.characters.pointer.timer %= 10)) this.characters.pointer.frame = Number(!this.characters.pointer.frame);
-                            }
-                        });
-                    </script>
-                </div>
-                <div class="AREA" title="The Sea"
-                     data-characters="player"
-                     >
-                    It is often way easier to define character code in their own init and step functions, however, as demonstrated here.
-                    Then you can load the characters with the <code>data-characters</code> attribute.
-                    <span class="MAP"
-                          data-tileset="tiles"
-                          data-mapwidth="16"
-                          data-screen="background"
-                          >BwcHBwcHBwcHBwcHBwcHBwYGBgYGBgYGBgYGBgYGBgYFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUBBQUFBQUFBQUFBQUFBQUFBAQEBAQEBAQEBAQEBAQEBA==</span>
-                    <span class="MAP"
-                          data-tileset="tiles"
-                          data-mapwidth="16"
-                          data-dx="256"
-                          data-screen="background"
-                          >BwcHBwcHBwcHBwcHBwcHBwYGBgYGBgYGBgYGBgYGBgYFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUBBQUFBQUFBQUFBQUFBQUFBAQEBAQEBAQEBAQEBAQEBA==</span>
-                    <script type="text/javascript">
-                        defineFunctions({
-                            step: function () {
-                                if (this.characters.player.screen_x < 8) this.x--;
-                                if (this.characters.player.screen_x > 248) this.x++;
-                                if (this.x < this.maps[0].x) {
-                                    this.maps[0].x -= 256;
-                                    this.maps[1].x -= 256;
-                                    this.clear = true;
-                                }
-                                if (this.x > this.maps[1].x) {
-                                    this.maps[0].x += 256;
-                                    this.maps[1].x += 256;
-                                    this.clear = true;
-                                }
-                            }
-                        });
-                    </script>
-                </div>
+                            });
+                        </script>
+                    </div>
+                </section>
             </section>
-        </section>
+            <section>
+                <h2>Areas</h2>
+                <p>
+                    Areas are used to generate a static background and/or foreground on which a section of the game takes place.
+                    Areas are given the class <code>AREA</code>, and should contain maps of the class <code>MAP</code>.
+                    Areas are referred to by index:
+                    The first area you define will have index 0, and the numbers will increase from there.
+                    (It makes sense to have area 0 be a splash screen).
+                </p>
+                <p>
+                    Maps tell the game how to render tiles on the screen.
+                    They are Base64-encoded strings, which should decode into 8-bit binary data.
+                    Each byte provides the index of the appropriate tile for that square in the map grid.
+                    The <code>data-tileset</code> attribute identifies the tileset from which to draw the tile, and the <code>data-mapwidth</code> attribute should tell how many tiles the map is wide.
+                    The <code>data-canvas</code> attribute should identify the canvas on which the map should be drawn.
+                </p>
+                <p>
+                    Characters can be loaded by referencing their <code>id</code>s in the <code>data-characters</code> attribute, or by passing a string to the <code>characters.load</code> function.
+                    Characters can be deleted with the <code>characters.kill</code> function.
+                </p>
+                <section>
+                    <h3>Some areas:</h3>
+                    <div class="AREA" title="Splash screen"
+                         >
+                        I have used this area to demonstrate programmatic character loading and managing.
+                        <span class="MAP"
+                              data-tileset="tiles"
+                              data-mapwidth="16"
+                              data-screen="background"
+                              >AAEAAQABAAEAAQABAAEAAQIDAgMCAwIDAgMCAwIDAgMAAQABAAEAAQABAAEAAQABAgMCAwIDAgMCAwIDAgMCAwABAAEAAQABAAEAAQABAAECAwIDAgMCAwIDAgMCAwIDAAEAAQABAAEAAQABAAEAAQIDAgMCAwIDAgMCAwIDAgMAAQABAAEAAQABAAEAAQABAgMCAwIDAgMCAwIDAgMCAw==</span>
+                        <script type="text/javascript">
+                            defineFunctions({
+                                init: function () {
+                                    var menu1;
+                                    var menu2;
+                                    var texts = this.game.texts;
+                                    var title;
+                                    this.title_timer = 0;
+                                    this.images.load("ctrlimg", 80, 32);
+                                    this.characters.load("pointer", 88, 120, "lf");
+                                    title = this.game.texts.load("title", "textground", "letters", "Jelli Game Engine -- Demo");
+                                    title.x = 78;
+                                    title.y = 60;
+                                    title.color = "sea";
+                                    menu1 = this.game.texts.load("menu1", "textground", "letters", "Use arrow keys to move");
+                                    menu1.x = 96;
+                                    menu1.y = 120;
+                                    menu1.color = "red";
+                                    menu1.fill();
+                                    menu2 = this.game.texts.load("menu2", "textground", "letters", "Press right, touch, or click to begin");
+                                    menu2.x = 96;
+                                    menu2.y = 136;
+                                    menu2.color = "black";
+                                    menu2.fill();
+                                },
+                                step: function () {
+                                    var game = this.game;
+                                    var view = game.views.scrn_01;
+                                    var texts = this.game.texts;
+                                    if (!this.title_timer) texts.title.advance();
+                                    this.title_timer++;
+                                    this.title_timer %= 30;
+                                    if (view.control.isActive("up")) {
+                                        this.characters.pointer.y = 120;
+                                        texts.menu1.clear();
+                                        texts.menu1.color = "red";
+                                        texts.menu1.fill();
+                                        texts.menu2.clear();
+                                        texts.menu2.color = "black";
+                                        texts.menu2.fill();
+                                    }
+                                    if (view.control.isActive("down")) {
+                                        this.characters.pointer.y = 136;
+                                        texts.menu1.clear();
+                                        texts.menu1.color = "black";
+                                        texts.menu1.fill();
+                                        texts.menu2.clear();
+                                        texts.menu2.color = "red";
+                                        texts.menu2.fill();
+                                    }
+                                    if (view.control.isActive("right") || view.control.touches.item(0) || view.control.clicks.item(0)) {
+                                        texts.title.kill();
+                                        texts.menu1.kill();
+                                        texts.menu2.kill();
+                                        game.clearScreen("textground");
+                                        game.area = 1;
+                                    }
+                                    if (view.control.clicks.item(2)) this.images.ctrlimg.placed = true;
+                                    else if (this.images.ctrlimg.placed) {
+                                        this.images.ctrlimg.placed = false;
+                                        game.clearScreen("menuground");
+                                    }
+                                    this.characters.pointer.timer++;
+                                    if (!(this.characters.pointer.timer %= 10)) this.characters.pointer.frame = Number(!this.characters.pointer.frame);
+                                }
+                            });
+                        </script>
+                    </div>
+                    <div class="AREA" title="The Sea"
+                         data-characters="player"
+                         >
+                        It is often way easier to define character code in their own init and step functions, however, as demonstrated here.
+                        Then you can load the characters with the <code>data-characters</code> attribute.
+                        <span class="MAP"
+                              data-tileset="tiles"
+                              data-mapwidth="16"
+                              data-screen="background"
+                              >BwcHBwcHBwcHBwcHBwcHBwYGBgYGBgYGBgYGBgYGBgYFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUBBQUFBQUFBQUFBQUFBQUFBAQEBAQEBAQEBAQEBAQEBA==</span>
+                        <span class="MAP"
+                              data-tileset="tiles"
+                              data-mapwidth="16"
+                              data-dx="256"
+                              data-screen="background"
+                              >BwcHBwcHBwcHBwcHBwcHBwYGBgYGBgYGBgYGBgYGBgYFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUBBQUFBQUFBQUFBQUFBQUFBAQEBAQEBAQEBAQEBAQEBA==</span>
+                        <script type="text/javascript">
+                            defineFunctions({
+                                step: function () {
+                                    if (this.characters.player.screen_x < 8) this.x--;
+                                    if (this.characters.player.screen_x > 248) this.x++;
+                                    if (this.x < this.maps[0].x) {
+                                        this.maps[0].x -= 256;
+                                        this.maps[1].x -= 256;
+                                        this.clear = true;
+                                    }
+                                    if (this.x > this.maps[1].x) {
+                                        this.maps[0].x += 256;
+                                        this.maps[1].x += 256;
+                                        this.clear = true;
+                                    }
+                                }
+                            });
+                        </script>
+                    </div>
+                </section>
+            </section>
+        </article>
     </body>
 </html>

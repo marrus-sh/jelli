@@ -74,6 +74,7 @@ At this time, the list of these components is as follows:
 6. [`PlacementImage`](engine/06 PlacementImage.litcoffee)
 7. [`Character`](engine/07 Character.litcoffee)
 8. [`Text`](engine/08 Text.litcoffee)
+9. [`View`](engine/09 View.litcoffee)
 
 Documentation for each engine module is available in the [engine](engine) directory.
 

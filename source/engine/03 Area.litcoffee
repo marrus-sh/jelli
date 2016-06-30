@@ -93,7 +93,7 @@ We can now load the maps.
 Maps are drawn from `MAP` elements within the `AREA` element. We iterate over each and use its `data-*` attributes to create the map.
 We then freeze `maps` to prevent our list from changing or being corrupted.
 
-        @maps[i] = game?.tilesets[map.getAttribute("data-tileset")]?.getMap(game?.screens[map.dataset.screen]?.context, map.textContent.trim(), map.getAttribute("data-mapwidth"), map.getAttribute("data-dx"), map.getAttribute("data-dy"), x, y) for map, i in (elt?.getElementsByClassName("MAP") || [])
+        @maps[i] = game?.tilesets[map.getAttribute("data-tileset")]?.getMap(game?.screens[map.getAttribute("data-screen")]?.context, map.textContent.trim(), map.getAttribute("data-mapwidth"), map.getAttribute("data-dx"), map.getAttribute("data-dy"), x, y) for map, i in (elt?.getElementsByClassName("MAP") || [])
         Object.freeze @maps
 
 Next, we can load the characters and images which have been specified in the `data-characters` and `data-images` attributes, respectively.

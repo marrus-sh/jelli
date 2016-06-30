@@ -31,19 +31,18 @@ If not provided, this is assumed to be `document`.
 First we need to ensure that `Game` has not already been called for this specific `Document` by checking for the existence of `doc.game`
 Then we set `doc.game` to the non-configurable, non-writable value of `this`:
 
-        return if not (doc instanceof Document) or doc.game?
+        return unless doc instanceof Document and not doc.game?
         Object.defineProperty doc, "game", {value: this}
 
-Next, we clear the `body` of `doc` by replacing it with a new `<body>` element.
-We store the old `<body>` in the variable `data`, thus maintaining our access to the game's data.
-Finally, we set the `visibility` CSS property of `doc.body` to `hidden`, keeping its contents invisible until we get a chance to properly lay it out.
+Next, we remove any `DATA` elements and place them inside `data`, a specially-crafted `<div>` for holding them.
 
-        data = doc.documentElement.replaceChild(doc.createElement("body"), doc.body)
-        doc.body.style.visibility = "hidden"
+>   **Note :**
+    A `<div>` is used instead of a `DocumentFragment` for storing `DATA` elements because it implements `Element`, rather than just `Node`.
+    At one time, a new `Document` was used, but this proved too cumbersome to be worthwhile.
 
-The `placed()` function, only available from inside the `Game` constructor, places a node into `doc` from `data`, by either name or value.
-
-        placed = (node) -> if node instanceof Node then doc.body.appendChild(node) else doc.body.appendChild(@getDataElement("", node))
+        data = doc.createElement("div");
+        for item in doc.getElementsByClassName("DATA")
+            data.appendChild(item)
 
 We can now set up containers for our various `Game` properties.
 We use `Object.defineProperties` because these should not be enumerable.
@@ -51,12 +50,13 @@ We use `Object.defineProperties` because these should not be enumerable.
         Object.defineProperties this, {
             data: {value: data}
             document: {value: doc}
-            functions: {value: data.functions}
+            functions: {value: document.body.functions}
             letters: {value: {}}
             screens: {value: {}}
             sheets: {value: {}}
             texts: {value: new Collection(this, Text)}
             tilesets: {value: {}}
+            views: {value: {}}
             window: {value: doc.defaultView || window}
         }
 
@@ -77,23 +77,21 @@ Two properties have getters and setters.
                 set: (n) -> resized = !!n
         }
 
-Next, we load the screens, by `placed()`-ing them and passing them to [`Screen`](../modules/Screen.litcoffee).
-Screens must be `<canvas>` elements, and they must have class `SCREEN`.
-As we place the screens, the list of screens will decrease, so we need to compensate for that by tracking `i`.
-The first screen to be loaded is used for layout, and is called `placement_screen`.
+Next, we manage the game's `VIEWS` elements and create `View` objects from them.
+Note that these are elements in `doc`, not `data`.
+We iterate over each:
 
-        i = 0
-        elts = data.getElementsByTagName("canvas")
-        while (item = elts.item(i))
-            if item.classList.contains("SCREEN")
-                @screens[item.id] = new Screen(placed(item), "2d")
-                unless @placement_screen? then Object.defineProperty(this, "placement_screen", {value: @screens[item.id]})
-            else i++
+        for view in doc.getElementsByClassName("VIEW")
+            @views[view.id] = new View(this, view)
+
+Many engine functions require accessing `Screen`s without knowing which `View` they belong to, so we also need to bundle all of our `View`'s `Screen`s into a single object:
+
+            @screens[name] = screen for name, screen of @views[view.id].screens
+
+Now, we can freeze both:
+
+        Object.freeze @views
         Object.freeze @screens
-
-Now that the screens have been loaded, (most importantly, `placement_screen`), we can load our [`Control`](../modules/Control.litcoffee):
-
-        Object.defineProperty this, "control", {value: new Control(@placement_screen.canvas)}
 
 Next, we have the various sprite-sheets.
 First come our [`Letters`](../modules/Letters.litcoffee):
@@ -148,9 +146,10 @@ The `clearScreen()` function simply sets a `data-*` attribute on the screen with
             value: ->
 
 First, we check to see if the `Game` has been resized.
-If it has, then we need to redo `layout`.
+If it has, then we need to `layout()` our `View`s.
 
-                @layout() if @resized
+                if @resized
+                    view.layout() for i, view of @views
 
 Next, we iterate over the screens and clear them if necessary.
 
@@ -189,6 +188,20 @@ It takes two arguments: `class`, which is the class of the desired element, and 
                 return elt if elt?
                 qs = if className then "#" + id + "." + className else "#" + id
                 return if elts instanceof HTMLCollection and (typeof elts.namedItem is "function" or elts.namedItem instanceof Function) then elts.namedItem(id) else @data.querySelector(qs)
+                @window.requestAnimationFrame @draw.bind(this)
+
+####  getDocElement  ####
+
+`getDocElement` is identical to `getDataElement`, only drawing from the entire `Document`.
+It is used to find [`View`](09 View.litcoffee)s.
+
+        getDocElement:
+            value: (className, id) ->
+                elts = if className then document.getElementsByClassName(className) else document.getElementsByTagName("*")
+                elt = elts.item(id) if typeof id is "number" or id instanceof Number
+                return elt if elt?
+                qs = if className then "#" + id + "." + className else "#" + id
+                return if elts instanceof HTMLCollection and (typeof elts.namedItem is "function" or elts.namedItem instanceof Function) then elts.namedItem(id) else document.querySelector(qs)
 
 
 ####  handleEvent()  ####
@@ -208,58 +221,6 @@ On `"resize"`, we set `resize` so that `draw()` knows to redo our layout.
                     when "resize" then @resized = true
 
 That's all for now – the majority of events are handled by [`Control`](../modules/Control.litcoffee).
-
-####  layout()  ####
-
-`layout()` lays out the `Game`, scaling up its screens by the largest integer multiplier.
-
->   [Issue #47](https://github.com/literallybenjam/jelli/issues/47) :
-    This code will likely change considerably in the future.
-    Consequently no in-depth explination is provided.
-
-        layout:
-            value: ->
-                @document.documentElement.style.margin = "0"
-                @document.documentElement.style.padding = "0"
-                @document.documentElement.style.background = "black"
-                @document.documentElement.style.msInterpolationMode = "nearest-neighbor"
-                @document.documentElement.style.imageRendering = "-webkit-optimize-contrast"
-                @document.documentElement.style.imageRendering = "-moz-crisp-edges"
-                @document.documentElement.style.imageRendering = "pixelated"
-                @document.documentElement.style.WebkitTouchCallout = "none"
-                @document.documentElement.style.webkitTouchCallout = "none"
-                @document.documentElement.style.WebkitUserSelect = "none"
-                @document.documentElement.style.webkitUserSelect = "none"
-                @document.documentElement.style.msUserSelect = "none"
-                @document.documentElement.style.MozUserSelect = "none"
-                @document.documentElement.style.userSelect = "none"
-                @document.body.style.position = "absolute"
-                @document.body.style.top = "0"
-                @document.body.style.bottom = "0"
-                @document.body.style.left = "0"
-                @document.body.style.right = "0"
-                @document.body.style.margin = "0"
-                @document.body.style.border = "none"
-                @document.body.style.padding = "0"
-                body_width = @document.body.clientWidth
-                body_height = @document.body.clientHeight
-                for i, screen of @screens
-                    canvas = screen.canvas
-                    if body_width / body_height > canvas.width / canvas.height
-                        scaled_height = if body_height < canvas.height then body_height else canvas.height * Math.floor(body_height / canvas.height)
-                        scaled_width = Math.floor(canvas.width * scaled_height / canvas.height)
-                    else
-                        scaled_width = if body_width < canvas.width then body_width else canvas.width * Math.floor(body_width / canvas.width)
-                        scaled_height = Math.floor(canvas.height * scaled_width / canvas.width)
-                    canvas.style.display = "block"
-                    canvas.style.position = "absolute"
-                    canvas.style.margin = "0"
-                    canvas.style.top = "calc(50% - " + (scaled_height / 2) + "px)";
-                    canvas.style.left = "calc(50% - " + (scaled_width / 2) + "px)";
-                    canvas.style.width = scaled_width + "px"
-                    canvas.style.height = scaled_height + "px"
-                @document.body.style.visibility = "";
-                return
 
 ####  loadArea()  ####
 

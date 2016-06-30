@@ -89,7 +89,7 @@ Because neither HTML attributes nor JavaScript object keys distinguish between n
 
 We now have everything we need to initialize `Character` as a `Unit`:
 
-        Unit.call this, area, game.screens[elt?.dataset.screen], id, x, y, sprite_list?.dataset.boxWidth || sprites[0]?.width, sprite_list?.dataset.boxHeight || sprites[0]?.height, sprite_list?.dataset.originX, sprite_list?.dataset.originY
+        Unit.call this, area, game.screens[elt?.getAttribute("data-screen")], id, x, y, sprite_list?.dataset.boxWidth || sprites[0]?.width, sprite_list?.dataset.boxHeight || sprites[0]?.height, sprite_list?.dataset.originX, sprite_list?.dataset.originY
 
 We can then define additional properties unique to the `Character` object.
 The following are non-enumerable, so we use `Object.defineProperties`:

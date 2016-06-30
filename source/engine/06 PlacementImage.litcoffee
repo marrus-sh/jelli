@@ -105,7 +105,7 @@ If for some reason we can't get *either* of these properties, then the `source_w
 
 We now have everything we need to initialize `PlacementImage` as a `Unit`:
 
-        Unit.call this, area, game.screens[elt?.dataset.screen], id, x, y, source_width, source_height, elt?.getAttribute("data-origin-x"), elt?.getAttribute("data-origin-y")
+        Unit.call this, area, game.screens[elt.getAttribute("data-screen")], id, x, y, source_width, source_height, elt?.getAttribute("data-origin-x"), elt?.getAttribute("data-origin-y")
 
 Of course, we also need to define the `source` and `placed` properties on the `PlacementImage`:
 
