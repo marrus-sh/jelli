@@ -1828,6 +1828,7 @@
         if (this.area instanceof Area) {
           this.area.step();
         }
+        this.run("then");
         return this.window.setTimeout(this.step.bind(this), 1000 / 60);
       }
     }
