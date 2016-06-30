@@ -228,10 +228,10 @@ We can now calculate the horizontal movement of the character.
     The fact that horizontal movement is calculated first means that if a `Character` walks diagonally while kitty-corner to a collision sector, it will travel horizontally along that sector rather than vertically.
     For example, in the following scenario:
 
->   |    |    |
->   |----|----|
->   | 　 | ⬛ |
->   | 🐊 | 　 |
+|    |    |
+|----|----|
+| 　 | ⬛ |
+| 🐊 | 　 |
 
 >   …🐊 will move horizontally rightward (by `Math.SQRT2 / 2`) if 🐊.targetBy(1, -1) is called.
     This is an extreme edge case (as it requires the `Character` to be lined up *perfectly* along the diagonal), but is worth noting regardless.
