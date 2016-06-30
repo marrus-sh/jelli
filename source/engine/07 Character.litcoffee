@@ -125,7 +125,7 @@ And now we can define the getters and setters:
         Object.defineProperties this, {
             direction:
                 get: -> direction
-                set: (n) -> direction = if isNaN(n) then Number(n) else null
+                set: (n) -> direction = if isNaN(n) then null else Number(n)
                 enumerable: yes
             frame:
                 get: -> frame
@@ -363,16 +363,12 @@ We can go ahead and overwrite `dx` and `dy`, since we won't be needing their old
                 dx = @x - ix
                 dy = @y - iy
 
-We use a tan2 function to set the `direction`.
+We use a atan2 function to set the `direction`.
 This is an angle in radians, clockwise from due north:
 
-                @direction = switch
-                    when dy < 0 then Math.tan(dx / -dy)
-                    when dy > 0 and dx >=0 then Math.tan(dx / -dy) + Math.PI
-                    when dy > 0 and dx < 0 then Math.tan(dx / -dy) - Math.PI
-                    when dy is 0 and dx > 0 then Math.PI / 2
-                    when dy is 0 and dy < 0 then -Math.PI / 2
-                    else null
+                @direction = Math.atan2(dx, -dy)
+
+                console.log dx, dy, @direction
 
 `velocity` uses the same magnitude function we used to calculate `d`:
 

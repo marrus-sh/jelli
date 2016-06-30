@@ -2594,7 +2594,7 @@
           return direction;
         },
         set: function(n) {
-          return direction = isNaN(n) ? Number(n) : null;
+          return direction = isNaN(n) ? null : Number(n);
         },
         enumerable: true
       },
@@ -2858,22 +2858,8 @@
         }
         dx = this.x - ix;
         dy = this.y - iy;
-        this.direction = (function() {
-          switch (false) {
-            case !(dy < 0):
-              return Math.tan(dx / -dy);
-            case !(dy > 0 && dx >= 0):
-              return Math.tan(dx / -dy) + Math.PI;
-            case !(dy > 0 && dx < 0):
-              return Math.tan(dx / -dy) - Math.PI;
-            case !(dy === 0 && dx > 0):
-              return Math.PI / 2;
-            case !(dy === 0 && dy < 0):
-              return -Math.PI / 2;
-            default:
-              return null;
-          }
-        })();
+        this.direction = Math.atan2(dx, -dy);
+        console.log(dx, dy, this.direction);
         return this.velocity = Math.sqrt(dx * dx + dy * dy);
       }
     }
