@@ -1,4 +1,4 @@
-#  06. UNIT  #
+#  05. UNIT  #
 The Jelli Game Engine
 
 - - -
@@ -43,7 +43,7 @@ You can see these in the constructor below.
 
 Given all of those arguments, our first task is to make sure they are what we expect:
 
-        area = null unless area instanceof area
+        area = null unless area instanceof Area
         screen = null unless screen instanceof Screen
         id = String(id)
         width = 0 if isNaN(width = Number(width))
@@ -158,7 +158,7 @@ The `Unit` prototype is incredibly simple.
 With that, we can freeze the prototype:
 
     })
-    
+
     Object.freeze Unit.prototype
 
 ###  Final touches:  ###

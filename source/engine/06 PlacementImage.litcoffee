@@ -1,4 +1,4 @@
-#  07. PLACEMENTIMAGE  #
+#  06. PLACEMENTIMAGE  #
 The Jelli Game Engine
 
 - - -
@@ -27,18 +27,18 @@ It has only two required arguments: `collection` and `name`, which hold the same
 However, the arguments `id`, `x`, `y`, and `placed` may be passed in to initialize the values of those respective properties.
 This takes a variety of forms:
 
-- `Character(collection, name)`
-- `Character(collection, name, placed)` **if** `placed` is a boolean
-- `Character(collection, name, id)` otherwise
-- `Character(collection, name, id, placed)` **if** `placed` is a boolean
-- `Character(collection, name, x, y)` otherwise
-- `Character(collection, name, x, y, placed)` **if** `placed` is a boolean
-- `Character(collection, name, id, x, y)` otherwise
-- `Character(collection, name, id, x, y, placed)`
+- `PlacementImage(collection, name)`
+- `PlacementImage(collection, name, placed)` **if** `placed` is a boolean
+- `PlacementImage(collection, name, id)` otherwise
+- `PlacementImage(collection, name, id, placed)` **if** `placed` is a boolean
+- `PlacementImage(collection, name, x, y)` otherwise
+- `PlacementImage(collection, name, x, y, placed)` **if** `placed` is a boolean
+- `PlacementImage(collection, name, id, x, y)` otherwise
+- `PlacementImage(collection, name, id, x, y, placed)`
 
 Note that if `id` is not set, it is assumed to be `name`.
 
-    Character = (collection, name, optional_args...) ->
+    PlacementImage = (collection, name, optional_args...) ->
 
 >   **Note :**
     There is no explicit call to `Jelli` here because `PlacementImage` inherits from `Unit`, which is already a `Jelli` object.
@@ -100,24 +100,26 @@ However, `HTMLImageElement`s also have `naturalWidth` and `naturalHeight` proper
 
 If for some reason we can't get *either* of these properties, then the `source_width` and `source_height` are set to zero.
 
-        source_width = 0 unless elt? and not isNaN(source_width = Number(if source.naturalWidth? then source.naturalWidth else source.width))
-        source_height = 0 unless elt? and not isNaN(source_height = Number(if source.naturalHeight? then source.naturalHeight else source.height))
+        source_width = 0 unless elt? and not isNaN(source_width = Number(if elt.naturalWidth? then elt.naturalWidth else source.width))
+        source_height = 0 unless elt? and not isNaN(source_height = Number(if elt.naturalHeight? then elt.naturalHeight else source.height))
 
 We now have everything we need to initialize `PlacementImage` as a `Unit`:
 
         Unit.call this, area, game.screens[elt?.dataset.screen], id, x, y, source_width, source_height, elt?.getAttribute("data-origin-x"), elt?.getAttribute("data-origin-y")
 
-Of course, we also need to define the `placed` property on the `PlacementImage`:
+Of course, we also need to define the `source` and `placed` properties on the `PlacementImage`:
 
         Object.defineProperties this, {
             placed:
                 get: -> placed
                 set: (n) -> placed = !!n
+            source: {value: elt}
         }
 
-`PlacementImage`s are static, so we can go ahead and freeze them.
+`PlacementImage`s are static, so we can go ahead and seal them.
+However, we can't freeze them, or `Collection` won't be able to overwrite their `kill()` function.
 
-        Object.freeze this
+        Object.seal this
 
 ###  The prototype:  ###
 
@@ -125,9 +127,9 @@ The `PlacementImage` prototype is very simple, consisting only of a `draw()` fun
 
     PlacementImage.prototype = Object.create(Unit.prototype, {
 
-The `draw()` function draws the `PlacementImage` – but only if it is loaded and `placed` has been set to `true`.
+The `draw()` function draws the `PlacementImage` – but only if it is a valid image, loaded, and `placed` has been set to `true`.
 
-        draw: {value: -> @screen.context.drawImage(@source, Math.floor(@edges.screen_left), Math.floor(@edges.screen_top)) if @placed and @screen instanceof Screen and (not (@source instanceof HTMLImageElement) or @source.complete)}
+        draw: {value: -> @screen.context.drawImage(@source, Math.floor(@edges.screen_left), Math.floor(@edges.screen_top)) if @placed and @screen instanceof Screen and (@source instanceof HTMLImageElement and source.complete or @source instanceof SVGImageElement or @source instanceof HTMLCanvasElement or createImageBitmap? and (image instanceof ImageBitmap or @source instanceof ImageBitmap))}
 
 The `togglePlacement` function either toggles `placed` or sets it to `n`.
 
@@ -140,7 +142,7 @@ We can now freeze the prototype:
 
     })
 
-    Object.freeze this
+    Object.freeze PlacementImage.prototype
 
 ###  Final touches:  ###
 

@@ -55,7 +55,7 @@ We use `Object.defineProperties` because these should not be enumerable.
             letters: {value: {}}
             screens: {value: {}}
             sheets: {value: {}}
-            texts: {value: {}}
+            texts: {value: new Collection(this, Text)}
             tilesets: {value: {}}
             window: {value: doc.defaultView || window}
         }
@@ -79,16 +79,21 @@ Two properties have getters and setters.
 
 Next, we load the screens, by `placed()`-ing them and passing them to [`Screen`](../modules/Screen.litcoffee).
 Screens must be `<canvas>` elements, and they must have class `SCREEN`.
+As we place the screens, the list of screens will decrease, so we need to compensate for that by tracking `i`.
 The first screen to be loaded is used for layout, and is called `placement_screen`.
 
-        for item in data.getElementsByTagName("canvas") when item.classList.contains("SCREEN")
-            @screens[item.id] = new Screen(placed(item), "2d")
-            unless @placement_screen? then Object.defineProperty(this, "placement_screen", {value: @screens[item.id]})
+        i = 0
+        elts = data.getElementsByTagName("canvas")
+        while (item = elts.item(i))
+            if item.classList.contains("SCREEN")
+                @screens[item.id] = new Screen(placed(item), "2d")
+                unless @placement_screen? then Object.defineProperty(this, "placement_screen", {value: @screens[item.id]})
+            else i++
         Object.freeze @screens
 
 Now that the screens have been loaded, (most importantly, `placement_screen`), we can load our [`Control`](../modules/Control.litcoffee):
 
-        Object.defineProperty this, "control", new Control(@placement_screen.canvas)
+        Object.defineProperty this, "control", {value: new Control(@placement_screen.canvas)}
 
 Next, we have the various sprite-sheets.
 First come our [`Letters`](../modules/Letters.litcoffee):
@@ -103,7 +108,7 @@ Then our [`Sheet`](../modules/Sheet.litcoffee)s:
 
 …And finally our [`Tileset`](../modules/Tileset.litcoffee)s (note for this one that we have to create a `Sheet` as part of the process):
 
-        @tilesets[item.id] = new Tileset(new Sheet(item, item.getAttribute("data-sprite-width"), item.getAttribute("data-sprite-height")), item.getAttribute("data-sprite-width"), item.getAttribute("data-sprite-height"), item.getAttribute("data-collisions").trim(), Sheet.drawSheetAtIndex)
+        @tilesets[item.id] = new Tileset(new Sheet(item, item.getAttribute("data-sprite-width"), item.getAttribute("data-sprite-height")), item.getAttribute("data-sprite-width"), item.getAttribute("data-sprite-height"), item.getAttribute("data-collisions")?.trim(), Sheet.drawSheetAtIndex) for item in data.getElementsByClassName("TILESET")
         Object.freeze @tilesets
 
 We can now initialize the game code:
@@ -224,8 +229,8 @@ That's all for now – the majority of events are handled by [`Control`](../modu
                 @document.body.style.padding = "0"
                 body_width = @document.body.clientWidth
                 body_height = @document.body.clientHeight
-                for i, screen in @screens
-                    canvas = @screens.canvas
+                for i, screen of @screens
+                    canvas = screen.canvas
                     if body_width / body_height > canvas.width / canvas.height
                         scaled_height = if body_height < canvas.height then body_height else canvas.height * Math.floor(body_height / canvas.height)
                         scaled_width = Math.floor(canvas.width * scaled_height / canvas.height)
@@ -240,6 +245,7 @@ That's all for now – the majority of events are handled by [`Control`](../modu
                     canvas.style.width = scaled_width + "px"
                     canvas.style.height = scaled_height + "px"
                 @document.body.style.visibility = "";
+                return
 
 ####  loadArea()  ####
 

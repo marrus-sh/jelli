@@ -31,7 +31,7 @@ We should start with a few quick lines of argument checking to make sure everyth
 
         elt = null unless elt instanceof Element
         e = null unless typeof e is "object"
-        rect = elt?.getBoundingClientRect
+        rect = elt?.getBoundingClientRect()
 
 Now we can define the properties of the `Poke`:
 
@@ -76,8 +76,8 @@ The `Poke` prototype contains only one function: `updateWith()`, which updates a
             value: (e) ->
                 return unless @target instanceof Element and typeof e is "object"
                 rect = @target.getBoundingClientRect()
-                @x = if elt?.width? then (e?.pageX - rect.left) * elt.width / elt.clientWidth else e?.pageX - rect.left
-                @y = if elt?.height? then (e?.pageY - rect.top) * elt.height / elt.clientHeight else e?.pageY - rect.top
+                @x = if @target.width? then (e?.pageX - rect.left) * @target.width / @target.clientWidth else e?.pageX - rect.left
+                @y = if @target.height? then (e?.pageY - rect.top) * @target.height / @target.clientHeight else e?.pageY - rect.top
     })
 
     Object.freeze Poke.prototype
@@ -103,18 +103,18 @@ The `PokeList` prototype allows users to create new `Pokes` and access `Poke`s b
 
 `deleteItem()` deletes the first `Poke` with the specified number, `n`
 
-        deleteItem: {value: (n) -> delete this[id] for id, poke of this when poke.number = n}
+        deleteItem: {value: (n) -> delete this[id] for id, poke of this when poke.number is n}
 
 `item()` returns the first `Poke` with the specified number, `n`.
 
         item:
             value: (n) ->
-                (return poke) for id, poke of this when poke.number = n
+                (return poke) for id, poke of this when poke.number is n
                 return null
 
 `newPoke()` creates a new `Poke` from the specified `MouseEvent` or `Touch` at number `n`:
 
-        new: {value: (e, id, n) -> this[id] = new Poke(@target e, n)}
+        new: {value: (id, e, n) -> this[id] = new Poke(@target, e, n)}
 
 We can now freeze the prototype:
 
@@ -172,7 +172,7 @@ If `name` is not provided, the function does nothing.
 
         add:
             value: (name) ->
-                @controls[name] = off if name?
+                @keys[name] = off if name?
                 return this
 
 You will note that the above function returned `this` – that is, the current `Control` object.
@@ -185,7 +185,7 @@ If no key with `name` has already been defined, this does nothing.
 
         addCodes:
             value: (name, codes...) ->
-                @codes[code] = name for code of codes unless name? and @keys[name]?
+                @codes[code] = name for code in codes if name? and @keys[name]?
                 return this
 
 Here we have defined the value of `code` in `@codes` to give us the `name` of the key, for each code specified.
@@ -212,14 +212,12 @@ For `"contextmenu"`, we just want to prevent the default.
 When a key is down, we want to toggle it to `on`…
 
                     when "keydown"
-                        e.preventDefault()
                         for code in [e.code, e.key, e.keyIdentifier, e.keyCode]
                             @toggleCode(code, on) if @isCodeDefined(code)
 
 …and when a key is up, we want to toggle it to `false`.
 
                     when "keyup"
-                        e.preventDefault()
                         for code in [e.code, e.key, e.keyIdentifier, e.keyCode]
                             @toggleCode(code, off) if @isCodeDefined(code)
 
@@ -314,7 +312,7 @@ If not set, the second argument will just toggle the key to the opposite value.
 
         toggle: {value: (name, to) -> @keys[name] = to? and to or not to? and !@keys[name] if name? and @keys[name]?}
 
-        toggleCode: {value: (code, to) -> controls[name] = to? and to or not to? and !@keys[name] if code? and (name = @codes[code]) and @keys[name]?}
+        toggleCode: {value: (code, to) -> @keys[name] = to? and to or not to? and !@keys[name] if code? and (name = @codes[code]) and @keys[name]?}
 
 You will notice that the above functions do *not* return `this`!
 Rather, they return whatever value the key was toggled to, or `undefined` if the toggle failed.

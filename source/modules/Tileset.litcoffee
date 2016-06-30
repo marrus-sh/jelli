@@ -39,7 +39,8 @@ We use a variable named `code` to keep track of the proper order for Base64 numb
 
 As another matter of convenience (and slight efficiency?), we can set up an object, `values`, which associates a Base64 number with its decimal equivalent:
 
-        values[n] = i for i, n in code
+        values = {}
+        values[n] = i for n, i in code
 
 We need to make sure that our string is (1) actually a string, and (2) actually in Base64.
 The latter requrires that it be divisible by `4`, so if it isn't then we exit early.
@@ -226,7 +227,7 @@ Note that in the above code, `Math.floor(x / @tile_width)` gives the column of t
 We can get the corner that the point is located in by multiplying by `2` if the point is on the right-hand side, and multiplying by `4` if the point is on the bottom.
 We use the bitwise `&` operator to compare this value to the collision data for the tile, and return the result.
 
-                return collision & 1 * (1 + x % tile_width <= this.tile_width / 2) * (1 + 3 * (y % @tile_height <= @tile_height / 2))
+                return collision & 1 * (1 + (x % @tile_width >= @tile_width / 2)) * (1 + 3 * (y % @tile_height >= @tile_height / 2))
 
 Next, we have the `draw()` function.
 This function is fairly simple, it just iterates over each tile and draws it to the `context`.
@@ -242,7 +243,7 @@ Note that the function aborts if `tile_width`, `tile_height`, or `tiles_wide` is
 
 We can now draw the tiles:
 
-                @tileset.draw(@context, @map[i], Number(@x) - Number(@origin_x) + (i % @tiles_wide) * @tile_width, Number(@y) - Number(@origin_y) + Math.floor(i / @tiles_wide) * @tiles_height) for i in [0..@map.length]
+                @tileset.draw(@context, @map[i], Number(@x) - Number(@origin_x) + (i % @tiles_wide) * @tile_width, Number(@y) - Number(@origin_y) + Math.floor(i / @tiles_wide) * @tile_height) for i in [0..@map.length]
 
 For a drawing function, we don't need to return a value.
 
@@ -259,7 +260,7 @@ If not, it returns the coordinate of the point instead.
 
 First we need to make sure that we were passed the arguments that we expect:
 
-                return unless (edge is Tilemap.BOTTOM_EDGE or edge is Tilemap.LEFT_EDGE or edge is Tilemap.RIGHT_EDGE or edge is Tilemap.TOP_EDGE) and isNaN(sx = Number(sx)) and isNaN(sy = Number(sy))
+                return if edge isnt Tilemap.BOTTOM_EDGE and edge isnt Tilemap.LEFT_EDGE and edge isnt Tilemap.RIGHT_EDGE and edge isnt Tilemap.TOP_EDGE or isNaN(sx = Number(sx)) or isNaN(sy = Number(sy))
 
 For convenience, let's store `Tileset.collisions` at `at`:
 
@@ -296,10 +297,10 @@ If the point lands on the far side of the tile, then we need to check to see if 
 If it does, we can return the near edge of the near side; if it doesn't, then the near edge of the far side is what we want.
 
                 switch edge
-                    when Tilemap.BOTTOM_EDGE then return (if corner is at.TOPLEFT and collision & at.BOTTOMLEFT or corner is at.TOPRIGHT and collision & at.BOTTOMRIGHT then iy * @tile_height + @tile_height + @y else iy * @tile_height + @tile_height / 2 + @y)
-                    when Tilemap.LEFT_EDGE then return (if corner is at.TOPRIGHT and collision & at.TOPLEFT or corner is at.BOTTOMRIGHT and collision & at.BOTTOMLEFT then ix * @tile_width + @x else ix * @tile_width + @tile_width / 2 + @x)
-                    when Tilemap.RIGHT_EDGE then return (if corner is at.TOPLEFT and collision & at.TOPRIGHT or corner is at.BOTTOMLEFT and collision & at.BOTTOMRIGHT then ix * @tile_width + @tile_width + @x else ix * @tile_width + @tile_width / 2 + @x)
-                    when Tilemap.TOP_EDGE then return (if corner is at.BOTTOMLEFT and collision & at.TOPLEFT or corner is at.BOTTOMRIGHT and collision & at.TOPRIGHT then iy * @tile_height + @y else iy * @tile_height + @tile_height / 2 + @y)
+                    when Tilemap.BOTTOM_EDGE then return (if corner is at.TOPLEFT and collision & at.BOTTOMLEFT or corner is at.TOPRIGHT and collision & at.BOTTOMRIGHT or corner is at.BOTTOMLEFT or corner is at.BOTTOMRIGHT then iy * @tile_height + @tile_height + @y else iy * @tile_height + @tile_height / 2 + @y)
+                    when Tilemap.LEFT_EDGE then return (if corner is at.TOPRIGHT and collision & at.TOPLEFT or corner is at.BOTTOMRIGHT and collision & at.BOTTOMLEFT or corner is at.TOPLEFT or corner is at.BOTTOMLEFT then ix * @tile_width + @x else ix * @tile_width + @tile_width / 2 + @x)
+                    when Tilemap.RIGHT_EDGE then return (if corner is at.TOPLEFT and collision & at.TOPRIGHT or corner is at.BOTTOMLEFT and collision & at.BOTTOMRIGHT or corner is at.TOPRIGHT or corner is at.BOTTOMRIGHT then ix * @tile_width + @tile_width + @x else ix * @tile_width + @tile_width / 2 + @x)
+                    when Tilemap.TOP_EDGE then return (if corner is at.BOTTOMLEFT and collision & at.TOPLEFT or corner is at.BOTTOMRIGHT and collision & at.TOPRIGHT or corner is at.TOPLEFT or corner is at.TOPRIGHT then iy * @tile_height + @y else iy * @tile_height + @tile_height / 2 + @y)
 
 With that, we're done.
 We can now freeze the prototype:
@@ -374,7 +375,7 @@ Here they are in order:
     Tileset.prototype = Object.create(Object.prototype, {
         draw: {value: (context, index, x, y) -> @drawFunction(context, @sheet, index, x, y) if typeof @drawFunction is "function" or @drawFunction instanceof Function}
         getMap: {value: (context, map, tiles_wide, x, y, origin_x, origin_y) -> new Tilemap(this, context, map, tiles_wide, x, y, origin_x, origin_y)}
-        getCollision: {value: (index) -> if isNaN(index) then 0 else (@collisions[Math.floor(index / 2)] >> 4 * ((index + 1) % 2)) & 0xF}    
+        getCollision: {value: (index) -> if isNaN(index) then 0 else (@collisions[Math.floor(index / 2)] >> 4 * ((index + 1) % 2)) & 0xF}
     })
 
 `getCollision()` involves complex bitwise operations because collision data is 4-bit, but is stored in an 8-bit array.

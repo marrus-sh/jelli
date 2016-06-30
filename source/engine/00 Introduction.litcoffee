@@ -19,7 +19,7 @@ The Jelli Game Engine
 
 >   *To come.*
 
-    defineFunctions = (function_object) ->
+    @defineFunctions = (function_object) ->
 
         scripts = document.getElementsByTagName("script")
         elt = script = scripts[scripts.length - 1]

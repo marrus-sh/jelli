@@ -38,13 +38,12 @@ The `Jelli` prototype provides useful extensions for game objects.
 
 `run()` calls a function assigned to the `functions` object with `this` assigned to the object.
 
-        run: (name) ->
-            @functions[name].call(this) if @functions? and (typeof @functions[name] is "function" or @functions[name] instanceof Function)
+        run: {value: (name) -> @functions[name].call(this) if @functions? and (typeof @functions[name] is "function" or @functions[name] instanceof Function)}
 
 That's all we have in the prototype for now.
 
     })
-    
+
     Object.freeze Jelli.prototype
 
 ###  Final touches:  ###

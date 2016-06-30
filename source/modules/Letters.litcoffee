@@ -27,7 +27,7 @@ It is not exposed to the window.
 
 `drawLetter()` takes four arguments: `letters`, a `Letter` object; `index`, the index of the letter to draw; `context`, a `CanvasRenderingContext2D` on which to draw the letter; and `x` and `y`, the coordinates of the letter's top-left corner.
 
-    drawLetter (letters, index, context, x, y) ->
+    drawLetter = (letters, index, context, x, y) ->
 
 First, we need to make sure our arguments are what we expect them to be.
 If `index`, `x`, or `y` don't resolve to numbers, we can simply set them to `0` instead, but with `letters` and `context`, if they aren't of the right type we will have to abort.
@@ -69,7 +69,7 @@ We can now define the letter properties.
 As you can see, `Letter` is a very simple constructor.
 
         @canvas = if letters then letters.canvas else null
-        @draw = drawLetter.bind(this, letters, index)
+        Object.defineProperty this, "draw", {value: drawLetter.bind(this, letters, index)}
         @height = if letters then letters.letter_height else 0
         @index = index
         @letters = letters
@@ -85,6 +85,172 @@ As you can see, `Letter` is a very simple constructor.
 
     Letter.prototype = Object.create(Object.prototype, {draw: {value: ->}})
     Object.freeze Letter.prototype
+
+###  LetterString:  ###
+
+`LetterString` defines a single line of text.
+It is mostly just used by `LetterBlock`.
+
+####  The constructor  ####
+
+The `LetterString` constructor only takes two arguments: `letters`, the `Letters` object that the string is associated with; and `data`, which is a string of letter data.
+Right now, each character in this string is interpreted as a code-point between `0x0` and `0xFFFF` (UTF-16).
+
+>   [Issue #55](https://github.com/literallybenjam/jelli/issues/55) :
+    Strings should be interpreted as 32-bit integers (UTF-32)
+
+    LetterString = (letters, data) ->
+
+If `data` isn't a string, we need to make it one.
+And of course, if `letters` isn't a `Letters` we'd better set it to `null`.
+
+        letters = null unless letters instanceof Letters
+        data = String(data)
+
+`index` gives the current logical position within the string, while `drawIndex` gives the current drawing position.
+If the logical position moves backwards, then we need to erase letters from the canvas, and `delIndex` keeps track of this.
+These are all defined using getters and setters to ensure that they always provide integer values.
+
+        delIndex = 0
+        drawIndex = 0
+        index = 0
+
+        Object.defineProperties this, {
+            delIndex:
+                get: -> delIndex
+                set: (n) -> delIndex = n unless isNaN(n = Math.round(n))
+            drawIndex:
+                get: -> drawIndex
+                set: (n) -> drawIndex = n unless isNaN(n = Math.round(n))
+            index:
+                get: -> index
+                set: (n) -> index = n unless isNaN(n = Math.round(n))
+        }
+
+Next, we have `data` (the source string), `length` (the length of the string), and `letters` (the `Letters` object).
+These are non-enumerable and non-writable.
+
+        Object.defineProperties this, {
+            data: {value: data}
+            length: {value: data.length}
+            letters: {value: letters}
+        }
+
+Finally, we can add the individual `Letter`s to the `LetterString`.
+
+        this[q] = letters?.item(data.charCodeAt(q)) for letter, q in data
+
+`LetterString`s are immutable, so we can freeze them:
+
+        Object.freeze this
+
+####  The prototype  ####
+
+The `LetterString` prototype is used to advance the indices, get individual letters, and draw the string to the context.
+
+    LetterString.prototype = Object.create(Object.prototype, {
+
+The `advance` function advances the `LetterString` by an optional amount (defaults to `1`).
+
+        advance:
+            value: (amount = 1) ->
+
+We do all our math on a separate variable, `i`, to avoid having to call the above getters and setters more often than we need to:
+
+                i = @index
+
+If the `amount` resolves to a number, then we will increment by that amount.
+Otherwise, we just increment by `1`.
+
+                i += if isNaN(amount = Math.round(amount)) then 1 else amount
+
+We want to make sure our index is within our bounds: nonnegative and less-than–or–equal-to the length of the block.
+
+                i = 0 if i < 0
+                i = @length if i > @length
+
+We can now set the `index`:
+
+                @index = i
+
+If our index moved backwards, we also need to set the `delIndex`:
+
+                @delIndex = i if @delIndex > i
+
+This function returns the final index position:
+
+                return i
+
+Our next function, `clear()`, simply resets `index` and `delIndex` to `0`:
+
+        clear: {value: -> @index = @delIndex = 0}
+
+Note that `clear()` **does not clear the drawing context**.
+By design, the only function which draws to or clears a drawing context is `draw()`.
+If ensuring that the letters have been cleared from the render is important to you, make sure that `draw()` is called at some point after calling `clear()` before proceeding.
+
+The `draw()` function draws the string to the given `context` with its top-left corner at (`x`, `y`).
+For purposes of efficiency, it only draws the string from `drawIndex` to `index`, and then sets `drawIndex` to this value.
+If `delIndex` is less than `drawIndex`, it deletes these characters and sets back `drawIndex` first.
+
+        draw:
+            value: (context, x, y) ->
+
+First we ensure that our arguments are correct, and we can actually draw the string.
+If `x` and `y` aren't numbers, they default to `0`.
+
+                return unless context instanceof CanvasRenderingContext2D and @letters instanceof Letters and (width = Number(@letters.letter_width)) and (height = Number(@letters.letter_height))
+                x = 0 if isNaN(x = Math.round(x))
+                y = 0 if isNaN(y = Math.round(y))
+
+You may recognize that `unless`-statement from `drawLetter`, above.
+
+Next, we make sure our indices are logical (between `0` and `length`).
+Additionally, `delIndex` can't exceed `index`.
+
+                @drawIndex = @length if @drawIndex > @length
+                @drawIndex = 0 if @drawIndex < 0
+                @delIndex = @index if @delIndex > @index
+                @delIndex = 0 if @delIndex < 0
+
+If `drawIndex` is bigger than `delIndex`, then we have some letters to delete:
+
+                if @drawIndex > @delIndex
+                    context.clearRect(x + @delIndex * (width + 1), y, (@drawIndex - @delIndex) * (width + 1), height + 1)
+                    @drawIndex = @delIndex
+
+You will note from the above that letters are given a 1px padding (on the bottom and right side).
+
+>   [Issue #41](https://github.com/literallybenjam/jelli/issues/41) :
+    It would be nice to be able to configure this amount.
+
+We can now draw the letters from `drawIndex` to `index`:
+
+                while @drawIndex < @length and @drawIndex < @index
+                    continue unless this[@drawIndex] instanceof Letter
+                    this[@drawIndex].draw(context, x + @drawIndex * (width + 1), y)
+                    @drawIndex++
+
+Finally, we can reset `delIndex` to `drawIndex`:
+
+                @delIndex = @drawIndex
+
+Our next function is `fill()`.
+The inverse to `clear()`, it sets `index` to the length of the `LetterString`.
+
+        fill: {value: -> @index = @length}
+
+Finally, `item()` returns a single `Letter` from the `LetterString`.
+It is the same as calling `this[n]`, except that a return value of a `Letter` or `null` is guaranteed:
+
+        item: {value: (n) -> if this[n] instanceof Letter then this[n] else null}
+
+…And our `LetterString`s are done.
+We can freeze the prototype to make sure everything stays golden:
+
+    })
+
+    Object.freeze LetterString.prototype
 
 ###  LetterBlock:  ###
 
@@ -106,7 +272,7 @@ We first need to make sure that the variables are of the proper type, and if not
 
 We can now go ahead and assign the strings to numeric indices in the `LetterBlock` object:
 
-        this[index] = (if string instanceof LetterString then string else new LetterString(letters, string)) for string, index in strings
+        this[q] = (if string instanceof LetterString then string else new LetterString(letters, string)) for string, q in strings
 
 There are several other properties that we also set for convenient access.
 We use `Object.defineProperties` because these values should **not** be enumerable:
@@ -129,7 +295,9 @@ They all follow basically the same form, so I went ahead and defined it as its o
 
 If the property value is equal to the length of the line, then continue on to the next line, incrementing `n` by that length:
 
-            n += this[i].length while i++ < @height and this[i][prop] is this[i].length
+            while i < @height and this[i][prop] is this[i].length
+                n += this[i].length
+                i++
 
 
 Otherwise, we've reached the last line where the property is set, so we can calculate the total value:
@@ -148,7 +316,9 @@ It should still be a number though:
 
 If `n` is bigger than the length of the line, we overflow to the next line, decrementing `n` by that length:
 
-            n -= this[i][prop] = this[i].length while i++ < @height and n > this[i].length
+            while i < @height and n > this[i].length
+                n -= this[i][prop] = this[i].length
+                i++
 
 Otherwise, we've reached the last line, and we set the property to `n`'s remaining value:
 
@@ -180,7 +350,7 @@ The `length` property only has a getter; it just adds up all the lengths of each
             get: ->
                 i = 0
                 n = 0
-                n += this[i].length while i++ < @height
+                n += this[i++].length while i < @height
                 return n
         }
 
@@ -244,7 +414,7 @@ It is very similar to our `multiGetter` function above:
             value: (n) ->
                 i = 0
                 return null if isNaN(n = Number(n))
-                n -= this[i].length while this[i++]? and n > this[i].length
+                n -= this[i++].length while this[i]? and n > this[i].length
                 return if this[i]? then this[i].item(n) else null
 
 Finally, the `line()` function gives us the entire `LetterSting` of a given line.
@@ -256,172 +426,6 @@ We can now freeze the prototype, and move on to our next constructor:
     })
 
     Object.freeze LetterBlock.prototype
-
-###  LetterString:  ###
-
-`LetterString` defines a single line of text.
-It is mostly just used by `LetterBlock`.
-
-####  The constructor  ####
-
-The `LetterString` constructor only takes two arguments: `letters`, the `Letters` object that the string is associated with; and `data`, which is a string of letter data.
-Right now, each character in this string is interpreted as a code-point between `0x0` and `0xFFFF` (UTF-16).
-
->   [Issue #55](https://github.com/literallybenjam/jelli/issues/55) :
-    Strings should be interpreted as 32-bit integers (UTF-32)
-
-    LetterString = (letters, data) ->
-
-If `data` isn't a string, we need to make it one.
-And of course, if `letters` isn't a `Letters` we'd better set it to `null`.
-
-        letters = null unless letters instanceof Letters
-        data = String(data)
-
-`index` gives the current logical position within the string, while `drawIndex` gives the current drawing position.
-If the logical position moves backwards, then we need to erase letters from the canvas, and `delIndex` keeps track of this.
-These are all defined using getters and setters to ensure that they always provide integer values.
-
-        delIndex = 0
-        drawIndex = 0
-        drawIndex = 0
-
-        Object.defineProperties this, {
-            delIndex:
-                get: -> delIndex
-                set: (n) -> delIndex = n unless isNaN(n = Math.round(n))
-            drawIndex:
-                get: -> drawIndex
-                set: (n) -> drawIndex = n unless isNaN(n = Math.round(n))
-            index:
-                get: -> index
-                set: (n) -> index = n unless isNaN(n = Math.round(n))
-        }
-
-Next, we have `data` (the source string), `length` (the length of the string), and `letters` (the `Letters` object).
-These are non-enumerable and non-writable.
-
-        Object.defineProperties this, {
-            data: {value: data}
-            length: {value: data.length}
-            letters: {value: letters}
-        }
-
-Finally, we can add the individual `Letter`s to the `LetterString`.
-
-        this[index] = letters?.item(data.charCodeAt(i)) for letter, index in data
-
-`LetterString`s are immutable, so we can freeze them:
-
-        Object.freeze this
-
-####  The prototype  ####
-
-The `LetterString` prototype is used to advance the indices, get individual letters, and draw the string to the context.
-
-    LetterString.prototype = Object.create(Object.prototype, {
-
-The `advance` function advances the `LetterString` by an optional amount (defaults to `1`).
-
-        advance:
-            value: (amount = 1) ->
-
-We do all our math on a separate variable, `i`, to avoid having to call the above getters and setters more often than we need to:
-
-                i = @index
-
-If the `amount` resolves to a number, then we will increment by that amount.
-Otherwise, we just increment by `1`.
-
-                i += if isNaN(amount = Math.round(amount)) then 1 else amount
-
-We want to make sure our index is within our bounds: nonnegative and less-than–or–equal-to the length of the block.
-
-                i = 0 if i < 0
-                i = @length if i > @length
-
-We can now set the `index`:
-
-                @index = i
-
-If our index moved backwards, we also need to set the `delIndex`:
-
-                @delIndex = i if @delIndex > i
-
-This function returns the final index position:
-
-                return i
-
-Our next function, `clear()`, simply resets `index` and `delIndex` to `0`:
-
-        clear: {value: -> @index = @delIndex = 0}
-
-Note that `clear()` **does not clear the drawing context**.
-By design, the only function which draws to or clears a drawing context is `draw()`.
-If ensuring that the letters have been cleared from the render is important to you, make sure that `draw()` is called at some point after calling `clear()` before proceeding.
-
-The `draw()` function draws the string to the given `context` with its top-left corner at (`x`, `y`).
-For purposes of efficiency, it only draws the string from `drawIndex` to `index`, and then sets `drawIndex` to this value.
-If `delIndex` is less than `drawIndex`, it deletes these characters and sets back `drawIndex` first.
-
-        draw:
-            value: (context, x, y) ->
-
-First we ensure that our arguments are correct, and we can actually draw the string.
-If `x` and `y` aren't numbers, they default to `0`.
-
-                return unless context instanceof CanvasRenderingContext2D and @letters instanceof Letters and (width = Number(@letters.letter_width)) and (height = Number(@letters_letter_height))
-                x = 0 if isNaN(x = Math.round(x))
-                y = 0 if isNaN(y = Math.round(y))
-
-You may recognize that `unless`-statement from `drawLetter`, above.
-
-Next, we make sure our indices are logical (between `0` and `length`).
-Additionally, `delIndex` can't exceed `index`.
-
-                @drawIndex = @length if @drawIndex > @length
-                @drawIndex = 0 if @drawIndex < 0
-                @delIndex = @index if @delIndex > @index
-                @delIndex = 0 if @delIndex < 0
-
-If `drawIndex` is bigger than `delIndex`, then we have some letters to delete:
-
-                if @drawIndex > @delIndex
-                    context.clearRect(x + @delIndex * (width + 1), y, (@drawIndex - @delIndex) * (width + 1), height + 1)
-                    @drawIndex = @delIndex
-
-You will note from the above that letters are given a 1px padding (on the bottom and right side).
-
->   [Issue #41](https://github.com/literallybenjam/jelli/issues/41) :
-    It would be nice to be able to configure this amount.
-
-We can now draw the letters from `drawIndex` to `index`:
-
-                while @drawIndex < @length and @drawIndex < @index
-                    continue unless this[@drawIndex] instanceof Letter
-                    this[@drawIndex].draw(context, x + @drawIndex * (width + 1), y)
-                    @drawIndex++
-
-Finally, we can reset `delIndex` to `drawIndex`:
-
-                @delIndex = @drawIndex
-
-Our next function is `fill()`.
-The inverse to `clear()`, it sets `index` to the length of the `LetterString`.
-
-        fill: {value: -> @index = @length}
-
-Finally, `item()` returns a single `Letter` from the `LetterString`.
-It is the same as calling `this[n]`, except that a return value of a `Letter` or `null` is guaranteed:
-
-        item: {value: (n) -> if this[n] instanceof Letter then this[n] else null}
-
-…And our `LetterString`s are done.
-We can freeze the prototype to make sure everything stays golden:
-
-    })
-
-    Object.freeze LetterString.prototype
 
 ###  Letters:  ###
 
@@ -494,7 +498,7 @@ Colour handling takes place using the getters and setters of the `color` attribu
         color = Letters.NO_COLOR
 
         Object.defineProperty this, "color", {
-            get: -> return color
+            get: -> color
             set: (n) ->
 
 If the `color` is set to `Letters.NO_COLOR`, we clear the `context` and redraw the image:
@@ -511,7 +515,7 @@ Otherwise, we use a composite operation to change the color of everything in the
                     color = String(n)
                     if @context instanceof CanvasRenderingContext2D
                         @context.globalCompositeOperation = "source-in"
-                        @context.context.fillStyle = color
+                        @context.fillStyle = color
                         @context.fillRect(0, 0, @context.canvas.width, @context.canvas.height)
                         @context.globalCompositeOperation = "source-over"
         }
@@ -522,8 +526,7 @@ In order to allow object freezing, this memorization takes place in a separate a
 
         index = this.size
         memory = []
-
-        getIndex: (i) ->
+        getIndex = (i) ->
             return if memory[i]? then memory[i] else memory[i] = new Letter(this, i)
 
         Object.defineProperty(this, index, {get: getIndex.bind(this, index)}) while (index-- > 0)
@@ -565,7 +568,7 @@ Now we can finally freeze it and be done!
 
     })
 
-    Object.freeze this
+    Object.freeze Letters.prototype
 
 ####  Final touches:  ####
 

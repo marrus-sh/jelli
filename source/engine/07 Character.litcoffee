@@ -1,4 +1,4 @@
-#  08. CHARACTER  #
+#  07. CHARACTER  #
 The Jelli Game Engine
 
 - - -
@@ -99,10 +99,10 @@ The following are non-enumerable, so we use `Object.defineProperties`:
             box_y: {value: if isNaN(sprite_list?.dataset.boxY) then 0 else Number(sprite_list?.dataset.boxY)}
             collides:
                 value: switch elt?.dataset.collides
-                    when undefined then Character.collision.DOES_NOT_COLLIDE
-                    when "map" then Character.collision.MAP
-                    when "character" then Character.collision.CHARACTER
-                    else Character.collision.ALL
+                    when undefined then Character.collisions.DOES_NOT_COLLIDE
+                    when "map" then Character.collisions.MAP
+                    when "character" then Character.collisions.CHARACTER
+                    else Character.collisions.ALL
             functions: {value: elt?.functions}
             sprite_height: {value: sprites[0]?.height || 0}
             sprite_width: {value: sprites[0]?.width}
@@ -141,7 +141,7 @@ And now we can define the getters and setters:
                 enumerable: yes
         }
 
-Finally, we can run the `Character`'s initialization code, and seal the resulting object:
+Finally, we can run the `Character`'s initialization code, and seal the resulting object.
 
         @run("init")
 
@@ -203,7 +203,7 @@ First, we calculate the magnitude of the distance vector:
 
 Next, we ensure that everything is set up properly for us to do our calculations:
 
-                return unless this.area instanceof Area and this.area.characters instanceof Collection and this.area.maps instanceof object and d
+                return unless this.area instanceof Area and this.area.characters instanceof Collection and this.area.maps instanceof Object and d
 
 We set `ix` and `iy` to the `Character`'s initial position.
 We will need these later for direction and velocity calculations.
@@ -267,7 +267,7 @@ If this edge is further left than `s`, we move `s` back to be flush with the edg
 
                             j = -1
                             while ++j <= k
-                                t = @area.maps[i].getCollisionEdge(Tileset.Map.LEFT_EDGE, s, @edges.top + j * @height / k)
+                                t = map.getCollisionEdge(Tileset.Map.LEFT_EDGE, s, @edges.top + j * @height / k)
                                 s = t if s > t
 
 Now, we do the same thing, only iterating over the area's `Character`s.
@@ -303,7 +303,7 @@ If our final `s` is still further right than our original right edge, then we go
                             k = Math.floor(@height / (map.tile_height / 2)) + 1
                             j = -1
                             while ++j <= k
-                                t = @area.maps[i].getCollisionEdge(Tileset.Map.RIGHT_EDGE, s, @edges.top + j * @height / k)
+                                t = map.getCollisionEdge(Tileset.Map.RIGHT_EDGE, s, @edges.top + j * @height / k)
                                 s = t if s < t
                     if @collides & Character.collisions.CHARACTER
                         @area.characters.doForEach (some) =>
@@ -324,7 +324,7 @@ And then for upward and downward motion, switching our widths and heights:
                             k = Math.floor(@width / (map.tile_width / 2)) + 1
                             j = -1
                             while ++j <= k
-                                t = @area.maps[i].getCollisionEdge(Tileset.Map.TOP_EDGE, @edges.left + j * @width / k, s)
+                                t = map.getCollisionEdge(Tileset.Map.TOP_EDGE, @edges.left + j * @width / k, s)
                                 s = t if s > t
                     if @collides & Character.collisions.CHARACTER
                         @area.characters.doForEach (some) =>
@@ -342,7 +342,7 @@ And then for upward and downward motion, switching our widths and heights:
                             k = Math.floor(@width / (map.tile_width / 2)) + 1
                             j = -1
                             while ++j <= k
-                                t = @area.maps[i].getCollisionEdge(Tileset.Map.BOTTOM_EDGE, @edges.left + j * @width / k, s)
+                                t = map.getCollisionEdge(Tileset.Map.BOTTOM_EDGE, @edges.left + j * @width / k, s)
                                 s = t if s < t
                     if @collides & Character.collisions.CHARACTER
                         @area.characters.doForEach (some) =>

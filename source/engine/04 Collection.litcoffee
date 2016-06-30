@@ -1,4 +1,4 @@
-#  03. COLLECTION  #
+#  04. COLLECTION  #
 The Jelli Game Engine
 
 - - -
@@ -71,7 +71,7 @@ It takes a function as its argument, which should take the form of `(value, key)
 It returns the `Collection` itself.
 
         doForEach:
-            value: ->
+            value: (fn) ->
                 fn(value, key) for key, value of this when not @Type? or value instanceof @Type
                 return this
 
@@ -105,8 +105,9 @@ The `load()` function creates an instance and stores it in `name`.
             value: (name, args...) ->
                 unless this[name]?
                     Object.defineProperty this, name, {
-                        value: if typeof @Type is "function" or @Type instanceof Function then new @Type(this, name, arguments...) else null
-                        configurable: true
+                        configurable: yes
+                        enumerable: yes
+                        value: if typeof @Type is "function" or @Type instanceof Function then new @Type(this, name, args...) else null
                     }
                     Object.defineProperty this[name], "kill", {value: this.kill.bind(this, name)}
                 else null
@@ -128,8 +129,9 @@ The code is below:
             value: (args...) ->
                 @nextIndex++ while this[@nextIndex]?
                 Object.defineProperty this, @nextIndex, {
-                    value: if typeof @Type is "function" or @Type instanceof Function then new @Type(this, @nextIndex, arguments...) else null
-                    configurable: true
+                    configurable: yes
+                    enumerable: yes
+                    value: if typeof @Type is "function" or @Type instanceof Function then new @Type(this, @nextIndex, args...) else null
                 }
                 Object.defineProperty this[@nextIndex], "kill", {value: this.kill.bind(this, @nextIndex)}
                 return @nextIndex++

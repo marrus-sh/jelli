@@ -1,4 +1,4 @@
-#  05. AREA  #
+#  03. AREA  #
 The Jelli Game Engine
 
 - - -
@@ -79,13 +79,13 @@ The `clear` property is set whenever `x` or `y` change.
             x:
                 get: -> x
                 set: (n) ->
-                    return if isNaN(n = Number(n))
+                    return if isNaN(x = Number(n))
                     map.origin_x = x for map in @maps
                     @clear = yes
             y:
                 get: -> y
                 set: (n) ->
-                    return if isNaN(n = Number(n))
+                    return if isNaN(y = Number(n))
                     map.origin_y = y for map in @maps
                     @clear = yes
         }
@@ -94,14 +94,14 @@ We can now load the maps.
 Maps are drawn from `MAP` elements within the `AREA` element. We iterate over each and use its `data-*` attributes to create the map.
 We then freeze `maps` to prevent our list from changing or being corrupted.
 
-        @maps[i] = game?.tilesets[map.dataset.tileset]?.getMap(game?.screens[map.dataset.screen]?.context, map.textContent.trim(), map.getAttibute("data-mapwidth"), map.getAttibute("data-dx"), map.getAttibute("data-dy"), x, y) for map, i in (elt?.getElementsByClassName("MAP") || [])
+        @maps[i] = game?.tilesets[map.getAttribute("data-tileset")]?.getMap(game?.screens[map.dataset.screen]?.context, map.textContent.trim(), map.getAttribute("data-mapwidth"), map.getAttribute("data-dx"), map.getAttribute("data-dy"), x, y) for map, i in (elt?.getElementsByClassName("MAP") || [])
         Object.freeze @maps
 
 Next, we can load the characters and images which have been specified in the `data-characters` and `data-images` attributes, respectively.
 This is easy because `characters` and `images` are `Collection`s.
 
-        @characters.load(i) for i in (elt?.dataset.characters?.split(/\s+/) || [])
-        @images.load(i) for i in (elt?.dataset.images?.split(/\s+/) || [])
+        @characters.load(i) for i in (elt?.getAttribute("data-characters")?.split(/\s+/) || [])
+        @images.load(i) for i in (elt?.getAttribute("data-images")?.split(/\s+/) || [])
 
 Finally, we can run the initialization code for the `Area`.
 Any variables assigned to the `Area` must be declared in the initialization code.
@@ -121,18 +121,20 @@ The `Area` prototype allows us to `draw` the `Area` and `step` the `Area`'s logi
 `draw` iterates over the `maps`, `characters`, and `images` of the `Area` and draws them to `context`, in that order.
 It only draws the `maps` if `clear` evaluates to `true`.
 
-        draw: (context) ->
-            map.draw() for map in maps if @clear
-            @characters?.doForEach (character) -> character.draw()
-            @images?.doForEach (image) -> image.draw()
-            @clear = no
+        draw:
+            value: (context) ->
+                map.draw() for map in @maps if @clear
+                @characters?.doForEach (character) -> character.draw()
+                @images?.doForEach (image) -> image.draw()
+                @clear = no
 
 `step` calls the `Area`'s own `step` function, the `step` functions for its `characters`, in order, and then the `Area`'s' `then` function.
 
-        step: ->
-            @run("step")
-            @characters?.doForEach (character) -> character.step()
-            @run("then")
+        step:
+            value: ->
+                @run("step")
+                @characters?.doForEach (character) -> character.step()
+                @run("then")
 
 Now that our prototype is done, we can freeze it.
 

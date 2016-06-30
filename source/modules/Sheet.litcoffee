@@ -25,7 +25,7 @@ It is packaged with `Sprite`, which describes a single sprite on the sheet.
 The function `drawSprite()` is called by `Sprite`s and `Sheet`s in order to draw their images.
 It is not exposed to the window.
 
-    drawSprite = (sheet, start_index, context, x, y, frame = 1) ->
+    drawSprite = (sheet, start_index, context, x, y, frame = 0) ->
 
 …That's a lot of arguments. Let's go through them:
 
@@ -113,7 +113,7 @@ If `sheet` isn't a `Sheet`, then we set it to be null.
 Now we can set the properties.
 Note that `draw` simply binds `drawSprite` to the given `Sheet` and `index`.
 
-        @draw = drawSprite.bind(null, sheet, index)
+        Object.defineProperty this, "draw", {value: drawSprite.bind(this, sheet, index)}
         @height = if sheet then sheet.sprite_height else 0
         @index = index
         @frames = length

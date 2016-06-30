@@ -69,7 +69,7 @@
     if (typeof e !== "object") {
       e = null;
     }
-    rect = elt != null ? elt.getBoundingClientRect : void 0;
+    rect = elt != null ? elt.getBoundingClientRect() : void 0;
     Object.defineProperties(this, {
       target: {
         value: elt
@@ -107,8 +107,8 @@
           return;
         }
         rect = this.target.getBoundingClientRect();
-        this.x = (typeof elt !== "undefined" && elt !== null ? elt.width : void 0) != null ? ((e != null ? e.pageX : void 0) - rect.left) * elt.width / elt.clientWidth : (e != null ? e.pageX : void 0) - rect.left;
-        return this.y = (typeof elt !== "undefined" && elt !== null ? elt.height : void 0) != null ? ((e != null ? e.pageY : void 0) - rect.top) * elt.height / elt.clientHeight : (e != null ? e.pageY : void 0) - rect.top;
+        this.x = this.target.width != null ? ((e != null ? e.pageX : void 0) - rect.left) * this.target.width / this.target.clientWidth : (e != null ? e.pageX : void 0) - rect.left;
+        return this.y = this.target.height != null ? ((e != null ? e.pageY : void 0) - rect.top) * this.target.height / this.target.clientHeight : (e != null ? e.pageY : void 0) - rect.top;
       }
     }
   });
@@ -131,7 +131,7 @@
         results = [];
         for (id in this) {
           poke = this[id];
-          if (poke.number = n) {
+          if (poke.number === n) {
             results.push(delete this[id]);
           }
         }
@@ -143,7 +143,7 @@
         var id, poke;
         for (id in this) {
           poke = this[id];
-          if (poke.number = n) {
+          if (poke.number === n) {
             return poke;
           }
         }
@@ -151,8 +151,8 @@
       }
     },
     "new": {
-      value: function(e, id, n) {
-        return this[id] = new Poke(this.target(e, n));
+      value: function(id, e, n) {
+        return this[id] = new Poke(this.target, e, n);
       }
     }
   });
@@ -160,7 +160,7 @@
   Object.freeze(PokeList.prototype);
 
   Control = function(elt) {
-    var ref, ref1, ref10, ref2, ref3, ref4, ref5, ref6, ref7, ref8, ref9;
+    var ref;
     if (elt == null) {
       elt = document.body;
     }
@@ -170,35 +170,17 @@
     this.keys = {};
     this.ownerDocument = ((ref = this.target) != null ? ref.ownerDocument : void 0) || document;
     this.touches = new PokeList(this.target);
-    if ((ref1 = this.ownerDocument) != null) {
-      ref1.defaultView.addEventListener("keydown", this, false);
-    }
-    if ((ref2 = this.ownerDocument) != null) {
-      ref2.defaultView.addEventListener("keyup", this, false);
-    }
-    if ((ref3 = this.ownerDocument) != null) {
-      ref3.defaultView.addEventListener("contextmenu", this, false);
-    }
-    if ((ref4 = this.ownerDocument) != null) {
-      ref4.defaultView.addEventListener("touchstart", this, false);
-    }
-    if ((ref5 = this.ownerDocument) != null) {
-      ref5.defaultView.addEventListener("touchend", this, false);
-    }
-    if ((ref6 = this.ownerDocument) != null) {
-      ref6.defaultView.addEventListener("touchmove", this, false);
-    }
-    if ((ref7 = this.ownerDocument) != null) {
-      ref7.defaultView.addEventListener("touchcancel", this, false);
-    }
-    if ((ref8 = this.ownerDocument) != null) {
-      ref8.defaultView.addEventListener("mousedown", this, false);
-    }
-    if ((ref9 = this.ownerDocument) != null) {
-      ref9.defaultView.addEventListener("mouseup", this, false);
-    }
-    if ((ref10 = this.ownerDocument) != null) {
-      ref10.defaultView.addEventListener("mousemove", this, false);
+    if (this.ownerDocument != null) {
+      this.ownerDocument.defaultView.addEventListener("keydown", this, false);
+      this.ownerDocument.defaultView.addEventListener("keyup", this, false);
+      this.ownerDocument.defaultView.addEventListener("contextmenu", this, false);
+      this.ownerDocument.defaultView.addEventListener("touchstart", this, false);
+      this.ownerDocument.defaultView.addEventListener("touchend", this, false);
+      this.ownerDocument.defaultView.addEventListener("touchmove", this, false);
+      this.ownerDocument.defaultView.addEventListener("touchcancel", this, false);
+      this.ownerDocument.defaultView.addEventListener("mousedown", this, false);
+      this.ownerDocument.defaultView.addEventListener("mouseup", this, false);
+      this.ownerDocument.defaultView.addEventListener("mousemove", this, false);
     }
     return Object.freeze(this);
   };
@@ -207,17 +189,18 @@
     add: {
       value: function(name) {
         if (name != null) {
-          this.controls[name] = false;
+          this.keys[name] = false;
         }
         return this;
       }
     },
     addCodes: {
       value: function() {
-        var code, codes, name;
+        var code, codes, k, len, name;
         name = arguments[0], codes = 2 <= arguments.length ? slice.call(arguments, 1) : [];
-        if (!((name != null) && (this.keys[name] != null))) {
-          for (code in codes) {
+        if ((name != null) && (this.keys[name] != null)) {
+          for (k = 0, len = codes.length; k < len; k++) {
+            code = codes[k];
             this.codes[code] = name;
           }
         }
@@ -242,7 +225,6 @@
             e.preventDefault();
             break;
           case "keydown":
-            e.preventDefault();
             ref = [e.code, e.key, e.keyIdentifier, e.keyCode];
             for (k = 0, len = ref.length; k < len; k++) {
               code = ref[k];
@@ -252,7 +234,6 @@
             }
             break;
           case "keyup":
-            e.preventDefault();
             ref1 = [e.code, e.key, e.keyIdentifier, e.keyCode];
             for (l = 0, len1 = ref1.length; l < len1; l++) {
               code = ref1[l];
@@ -375,7 +356,7 @@
       value: function(code, to) {
         var name;
         if ((code != null) && (name = this.codes[code]) && (this.keys[name] != null)) {
-          return controls[name] = (to != null) && to || (to == null) && !this.keys[name];
+          return this.keys[name] = (to != null) && to || (to == null) && !this.keys[name];
         }
       }
     }
@@ -399,10 +380,10 @@
   Sprite-based text processing and rendering
   ------------------------------------------
    */
-  var Letter, LetterBlock, LetterString, Letters,
+  var Letter, LetterBlock, LetterString, Letters, drawLetter,
     slice = [].slice;
 
-  drawLetter(function(letters, index, context, x, y) {
+  drawLetter = function(letters, index, context, x, y) {
     var height, i, j, width;
     if (!(letters instanceof Letters && index < letters.size && context instanceof CanvasRenderingContext2D)) {
       return;
@@ -421,7 +402,7 @@
     if (letters.canvas instanceof HTMLCanvasElement && !isNaN(i) && !isNaN(j) && (width = Number(letters.letter_width)) && (height = Number(letters.letter_height))) {
       return context.drawImage(letters.canvas, i * width, j * height, width, height, x, y, width, height);
     }
-  });
+  };
 
   Letter = function(letters, index) {
     if (!(letters instanceof Letters)) {
@@ -431,7 +412,9 @@
       index = 0;
     }
     this.canvas = letters ? letters.canvas : null;
-    this.draw = drawLetter.bind(this, letters, index);
+    Object.defineProperty(this, "draw", {
+      value: drawLetter.bind(this, letters, index)
+    });
     this.height = letters ? letters.letter_height : 0;
     this.index = index;
     this.letters = letters;
@@ -447,8 +430,150 @@
 
   Object.freeze(Letter.prototype);
 
+  LetterString = function(letters, data) {
+    var delIndex, drawIndex, index, k, len, letter, q;
+    if (!(letters instanceof Letters)) {
+      letters = null;
+    }
+    data = String(data);
+    delIndex = 0;
+    drawIndex = 0;
+    index = 0;
+    Object.defineProperties(this, {
+      delIndex: {
+        get: function() {
+          return delIndex;
+        },
+        set: function(n) {
+          if (!isNaN(n = Math.round(n))) {
+            return delIndex = n;
+          }
+        }
+      },
+      drawIndex: {
+        get: function() {
+          return drawIndex;
+        },
+        set: function(n) {
+          if (!isNaN(n = Math.round(n))) {
+            return drawIndex = n;
+          }
+        }
+      },
+      index: {
+        get: function() {
+          return index;
+        },
+        set: function(n) {
+          if (!isNaN(n = Math.round(n))) {
+            return index = n;
+          }
+        }
+      }
+    });
+    Object.defineProperties(this, {
+      data: {
+        value: data
+      },
+      length: {
+        value: data.length
+      },
+      letters: {
+        value: letters
+      }
+    });
+    for (q = k = 0, len = data.length; k < len; q = ++k) {
+      letter = data[q];
+      this[q] = letters != null ? letters.item(data.charCodeAt(q)) : void 0;
+    }
+    return Object.freeze(this);
+  };
+
+  LetterString.prototype = Object.create(Object.prototype, {
+    advance: {
+      value: function(amount) {
+        var i;
+        if (amount == null) {
+          amount = 1;
+        }
+        i = this.index;
+        i += isNaN(amount = Math.round(amount)) ? 1 : amount;
+        if (i < 0) {
+          i = 0;
+        }
+        if (i > this.length) {
+          i = this.length;
+        }
+        this.index = i;
+        if (this.delIndex > i) {
+          this.delIndex = i;
+        }
+        return i;
+      }
+    },
+    clear: {
+      value: function() {
+        return this.index = this.delIndex = 0;
+      }
+    },
+    draw: {
+      value: function(context, x, y) {
+        var height, width;
+        if (!(context instanceof CanvasRenderingContext2D && this.letters instanceof Letters && (width = Number(this.letters.letter_width)) && (height = Number(this.letters.letter_height)))) {
+          return;
+        }
+        if (isNaN(x = Math.round(x))) {
+          x = 0;
+        }
+        if (isNaN(y = Math.round(y))) {
+          y = 0;
+        }
+        if (this.drawIndex > this.length) {
+          this.drawIndex = this.length;
+        }
+        if (this.drawIndex < 0) {
+          this.drawIndex = 0;
+        }
+        if (this.delIndex > this.index) {
+          this.delIndex = this.index;
+        }
+        if (this.delIndex < 0) {
+          this.delIndex = 0;
+        }
+        if (this.drawIndex > this.delIndex) {
+          context.clearRect(x + this.delIndex * (width + 1), y, (this.drawIndex - this.delIndex) * (width + 1), height + 1);
+          this.drawIndex = this.delIndex;
+        }
+        while (this.drawIndex < this.length && this.drawIndex < this.index) {
+          if (!(this[this.drawIndex] instanceof Letter)) {
+            continue;
+          }
+          this[this.drawIndex].draw(context, x + this.drawIndex * (width + 1), y);
+          this.drawIndex++;
+        }
+        return this.delIndex = this.drawIndex;
+      }
+    },
+    fill: {
+      value: function() {
+        return this.index = this.length;
+      }
+    },
+    item: {
+      value: function(n) {
+        if (this[n] instanceof Letter) {
+          return this[n];
+        } else {
+          return null;
+        }
+      }
+    }
+  });
+
+  Object.freeze(LetterString.prototype);
+
   LetterBlock = function() {
-    var context, index, k, len, letters, multiGetter, multiSetter, string, strings, x, y;
+    var context, k, len, letters, multiGetter, multiSetter, q, string, strings, x, y;
     letters = arguments[0], context = arguments[1], x = arguments[2], y = arguments[3], strings = 5 <= arguments.length ? slice.call(arguments, 4) : [];
     if (!(context instanceof CanvasRenderingContext2D)) {
       context = null;
@@ -462,9 +587,9 @@
     if (isNaN(y = Math.round(y))) {
       y = 0;
     }
-    for (index = k = 0, len = strings.length; k < len; index = ++k) {
-      string = strings[index];
-      this[index] = (string instanceof LetterString ? string : new LetterString(letters, string));
+    for (q = k = 0, len = strings.length; k < len; q = ++k) {
+      string = strings[q];
+      this[q] = (string instanceof LetterString ? string : new LetterString(letters, string));
     }
     Object.defineProperties(this, {
       context: {
@@ -481,8 +606,9 @@
       var i, n;
       i = 0;
       n = 0;
-      while (i++ < this.height && this[i][prop] === this[i].length) {
+      while (i < this.height && this[i][prop] === this[i].length) {
         n += this[i].length;
+        i++;
       }
       if (i < this.height) {
         return n + this[i][prop];
@@ -496,8 +622,9 @@
       if (isNaN(n = Number(n))) {
         n = 0;
       }
-      while (i++ < this.height && n > this[i].length) {
+      while (i < this.height && n > this[i].length) {
         n -= this[i][prop] = this[i].length;
+        i++;
       }
       if (i < this.height) {
         this[i][prop] = n;
@@ -527,8 +654,8 @@
         var i, n;
         i = 0;
         n = 0;
-        while (i++ < this.height) {
-          n += this[i].length;
+        while (i < this.height) {
+          n += this[i++].length;
         }
         return n;
       }
@@ -583,8 +710,8 @@
         if (isNaN(n = Number(n))) {
           return null;
         }
-        while ((this[i++] != null) && n > this[i].length) {
-          n -= this[i].length;
+        while ((this[i] != null) && n > this[i].length) {
+          n -= this[i++].length;
         }
         if (this[i] != null) {
           return this[i].item(n);
@@ -606,151 +733,8 @@
 
   Object.freeze(LetterBlock.prototype);
 
-  LetterString = function(letters, data) {
-    var delIndex, drawIndex, index, k, len, letter;
-    if (!(letters instanceof Letters)) {
-      letters = null;
-    }
-    data = String(data);
-    delIndex = 0;
-    drawIndex = 0;
-    drawIndex = 0;
-    Object.defineProperties(this, {
-      delIndex: {
-        get: function() {
-          return delIndex;
-        },
-        set: function(n) {
-          if (!isNaN(n = Math.round(n))) {
-            return delIndex = n;
-          }
-        }
-      },
-      drawIndex: {
-        get: function() {
-          return drawIndex;
-        },
-        set: function(n) {
-          if (!isNaN(n = Math.round(n))) {
-            return drawIndex = n;
-          }
-        }
-      },
-      index: {
-        get: function() {
-          return index;
-        },
-        set: function(n) {
-          var index;
-          if (!isNaN(n = Math.round(n))) {
-            return index = n;
-          }
-        }
-      }
-    });
-    Object.defineProperties(this, {
-      data: {
-        value: data
-      },
-      length: {
-        value: data.length
-      },
-      letters: {
-        value: letters
-      }
-    });
-    for (index = k = 0, len = data.length; k < len; index = ++k) {
-      letter = data[index];
-      this[index] = letters != null ? letters.item(data.charCodeAt(i)) : void 0;
-    }
-    return Object.freeze(this);
-  };
-
-  LetterString.prototype = Object.create(Object.prototype, {
-    advance: {
-      value: function(amount) {
-        var i;
-        if (amount == null) {
-          amount = 1;
-        }
-        i = this.index;
-        i += isNaN(amount = Math.round(amount)) ? 1 : amount;
-        if (i < 0) {
-          i = 0;
-        }
-        if (i > this.length) {
-          i = this.length;
-        }
-        this.index = i;
-        if (this.delIndex > i) {
-          this.delIndex = i;
-        }
-        return i;
-      }
-    },
-    clear: {
-      value: function() {
-        return this.index = this.delIndex = 0;
-      }
-    },
-    draw: {
-      value: function(context, x, y) {
-        var height, width;
-        if (!(context instanceof CanvasRenderingContext2D && this.letters instanceof Letters && (width = Number(this.letters.letter_width)) && (height = Number(this.letters_letter_height)))) {
-          return;
-        }
-        if (isNaN(x = Math.round(x))) {
-          x = 0;
-        }
-        if (isNaN(y = Math.round(y))) {
-          y = 0;
-        }
-        if (this.drawIndex > this.length) {
-          this.drawIndex = this.length;
-        }
-        if (this.drawIndex < 0) {
-          this.drawIndex = 0;
-        }
-        if (this.delIndex > this.index) {
-          this.delIndex = this.index;
-        }
-        if (this.delIndex < 0) {
-          this.delIndex = 0;
-        }
-        if (this.drawIndex > this.delIndex) {
-          context.clearRect(x + this.delIndex * (width + 1), y, (this.drawIndex - this.delIndex) * (width + 1), height + 1);
-          this.drawIndex = this.delIndex;
-        }
-        while (this.drawIndex < this.length && this.drawIndex < this.index) {
-          if (!(this[this.drawIndex] instanceof Letter)) {
-            continue;
-          }
-          this[this.drawIndex].draw(context, x + this.drawIndex * (width + 1), y);
-          this.drawIndex++;
-        }
-        return this.delIndex = this.drawIndex;
-      }
-    },
-    fill: {
-      value: function() {
-        return this.index = this.length;
-      }
-    },
-    item: {
-      value: function(n) {
-        if (this[n] instanceof Letter) {
-          return this[n];
-        } else {
-          return null;
-        }
-      }
-    }
-  });
-
-  Object.freeze(LetterString.prototype);
-
   Letters = function(source, letter_width, letter_height, doc) {
-    var canvas, color, context, index, memory, source_height, source_width;
+    var canvas, color, context, getIndex, index, memory, source_height, source_width;
     if (doc == null) {
       doc = document;
     }
@@ -830,7 +814,7 @@
           color = String(n);
           if (this.context instanceof CanvasRenderingContext2D) {
             this.context.globalCompositeOperation = "source-in";
-            this.context.context.fillStyle = color;
+            this.context.fillStyle = color;
             this.context.fillRect(0, 0, this.context.canvas.width, this.context.canvas.height);
             return this.context.globalCompositeOperation = "source-over";
           }
@@ -839,15 +823,13 @@
     });
     index = this.size;
     memory = [];
-    ({
-      getIndex: function(i) {
-        if (memory[i] != null) {
-          return memory[i];
-        } else {
-          return memory[i] = new Letter(this, i);
-        }
+    getIndex = function(i) {
+      if (memory[i] != null) {
+        return memory[i];
+      } else {
+        return memory[i] = new Letter(this, i);
       }
-    });
+    };
     while (index-- > 0) {
       Object.defineProperty(this, index, {
         get: getIndex.bind(this, index)
@@ -885,7 +867,7 @@
     }
   });
 
-  Object.freeze(this);
+  Object.freeze(Letters.prototype);
 
   Object.defineProperty(Letters, "NO_COLOR", {
     value: typeof Symbol !== "undefined" && Symbol !== null ? Symbol("none") : Object.freeze(Object.create(null))
@@ -996,7 +978,7 @@
   drawSprite = function(sheet, start_index, context, x, y, frame) {
     var height, i, image, j, source, width;
     if (frame == null) {
-      frame = 1;
+      frame = 0;
     }
     if (!(sheet instanceof Sheet && start_index < sheet.size && context instanceof CanvasRenderingContext2D)) {
       return;
@@ -1036,7 +1018,9 @@
     if (isNaN(length = Number(length)) || length <= 0) {
       length = 1;
     }
-    this.draw = drawSprite.bind(null, sheet, index);
+    Object.defineProperty(this, "draw", {
+      value: drawSprite.bind(this, sheet, index)
+    });
     this.height = sheet ? sheet.sprite_height : 0;
     this.index = index;
     this.frames = length;
@@ -1134,10 +1118,11 @@
   var Tilemap, Tileset, collision_constants, decode64;
 
   decode64 = function(base64) {
-    var code, data, i, j, len, n, placeholders;
+    var code, data, i, j, len, n, placeholders, values;
     code = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/-_";
-    for (n = j = 0, len = code.length; j < len; n = ++j) {
-      i = code[n];
+    values = {};
+    for (i = j = 0, len = code.length; j < len; i = ++j) {
+      n = code[i];
       values[n] = i;
     }
     if ((base64 = String(base64)).length % 4) {
@@ -1256,7 +1241,7 @@
           return 0x0;
         }
         collision = this.tileset.getCollision(this.map[Math.floor(x / this.tile_width) + Math.floor(y / this.tile_height) * this.tiles_wide]);
-        return collision & 1 * (1 + x % tile_width <= this.tile_width / 2) * (1 + 3 * (y % this.tile_height <= this.tile_height / 2));
+        return collision & 1 * (1 + (x % this.tile_width >= this.tile_width / 2)) * (1 + 3 * (y % this.tile_height >= this.tile_height / 2));
       }
     },
     draw: {
@@ -1266,14 +1251,14 @@
           return;
         }
         for (i = j = 0, ref = this.map.length; 0 <= ref ? j <= ref : j >= ref; i = 0 <= ref ? ++j : --j) {
-          this.tileset.draw(this.context, this.map[i], Number(this.x) - Number(this.origin_x) + (i % this.tiles_wide) * this.tile_width, Number(this.y) - Number(this.origin_y) + Math.floor(i / this.tiles_wide) * this.tiles_height);
+          this.tileset.draw(this.context, this.map[i], Number(this.x) - Number(this.origin_x) + (i % this.tiles_wide) * this.tile_width, Number(this.y) - Number(this.origin_y) + Math.floor(i / this.tiles_wide) * this.tile_height);
         }
       }
     },
     getCollisionEdge: {
       value: function(edge, sx, sy) {
         var at, collision, corner, i, ix, iy, x, y;
-        if (!((edge === Tilemap.BOTTOM_EDGE || edge === Tilemap.LEFT_EDGE || edge === Tilemap.RIGHT_EDGE || edge === Tilemap.TOP_EDGE) && isNaN(sx = Number(sx)) && isNaN(sy = Number(sy)))) {
+        if (edge !== Tilemap.BOTTOM_EDGE && edge !== Tilemap.LEFT_EDGE && edge !== Tilemap.RIGHT_EDGE && edge !== Tilemap.TOP_EDGE || isNaN(sx = Number(sx)) || isNaN(sy = Number(sy))) {
           return;
         }
         at = Tileset.collisions;
@@ -1293,13 +1278,13 @@
         }
         switch (edge) {
           case Tilemap.BOTTOM_EDGE:
-            return (corner === at.TOPLEFT && collision & at.BOTTOMLEFT || corner === at.TOPRIGHT && collision & at.BOTTOMRIGHT ? iy * this.tile_height + this.tile_height + this.y : iy * this.tile_height + this.tile_height / 2 + this.y);
+            return (corner === at.TOPLEFT && collision & at.BOTTOMLEFT || corner === at.TOPRIGHT && collision & at.BOTTOMRIGHT || corner === at.BOTTOMLEFT || corner === at.BOTTOMRIGHT ? iy * this.tile_height + this.tile_height + this.y : iy * this.tile_height + this.tile_height / 2 + this.y);
           case Tilemap.LEFT_EDGE:
-            return (corner === at.TOPRIGHT && collision & at.TOPLEFT || corner === at.BOTTOMRIGHT && collision & at.BOTTOMLEFT ? ix * this.tile_width + this.x : ix * this.tile_width + this.tile_width / 2 + this.x);
+            return (corner === at.TOPRIGHT && collision & at.TOPLEFT || corner === at.BOTTOMRIGHT && collision & at.BOTTOMLEFT || corner === at.TOPLEFT || corner === at.BOTTOMLEFT ? ix * this.tile_width + this.x : ix * this.tile_width + this.tile_width / 2 + this.x);
           case Tilemap.RIGHT_EDGE:
-            return (corner === at.TOPLEFT && collision & at.TOPRIGHT || corner === at.BOTTOMLEFT && collision & at.BOTTOMRIGHT ? ix * this.tile_width + this.tile_width + this.x : ix * this.tile_width + this.tile_width / 2 + this.x);
+            return (corner === at.TOPLEFT && collision & at.TOPRIGHT || corner === at.BOTTOMLEFT && collision & at.BOTTOMRIGHT || corner === at.TOPRIGHT || corner === at.BOTTOMRIGHT ? ix * this.tile_width + this.tile_width + this.x : ix * this.tile_width + this.tile_width / 2 + this.x);
           case Tilemap.TOP_EDGE:
-            return (corner === at.BOTTOMLEFT && collision & at.TOPLEFT || corner === at.BOTTOMRIGHT && collision & at.TOPRIGHT ? iy * this.tile_height + this.y : iy * this.tile_height + this.tile_height / 2 + this.y);
+            return (corner === at.BOTTOMLEFT && collision & at.TOPLEFT || corner === at.BOTTOMRIGHT && collision & at.TOPRIGHT || corner === at.TOPLEFT || corner === at.TOPRIGHT ? iy * this.tile_height + this.y : iy * this.tile_height + this.tile_height / 2 + this.y);
         }
       }
     }
@@ -1537,9 +1522,7 @@
   The Jelli Game Engine
   ---------------------
    */
-  var defineFunctions;
-
-  defineFunctions = function(function_object) {
+  this.defineFunctions = function(function_object) {
     var elt, script, scripts;
     scripts = document.getElementsByTagName("script");
     elt = script = scripts[scripts.length - 1];
@@ -1575,9 +1558,11 @@
   };
 
   Jelli.prototype = Object.create(Object.prototype, {
-    run: function(name) {
-      if ((this.functions != null) && (typeof this.functions[name] === "function" || this.functions[name] instanceof Function)) {
-        return this.functions[name].call(this);
+    run: {
+      value: function(name) {
+        if ((this.functions != null) && (typeof this.functions[name] === "function" || this.functions[name] instanceof Function)) {
+          return this.functions[name].call(this);
+        }
       }
     }
   });
@@ -1599,7 +1584,7 @@
   var Game;
 
   Game = function(doc) {
-    var area, data, item, j, k, l, len, len1, len2, placed, ref, ref1, ref2, resized;
+    var area, data, elts, i, item, j, k, l, len, len1, len2, placed, ref, ref1, ref2, ref3, resized;
     if (doc == null) {
       doc = document;
     }
@@ -1639,7 +1624,7 @@
         value: {}
       },
       texts: {
-        value: {}
+        value: new Collection(this, Text)
       },
       tilesets: {
         value: {}
@@ -1672,34 +1657,41 @@
         }
       }
     });
-    ref = data.getElementsByTagName("canvas");
-    for (j = 0, len = ref.length; j < len; j++) {
-      item = ref[j];
-      if (!(item.classList.contains("SCREEN"))) {
-        continue;
-      }
-      this.screens[item.id] = new Screen(placed(item), "2d");
-      if (this.placement_screen == null) {
-        Object.defineProperty(this, "placement_screen", {
-          value: this.screens[item.id]
-        });
+    i = 0;
+    elts = data.getElementsByTagName("canvas");
+    while ((item = elts.item(i))) {
+      if (item.classList.contains("SCREEN")) {
+        this.screens[item.id] = new Screen(placed(item), "2d");
+        if (this.placement_screen == null) {
+          Object.defineProperty(this, "placement_screen", {
+            value: this.screens[item.id]
+          });
+        }
+      } else {
+        i++;
       }
     }
     Object.freeze(this.screens);
-    Object.defineProperty(this, "control", new Control(this.placement_screen.canvas));
-    ref1 = data.getElementsByClassName("LETTERS");
-    for (k = 0, len1 = ref1.length; k < len1; k++) {
-      item = ref1[k];
+    Object.defineProperty(this, "control", {
+      value: new Control(this.placement_screen.canvas)
+    });
+    ref = data.getElementsByClassName("LETTERS");
+    for (j = 0, len = ref.length; j < len; j++) {
+      item = ref[j];
       this.letters[item.id] = new Letters(item, item.getAttribute("data-sprite-width"), item.getAttribute("data-sprite-height"), doc);
     }
     Object.freeze(this.letters);
-    ref2 = data.getElementsByClassName("SHEET");
-    for (l = 0, len2 = ref2.length; l < len2; l++) {
-      item = ref2[l];
+    ref1 = data.getElementsByClassName("SHEET");
+    for (k = 0, len1 = ref1.length; k < len1; k++) {
+      item = ref1[k];
       this.sheets[item.id] = new Sheet(item, item.getAttribute("data-sprite-width"), item.getAttribute("data-sprite-height"));
     }
     Object.freeze(this.sheets);
-    this.tilesets[item.id] = new Tileset(new Sheet(item, item.getAttribute("data-sprite-width"), item.getAttribute("data-sprite-height")), item.getAttribute("data-sprite-width"), item.getAttribute("data-sprite-height"), item.getAttribute("data-collisions").trim(), Sheet.drawSheetAtIndex);
+    ref2 = data.getElementsByClassName("TILESET");
+    for (l = 0, len2 = ref2.length; l < len2; l++) {
+      item = ref2[l];
+      this.tilesets[item.id] = new Tileset(new Sheet(item, item.getAttribute("data-sprite-width"), item.getAttribute("data-sprite-height")), item.getAttribute("data-sprite-width"), item.getAttribute("data-sprite-height"), (ref3 = item.getAttribute("data-collisions")) != null ? ref3.trim() : void 0, Sheet.drawSheetAtIndex);
+    }
     Object.freeze(this.tilesets);
     this.run("init");
     Object.seal(this);
@@ -1760,7 +1752,7 @@
     },
     layout: {
       value: function() {
-        var body_height, body_width, canvas, i, j, len, ref, scaled_height, scaled_width, screen;
+        var body_height, body_width, canvas, i, ref, scaled_height, scaled_width, screen;
         this.document.documentElement.style.margin = "0";
         this.document.documentElement.style.padding = "0";
         this.document.documentElement.style.background = "black";
@@ -1786,9 +1778,9 @@
         body_width = this.document.body.clientWidth;
         body_height = this.document.body.clientHeight;
         ref = this.screens;
-        for (screen = j = 0, len = ref.length; j < len; screen = ++j) {
-          i = ref[screen];
-          canvas = this.screens.canvas;
+        for (i in ref) {
+          screen = ref[i];
+          canvas = screen.canvas;
           if (body_width / body_height > canvas.width / canvas.height) {
             scaled_height = body_height < canvas.height ? body_height : canvas.height * Math.floor(body_height / canvas.height);
             scaled_width = Math.floor(canvas.width * scaled_height / canvas.height);
@@ -1804,7 +1796,7 @@
           canvas.style.width = scaled_width + "px";
           canvas.style.height = scaled_height + "px";
         }
-        return this.document.body.style.visibility = "";
+        this.document.body.style.visibility = "";
       }
     },
     loadArea: {
@@ -1892,7 +1884,7 @@
         },
         set: function(n) {
           var j, len, map, ref;
-          if (isNaN(n = Number(n))) {
+          if (isNaN(x = Number(n))) {
             return;
           }
           ref = this.maps;
@@ -1909,7 +1901,7 @@
         },
         set: function(n) {
           var j, len, map, ref;
-          if (isNaN(n = Number(n))) {
+          if (isNaN(y = Number(n))) {
             return;
           }
           ref = this.maps;
@@ -1924,15 +1916,15 @@
     ref = (elt != null ? elt.getElementsByClassName("MAP") : void 0) || [];
     for (i = j = 0, len = ref.length; j < len; i = ++j) {
       map = ref[i];
-      this.maps[i] = game != null ? (ref1 = game.tilesets[map.dataset.tileset]) != null ? ref1.getMap(game != null ? (ref2 = game.screens[map.dataset.screen]) != null ? ref2.context : void 0 : void 0, map.textContent.trim(), map.getAttibute("data-mapwidth"), map.getAttibute("data-dx"), map.getAttibute("data-dy"), x, y) : void 0 : void 0;
+      this.maps[i] = game != null ? (ref1 = game.tilesets[map.getAttribute("data-tileset")]) != null ? ref1.getMap(game != null ? (ref2 = game.screens[map.dataset.screen]) != null ? ref2.context : void 0 : void 0, map.textContent.trim(), map.getAttribute("data-mapwidth"), map.getAttribute("data-dx"), map.getAttribute("data-dy"), x, y) : void 0 : void 0;
     }
     Object.freeze(this.maps);
-    ref4 = (elt != null ? (ref3 = elt.dataset.characters) != null ? ref3.split(/\s+/) : void 0 : void 0) || [];
+    ref4 = (elt != null ? (ref3 = elt.getAttribute("data-characters")) != null ? ref3.split(/\s+/) : void 0 : void 0) || [];
     for (k = 0, len1 = ref4.length; k < len1; k++) {
       i = ref4[k];
       this.characters.load(i);
     }
-    ref6 = (elt != null ? (ref5 = elt.dataset.images) != null ? ref5.split(/\s+/) : void 0 : void 0) || [];
+    ref6 = (elt != null ? (ref5 = elt.getAttribute("data-images")) != null ? ref5.split(/\s+/) : void 0 : void 0) || [];
     for (l = 0, len2 = ref6.length; l < len2; l++) {
       i = ref6[l];
       this.images.load(i);
@@ -1942,35 +1934,40 @@
   };
 
   Area.prototype = Object.create(Jelli.prototype, {
-    draw: function(context) {
-      var j, len, map, ref, ref1;
-      if (this.clear) {
-        for (j = 0, len = maps.length; j < len; j++) {
-          map = maps[j];
-          map.draw();
+    draw: {
+      value: function(context) {
+        var j, len, map, ref, ref1, ref2;
+        if (this.clear) {
+          ref = this.maps;
+          for (j = 0, len = ref.length; j < len; j++) {
+            map = ref[j];
+            map.draw();
+          }
         }
+        if ((ref1 = this.characters) != null) {
+          ref1.doForEach(function(character) {
+            return character.draw();
+          });
+        }
+        if ((ref2 = this.images) != null) {
+          ref2.doForEach(function(image) {
+            return image.draw();
+          });
+        }
+        return this.clear = false;
       }
-      if ((ref = this.characters) != null) {
-        ref.doForEach(function(character) {
-          return character.draw();
-        });
-      }
-      if ((ref1 = this.images) != null) {
-        ref1.doForEach(function(image) {
-          return image.draw();
-        });
-      }
-      return this.clear = false;
     },
-    step: function() {
-      var ref;
-      this.run("step");
-      if ((ref = this.characters) != null) {
-        ref.doForEach(function(character) {
-          return character.step();
-        });
+    step: {
+      value: function() {
+        var ref;
+        this.run("step");
+        if ((ref = this.characters) != null) {
+          ref.doForEach(function(character) {
+            return character.step();
+          });
+        }
+        return this.run("then");
       }
-      return this.run("then");
     }
   });
 
@@ -2028,7 +2025,7 @@
 
   Collection.prototype = Object.create(Object.prototype, {
     doForEach: {
-      value: function() {
+      value: function(fn) {
         var key, value;
         for (key in this) {
           value = this[key];
@@ -2057,12 +2054,13 @@
         name = arguments[0], args = 2 <= arguments.length ? slice.call(arguments, 1) : [];
         if (this[name] == null) {
           Object.defineProperty(this, name, {
+            configurable: true,
+            enumerable: true,
             value: typeof this.Type === "function" || this.Type instanceof Function ? (function(func, args, ctor) {
               ctor.prototype = func.prototype;
               var child = new ctor, result = func.apply(child, args);
               return Object(result) === result ? result : child;
-            })(this.Type, [this, name].concat(slice.call(arguments)), function(){}) : null,
-            configurable: true
+            })(this.Type, [this, name].concat(slice.call(args)), function(){}) : null
           });
           return Object.defineProperty(this[name], "kill", {
             value: this.kill.bind(this, name)
@@ -2080,12 +2078,13 @@
           this.nextIndex++;
         }
         Object.defineProperty(this, this.nextIndex, {
+          configurable: true,
+          enumerable: true,
           value: typeof this.Type === "function" || this.Type instanceof Function ? (function(func, args, ctor) {
             ctor.prototype = func.prototype;
             var child = new ctor, result = func.apply(child, args);
             return Object(result) === result ? result : child;
-          })(this.Type, [this, this.nextIndex].concat(slice.call(arguments)), function(){}) : null,
-          configurable: true
+          })(this.Type, [this, this.nextIndex].concat(slice.call(args)), function(){}) : null
         });
         Object.defineProperty(this[this.nextIndex], "kill", {
           value: this.kill.bind(this, this.nextIndex)
@@ -2113,7 +2112,7 @@
 
   Unit = function(area, screen, id, x, y, width, height, origin_x, origin_y) {
     Jelli.call(this);
-    if (!(area instanceof area)) {
+    if (!(area instanceof Area)) {
       area = null;
     }
     if (!(screen instanceof Screen)) {
@@ -2338,10 +2337,10 @@
   The Jelli Game Engine
   ---------------------
    */
-  var Character,
+  var PlacementImage,
     slice = [].slice;
 
-  Character = function() {
+  PlacementImage = function() {
     var area, collection, elt, game, id, name, optional_args, placed, source_height, source_width, x, y;
     collection = arguments[0], name = arguments[1], optional_args = 3 <= arguments.length ? slice.call(arguments, 2) : [];
     switch (optional_args.length) {
@@ -2411,10 +2410,10 @@
     if (!(elt instanceof HTMLImageElement || elt instanceof SVGImageElement || elt instanceof HTMLCanvasElement || (typeof createImageBitmap !== "undefined" && createImageBitmap !== null) && elt instanceof ImageBitmap)) {
       elt = null;
     }
-    if (!((elt != null) && !isNaN(source_width = Number(source.naturalWidth != null ? source.naturalWidth : source.width)))) {
+    if (!((elt != null) && !isNaN(source_width = Number(elt.naturalWidth != null ? elt.naturalWidth : source.width)))) {
       source_width = 0;
     }
-    if (!((elt != null) && !isNaN(source_height = Number(source.naturalHeight != null ? source.naturalHeight : source.height)))) {
+    if (!((elt != null) && !isNaN(source_height = Number(elt.naturalHeight != null ? elt.naturalHeight : source.height)))) {
       source_height = 0;
     }
     Unit.call(this, area, game.screens[elt != null ? elt.dataset.screen : void 0], id, x, y, source_width, source_height, elt != null ? elt.getAttribute("data-origin-x") : void 0, elt != null ? elt.getAttribute("data-origin-y") : void 0);
@@ -2426,15 +2425,18 @@
         set: function(n) {
           return placed = !!n;
         }
+      },
+      source: {
+        value: elt
       }
     });
-    return Object.freeze(this);
+    return Object.seal(this);
   };
 
   PlacementImage.prototype = Object.create(Unit.prototype, {
     draw: {
       value: function() {
-        if (this.placed && this.screen instanceof Screen && (!(this.source instanceof HTMLImageElement) || this.source.complete)) {
+        if (this.placed && this.screen instanceof Screen && (this.source instanceof HTMLImageElement && source.complete || this.source instanceof SVGImageElement || this.source instanceof HTMLCanvasElement || (typeof createImageBitmap !== "undefined" && createImageBitmap !== null) && (image instanceof ImageBitmap || this.source instanceof ImageBitmap))) {
           return this.screen.context.drawImage(this.source, Math.floor(this.edges.screen_left), Math.floor(this.edges.screen_top));
         }
       }
@@ -2450,7 +2452,7 @@
     }
   });
 
-  Object.freeze(this);
+  Object.freeze(PlacementImage.prototype);
 
   this.PlacementImage = Object.freeze(PlacementImage);
 
@@ -2468,7 +2470,7 @@
     slice = [].slice;
 
   Character = function() {
-    var area, collection, current_sprite, direction, elt, frame, game, id, index, l, len, name, optional_args, ref, ref1, ref2, ref3, ref4, ref5, sprite, sprite_list, sprites, velocity, x, y;
+    var area, collection, current_sprite, direction, elt, frame, game, i, id, index, len, name, optional_args, ref, ref1, ref2, ref3, ref4, ref5, sprite, sprite_list, sprites, velocity, x, y;
     collection = arguments[0], name = arguments[1], optional_args = 3 <= arguments.length ? slice.call(arguments, 2) : [];
     switch (optional_args.length) {
       case 0:
@@ -2518,7 +2520,7 @@
     sprites = {};
     sprite_list = (game != null ? game.data : void 0) instanceof Node ? game.data.getElementsByClassName("SPRITELIST").namedItem(elt != null ? elt.dataset.sprites : void 0) || null : null;
     ref = (sprite_list != null ? sprite_list.getElementsByClassName("SPRITE") : void 0) || [];
-    for (index = l = 0, len = ref.length; l < len; index = ++l) {
+    for (index = i = 0, len = ref.length; i < len; index = ++i) {
       sprite = ref[index];
       sprites[index] = (game != null ? (ref1 = game.sheets[sprite_list.dataset.sheet]) != null ? ref1.getSprite(sprite.dataset.index, sprite.dataset.length) : void 0 : void 0) || null;
       if (sprite.hasAttribute("title") && isNaN(sprite.getAttribute("title"))) {
@@ -2538,13 +2540,13 @@
         value: (function() {
           switch (elt != null ? elt.dataset.collides : void 0) {
             case void 0:
-              return Character.collision.DOES_NOT_COLLIDE;
+              return Character.collisions.DOES_NOT_COLLIDE;
             case "map":
-              return Character.collision.MAP;
+              return Character.collisions.MAP;
             case "character":
-              return Character.collision.CHARACTER;
+              return Character.collisions.CHARACTER;
             default:
-              return Character.collision.ALL;
+              return Character.collisions.ALL;
           }
         })()
       },
@@ -2659,9 +2661,9 @@
     },
     targetBy: {
       value: function(dx, dy) {
-        var d, ix, iy, j, k, l, len, len1, len2, len3, m, map, o, p, ref, ref1, ref2, ref3, s, t;
+        var d, i, ix, iy, j, k, l, len, len1, len2, len3, m, map, o, ref, ref1, ref2, ref3, s, t;
         d = Math.sqrt(dx * dx + dy * dy);
-        if (!(this.area instanceof Area && this.area.characters instanceof Collection && this.area.maps instanceof object && d)) {
+        if (!(this.area instanceof Area && this.area.characters instanceof Collection && this.area.maps instanceof Object && d)) {
           return;
         }
         ix = this.x;
@@ -2674,12 +2676,12 @@
           s = this.edges.right + dx;
           if (this.collides & Character.collisions.MAP) {
             ref = this.area.maps;
-            for (l = 0, len = ref.length; l < len; l++) {
-              map = ref[l];
+            for (i = 0, len = ref.length; i < len; i++) {
+              map = ref[i];
               k = Math.floor(this.height / (map.tile_height / 2)) + 1;
               j = -1;
               while (++j <= k) {
-                t = this.area.maps[i].getCollisionEdge(Tileset.Map.LEFT_EDGE, s, this.edges.top + j * this.height / k);
+                t = map.getCollisionEdge(Tileset.Map.LEFT_EDGE, s, this.edges.top + j * this.height / k);
                 if (s > t) {
                   s = t;
                 }
@@ -2716,12 +2718,12 @@
           s = this.edges.left + dx;
           if (this.collides & Character.collisions.MAP) {
             ref1 = this.area.maps;
-            for (m = 0, len1 = ref1.length; m < len1; m++) {
-              map = ref1[m];
+            for (l = 0, len1 = ref1.length; l < len1; l++) {
+              map = ref1[l];
               k = Math.floor(this.height / (map.tile_height / 2)) + 1;
               j = -1;
               while (++j <= k) {
-                t = this.area.maps[i].getCollisionEdge(Tileset.Map.RIGHT_EDGE, s, this.edges.top + j * this.height / k);
+                t = map.getCollisionEdge(Tileset.Map.RIGHT_EDGE, s, this.edges.top + j * this.height / k);
                 if (s < t) {
                   s = t;
                 }
@@ -2758,12 +2760,12 @@
           s = this.edges.bottom + dy;
           if (this.collides & Character.collisions.MAP) {
             ref2 = this.area.maps;
-            for (o = 0, len2 = ref2.length; o < len2; o++) {
-              map = ref2[o];
+            for (m = 0, len2 = ref2.length; m < len2; m++) {
+              map = ref2[m];
               k = Math.floor(this.width / (map.tile_width / 2)) + 1;
               j = -1;
               while (++j <= k) {
-                t = this.area.maps[i].getCollisionEdge(Tileset.Map.TOP_EDGE, this.edges.left + j * this.width / k, s);
+                t = map.getCollisionEdge(Tileset.Map.TOP_EDGE, this.edges.left + j * this.width / k, s);
                 if (s > t) {
                   s = t;
                 }
@@ -2800,12 +2802,12 @@
           s = this.edges.top + dy;
           if (this.collides & Character.collisions.MAP) {
             ref3 = this.area.maps;
-            for (p = 0, len3 = ref3.length; p < len3; p++) {
-              map = ref3[p];
+            for (o = 0, len3 = ref3.length; o < len3; o++) {
+              map = ref3[o];
               k = Math.floor(this.width / (map.tile_width / 2)) + 1;
               j = -1;
               while (++j <= k) {
-                t = this.area.maps[i].getCollisionEdge(Tileset.Map.BOTTOM_EDGE, this.edges.left + j * this.width / k, s);
+                t = map.getCollisionEdge(Tileset.Map.BOTTOM_EDGE, this.edges.left + j * this.width / k, s);
                 if (s < t) {
                   s = t;
                 }
@@ -2873,5 +2875,136 @@
   Object.freeze(Character.collisions);
 
   this.Character = Object.freeze(Character);
+
+}).call(this);
+// Generated by CoffeeScript 1.10.0
+(function() {
+  "use strict";
+
+  /*
+  TEXT
+  The Jelli Game Engine
+  ---------------------
+   */
+  var Text;
+
+  Text = function(collection, name, screen, letters_name, text, isBase64) {
+    var area, context, game, letters, ref;
+    if (isBase64 == null) {
+      isBase64 = false;
+    }
+    if (!(collection instanceof Collection)) {
+      collection = null;
+    }
+    game = collection != null ? collection.game : null;
+    area = collection != null ? collection.area : null;
+    if (game != null) {
+      context = (ref = game.screens[screen]) != null ? ref.context : void 0;
+      letters = game.letters[letters_name];
+      if (isBase64) {
+        text = game.window.atob(text);
+      }
+    } else {
+      context = letters = null;
+    }
+    Object.defineProperty(this, "block", {
+      value: letters != null ? letters.createBlock.apply(letters, [context, 0, 0].concat(text.split(letters.source.getAttribute("data-linefeed")))) : void 0
+    });
+    Object.defineProperties(this, {
+      advance: {
+        value: this.block.advance.bind(this.block)
+      },
+      clear: {
+        value: this.block.clear.bind(this.block)
+      },
+      fill: {
+        value: this.block.fill.bind(this.block)
+      },
+      item: {
+        value: this.block.item.bind(this.block)
+      },
+      line: {
+        value: this.block.line.bind(this.block)
+      }
+    });
+    Object.defineProperties(this, {
+      delIndex: {
+        get: function() {
+          return this.block.delIndex;
+        },
+        set: function(n) {
+          return this.block.delIndex = n;
+        }
+      },
+      drawIndex: {
+        get: function() {
+          return this.block.drawIndex;
+        },
+        set: function(n) {
+          return this.block.drawIndex = n;
+        }
+      },
+      index: {
+        get: function() {
+          return this.block.index;
+        },
+        set: function(n) {
+          return this.block.index = n;
+        }
+      },
+      x: {
+        get: function() {
+          return this.block.x;
+        },
+        set: function(n) {
+          return this.block.x = n;
+        }
+      },
+      y: {
+        get: function() {
+          return this.block.y;
+        },
+        set: function(n) {
+          return this.block.y = n;
+        }
+      }
+    });
+    Object.defineProperties(this, {
+      color: {
+        value: null,
+        writable: true
+      },
+      context: {
+        value: context,
+        enumerable: true
+      },
+      kill: {
+        value: null,
+        writable: true
+      }
+    });
+    return Object.seal(this);
+  };
+
+  Text.prototype = Object.create(Object.prototype, {
+    draw: {
+      value: function() {
+        var ref, ref1;
+        if (!(((ref = this.block) != null ? ref.letters : void 0) instanceof Letters)) {
+          return;
+        }
+        if (this.color) {
+          this.block.letters.color = (ref1 = this.block.letters.source) != null ? ref1.getAttribute("data-palette-" + this.color) : void 0;
+        } else {
+          this.block.letters.clearColor();
+        }
+        return this.block.draw();
+      }
+    }
+  });
+
+  Object.freeze(Text.prototype);
+
+  this.Text = Object.freeze(Text);
 
 }).call(this);
