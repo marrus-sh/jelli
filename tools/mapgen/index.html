@@ -126,14 +126,15 @@
                                 this.game.screens.map_scrn2.canvas.style.visibility = "hidden";
                                 this.images.image.placed = true;
                                 this.images.image2.placed = false;
-                                this.characters.tilechar.x = 2;
+                                this.characters.selected.x = 2;
+                                this.characters.selected2.x =  this.game.screens.map_scrn.width;
                             }
                             else {
                                 this.game.screens.map_scrn2.canvas.style.visibility = "visible";
                                 this.images.image.placed = false;
                                 this.images.image2.placed = true;
-                                this.characters.tilechar.x =  game.screens.map_scrn.width;
-                                this.characters.tilechar2.x = 2;
+                                this.characters.selected.x =  this.game.screens.map_scrn.width;
+                                this.characters.selected2.x = 2;
                             }
                         }
                         if ((poke = this.game.views.tiles.control.clicks[0] || this.game.views.tiles.control.touches[0]) && poke.x > 0 && poke.x < this.game.views.tiles.width && poke.y > 0 && poke.y < this.game.views.tiles.height) {
