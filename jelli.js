@@ -285,7 +285,7 @@
     },
     handleEvent: {
       value: function(e) {
-        var click, code, i, j, k, l, len, len1, len2, len3, len4, m, n, new_touch, o, p, rect, ref, ref1, ref10, ref11, ref12, ref2, ref3, ref4, ref5, ref6, ref7, ref8, ref9, touch;
+        var click, code, i, j, k, l, len, len1, len2, len3, len4, m, n, new_touch, o, p, rect, ref, ref1, ref10, ref11, ref12, ref2, ref3, ref4, ref5, ref6, ref7, ref8, ref9, touch, touch_inside;
         if (!(e instanceof Event)) {
           return;
         }
@@ -312,14 +312,13 @@
             }
             break;
           case "mousedown":
-            e.preventDefault();
             rect = (ref2 = this.target) != null ? ref2.getBoundingClientRect() : void 0;
             if (rect && (rect.left < (ref3 = e.pageX) && ref3 < rect.right) && (rect.top < (ref4 = e.pageY) && ref4 < rect.bottom)) {
+              e.preventDefault();
               this.clicks["new"](e.button, e, e.button);
             }
             break;
           case "mousemove":
-            e.preventDefault();
             ref5 = this.clicks;
             for (i in ref5) {
               click = ref5[i];
@@ -327,12 +326,10 @@
             }
             break;
           case "mouseup":
-            e.preventDefault();
             delete this.clicks[e.button];
             break;
           case "touchcancel":
           case "touchend":
-            e.preventDefault();
             ref6 = e.changedTouches;
             for (m = 0, len2 = ref6.length; m < len2; m++) {
               touch = ref6[m];
@@ -340,7 +337,6 @@
             }
             break;
           case "touchmove":
-            e.preventDefault();
             ref7 = e.changedTouches;
             for (o = 0, len3 = ref7.length; o < len3; o++) {
               touch = ref7[o];
@@ -348,25 +344,31 @@
             }
             break;
           case "touchstart":
-            ref8 = e.changedTouches;
-            for (p = 0, len4 = ref8.length; p < len4; p++) {
-              new_touch = ref8[p];
+            rect = (ref8 = this.target) != null ? ref8.getBoundingClientRect() : void 0;
+            touch_inside = false;
+            ref9 = e.changedTouches;
+            for (p = 0, len4 = ref9.length; p < len4; p++) {
+              new_touch = ref9[p];
+              if (!(rect && (rect.left < (ref10 = touch.pageX) && ref10 < rect.right) && (rect.top < (ref11 = touch.pageY) && ref11 < rect.bottom))) {
+                continue;
+              }
+              touch_inside = true;
               n = null;
               j = 0;
               while (n !== j) {
                 n = j;
-                ref9 = this.touches;
-                for (i in ref9) {
-                  touch = ref9[i];
+                ref12 = this.touches;
+                for (i in ref12) {
+                  touch = ref12[i];
                   if (j === touch.number) {
                     j++;
                   }
                 }
               }
-              rect = (ref10 = this.target) != null ? ref10.getBoundingClientRect() : void 0;
-              if (rect && (rect.left < (ref11 = touch.pageX) && ref11 < rect.right) && (rect.top < (ref12 = touch.pageY) && ref12 < rect.bottom)) {
-                this.touches["new"](new_touch.identifier, touch, n);
-              }
+              this.touches["new"](new_touch.identifier, touch, n);
+            }
+            if (touch_inside) {
+              e.preventDefault();
             }
         }
       }
@@ -2519,7 +2521,7 @@
   PlacementImage.prototype = Object.create(Unit.prototype, {
     draw: {
       value: function() {
-        if (this.placed && this.screen instanceof Screen && (this.source instanceof HTMLImageElement && this.source.complete || this.source instanceof SVGImageElement || this.source instanceof HTMLCanvasElement || (typeof createImageBitmap !== "undefined" && createImageBitmap !== null) && (image instanceof ImageBitmap || this.source instanceof ImageBitmap))) {
+        if (this.placed && this.screen instanceof Screen && (this.source instanceof HTMLImageElement && this.source.complete || this.source instanceof SVGImageElement || this.source instanceof HTMLCanvasElement || (typeof createImageBitmap !== "undefined" && createImageBitmap !== null) && (this.source instanceof ImageBitmap || this.source instanceof ImageBitmap))) {
           return this.screen.context.drawImage(this.source, Math.floor(this.edges.screen_left), Math.floor(this.edges.screen_top));
         }
       }

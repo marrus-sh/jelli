@@ -129,7 +129,7 @@ The `PlacementImage` prototype is very simple, consisting only of a `draw()` fun
 
 The `draw()` function draws the `PlacementImage` – but only if it is a valid image, loaded, and `placed` has been set to `true`.
 
-        draw: {value: -> @screen.context.drawImage(@source, Math.floor(@edges.screen_left), Math.floor(@edges.screen_top)) if @placed and @screen instanceof Screen and (@source instanceof HTMLImageElement and @source.complete or @source instanceof SVGImageElement or @source instanceof HTMLCanvasElement or createImageBitmap? and (image instanceof ImageBitmap or @source instanceof ImageBitmap))}
+        draw: {value: -> @screen.context.drawImage(@source, Math.floor(@edges.screen_left), Math.floor(@edges.screen_top)) if @placed and @screen instanceof Screen and (@source instanceof HTMLImageElement and @source.complete or @source instanceof SVGImageElement or @source instanceof HTMLCanvasElement or createImageBitmap? and (@source instanceof ImageBitmap or @source instanceof ImageBitmap))}
 
 The `togglePlacement` function either toggles `placed` or sets it to `n`.
 

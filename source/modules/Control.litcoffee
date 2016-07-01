@@ -252,42 +252,46 @@ On `"mousedown"`, we generate a new `Poke` if the event was within our `target`'
 The index of the `Poke` corresponds to the mouse button that was pressed.
 
                     when "mousedown"
-                        e.preventDefault()
                         rect = @target?.getBoundingClientRect()
-                        @clicks.new(e.button, e, e.button) if rect and rect.left < e.pageX < rect.right and rect.top < e.pageY < rect.bottom
+                        if rect and rect.left < e.pageX < rect.right and rect.top < e.pageY < rect.bottom
+                            e.preventDefault()
+                            @clicks.new(e.button, e, e.button)
 
 On `"mousemove"`, we update the corresponding `Poke` with the mouse's new position.
 
                     when "mousemove"
-                        e.preventDefault()
                         click.updateWith(e) for i, click of @clicks
 
 On `"mouseup"`, we delete the `Poke` associated with the corresponding mouse button.
 
                     when "mouseup"
-                        e.preventDefault()
                         delete @clicks[e.button]
 
 On `"touchcancel"` or `"touchend"`, we want to delete the corresponding `Poke`s.
 
                     when "touchcancel", "touchend"
-                        e.preventDefault()
                         delete @touches[touch.identifier] for touch in e.changedTouches
 
 On `"touchmove"`, we want to update the corresponding `Poke`s with their new positions.
 
                     when "touchmove"
-                        e.preventDefault()
                         @touches[touch.identifier].updateWith(touch) for touch in e.changedTouches
 
 On `"touchstart"`, we want to create a new `Poke` for the touch if the event was within our `target`'s bounds.
 This is a slightly more complicated process.
 
                     when "touchstart"
+                        rect = @target?.getBoundingClientRect()
+                        touch_inside = false
 
 We iterate over each touch:
 
                         for new_touch in e.changedTouches
+
+If the rect is out of bounds, we skip over this touch:
+
+                            continue unless rect and rect.left < touch.pageX < rect.right and rect.top < touch.pageY < rect.bottom
+                            touch_inside = yes
 
 First, we need to get the number of the touch, by iterating through existing touches until we find a number that is unused:
 
@@ -300,8 +304,11 @@ First, we need to get the number of the touch, by iterating through existing tou
 
 Now we can add a `Poke` with the appropriate number if the `touch` was inside our `VIEW`.
 
-                            rect = @target?.getBoundingClientRect()
-                            @touches.new(new_touch.identifier, touch, n) if rect and rect.left < touch.pageX < rect.right and rect.top < touch.pageY < rect.bottom
+                            @touches.new(new_touch.identifier, touch, n)
+
+If we successfully added a touch, then we should `preventDefault()`:
+
+                        if touch_inside then e.preventDefault()
 
 This function shouldn't return anything, because it's just an event handler.
 

@@ -35,6 +35,10 @@ body {
     width: 100%;
     height: 100%;
 }
+#layer {
+    margin: 12px auto;
+    align-self: center;
+}
 #map {
     flex-grow: 1;
     flex-shrink: 0;
@@ -51,8 +55,14 @@ body {
     margin: 12px auto;
     width: 75%;
     max-width: 31pc;
+    height: 48px;
+    overflow: auto;
     text-align: center;
 }
-#outstring {
+#outstring, #outstring2 {
     word-wrap: break-word;
+}
+dl, dt, dd, p {
+    margin: 0;
+    padding: 0;
 }
