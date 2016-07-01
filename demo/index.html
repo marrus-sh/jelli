@@ -38,10 +38,10 @@
                 <h2>Game setup</h2>
                 <p>
                     Sometimes the game itself needs scripting which cannot be achieved at a lower level.
-                    This can be accomplished through <code>defineFunctions</code>, run somewhere inside the body outside of a character or area.
+                    This can be accomplished through <code>Game.defineFunctions</code>, run somewhere inside the body outside of a character or area.
                 </p>
                 <script type="text/javascript">
-                    defineFunctions({
+                    Game.defineFunctions(document.body, {
                         init: function () {
                             //  Setting up controls:
                             this.views.scrn_01.control.add("down").addCodes("down", 0x28, "ArrowDown", "Down");
@@ -190,7 +190,7 @@
                 </p>
                 <p>
                     Characters generally need scripting.
-                    This can be accomplished through <code>defineFunctions</code>, run somewhere inside the character element.
+                    This can be accomplished through <code>Game.defineFunctions</code>, run somewhere inside the character element.
                 </p>
                 <p>
                     Characters are destroyed when an area is unloaded, and the values of their variables are not stored.
@@ -202,7 +202,7 @@
                          data-screen="mainground"
                          >
                         <script type="text/javascript">
-                            defineFunctions({
+                            Game.defineFunctions("pointer", {
                                 init: function () {
                                     //  Any variables that you're going to use need to be declared in your init function:
                                     this.timer = 0;
@@ -216,7 +216,7 @@
                          data-collides
                          >
                         <script type="text/javascript">
-                            defineFunctions({
+                            Game.defineFunctions("player", {
                                 init: function () {
                                     this.x = 16;
                                     this.y = 80;
@@ -271,7 +271,7 @@
                 </p>
                 <section>
                     <h3>Some areas:</h3>
-                    <div class="AREA" title="Splash screen"
+                    <div id="area01" class="AREA" title="Splash screen"
                          >
                         I have used this area to demonstrate programmatic character loading and managing.
                         <span class="MAP"
@@ -280,7 +280,7 @@
                               data-screen="background"
                               >AAEAAQABAAEAAQABAAEAAQIDAgMCAwIDAgMCAwIDAgMAAQABAAEAAQABAAEAAQABAgMCAwIDAgMCAwIDAgMCAwABAAEAAQABAAEAAQABAAECAwIDAgMCAwIDAgMCAwIDAAEAAQABAAEAAQABAAEAAQIDAgMCAwIDAgMCAwIDAgMAAQABAAEAAQABAAEAAQABAgMCAwIDAgMCAwIDAgMCAw==</span>
                         <script type="text/javascript">
-                            defineFunctions({
+                            Game.defineFunctions("area01", {
                                 init: function () {
                                     var menu1;
                                     var menu2;
@@ -347,7 +347,7 @@
                             });
                         </script>
                     </div>
-                    <div class="AREA" title="The Sea"
+                    <div id="area02" class="AREA" title="The Sea"
                          data-characters="player"
                          >
                         It is often way easier to define character code in their own init and step functions, however, as demonstrated here.
@@ -364,7 +364,7 @@
                               data-screen="background"
                               >BwcHBwcHBwcHBwcHBwcHBwYGBgYGBgYGBgYGBgYGBgYFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUBBQUFBQUFBQUFBQUFBQUFBAQEBAQEBAQEBAQEBAQEBA==</span>
                         <script type="text/javascript">
-                            defineFunctions({
+                            Game.defineFunctions("area02", {
                                 step: function () {
                                     if (this.characters.player.screen_x < 8) this.x--;
                                     if (this.characters.player.screen_x > 248) this.x++;

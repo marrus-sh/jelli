@@ -33,7 +33,6 @@ First, of course, we ensure that that's actually what we were given:
 
 We can now set up the `View` object:
 
-        @control = new Control(elt)
         @height = 0 if isNaN(@height = Number(elt?.getAttribute("data-height")))
         @screens = {}
         @target = elt
@@ -51,11 +50,17 @@ Until we have a chance to lay out the `VIEW`, let's hide its contents:
 Then we can load the screens.
 These are specified by `data-screens` on the `VIEW` element.
 
+        first_screen = null
         for name in elt?.getAttribute("data-screens")?.split(/\s+/) || []
             screen = game?.getDataElement("SCREEN", name)
             if screen
                 @screens[name] = new Screen(elt.appendChild(screen), "2d")
+                first_screen = @screens[name] unless first_screen?
         Object.freeze @screens
+
+Finally, we can set up the `Control`, basing it off of the first screen's `<canvas>` if possible:
+
+        @control = new Control((if first_screen? then first_screen.canvas else elt), 0, 0, @width, @height)
 
 That's it!
 `View`s are immutable, so we can go ahead and freeze them:

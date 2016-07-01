@@ -129,7 +129,7 @@ And now we can define the getters and setters:
                 enumerable: yes
             frame:
                 get: -> frame
-                set: (n) -> frame = Number(n) unless isNaN(n)
+                set: (n) -> frame = n unless isNaN(n = Number(n)) or n < 0 or n >= @sprites[@sprite].frames
                 enumerable: yes
             sprite:
                 get: -> current_sprite

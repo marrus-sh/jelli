@@ -23,32 +23,37 @@ Keyboard input tracking; mouse and touch support
 
 ####  The constructor  ####
 
-The `Poke` constructor takes three arguments: `elt`, which specifies the area relative to which `Poke` coordinates should be defined; `e`, which should be either a `MouseEvent` or a `Touch`; and `n`, which should be a number (this is not inforced, though).
+The `Poke` constructor takes seven arguments: `elt`, which specifies the area relative to which `Poke` coordinates should be defined; `e`, which should be either a `MouseEvent` or a `Touch`; `n`, which should be a number (this is not inforced, though); and `x`, `y`, `width`, and `height`, which define the coordinate system from which to calculate `Poke` coordinates.
 
-    Poke = (elt, e, n) ->
+    Poke = (elt, e, n, x, y, width, height) ->
 
 We should start with a few quick lines of argument checking to make sure everything is in order:
 
         elt = null unless elt instanceof Element
         e = null unless typeof e is "object"
         rect = elt?.getBoundingClientRect()
+        x = 0 if isNaN(x = Number(x))
+        y = 0 if isNaN(y = Number(y))
+        width = (if elt.width? then elt.width else elt.clientWidth) if isNaN(width = Number(width))
+        height = (if elt.height? then elt.height else elt.clientHeight) if isNaN(height = Number(height))
 
 Now we can define the properties of the `Poke`:
 
         Object.defineProperties this, {
-            target: {value: elt}
+            origin_height: {value: height}
             number: {value: n}
+            target: {value: elt}
+            origin_width: {value: width}
+            origin_x: {value: x}
+            origin_y: {value: y}
         }
 
 `start_x` and `start_y` give the initial coordinates of the `Poke`, relative to `elt`.
-If `elt`'s `width` and/or `height` is set, these coordinates are scaled to match `elt`'s internal coordinate scheme (important in the case of `<canvas>` elements).
-
->   *Note :*
-    If an element's `width` or `height` changes during the time while a `Poke` is active, `start_x` and `start_y` will continue to be based on its original dimensions, but `x` and `y` (defined later) will not.
+These coordinates are scaled to match the internal coordinate scheme given by `x`, `y`, `width`, and `height`.
 
         Object.defineProperties this, {
-            start_x: {value: if elt?.width? then (e?.pageX - rect.left) * elt.width / elt.clientWidth else e?.pageX - rect.left}
-            start_y: {value: if elt?.height? then (e?.pageY - rect.top) * elt.height / elt.clientHeight else e?.pageY - rect.top}
+            start_x: {value: (e?.pageX - rect.left - @origin_x) * @origin_width / elt.clientWidth}
+            start_y: {value: (e?.pageY - rect.top - @origin_y) * @origin_height / elt.clientHeight}
         }
 
 `x` and `y` give the current coordinates of the `Poke`, relative to `elt`.
@@ -76,8 +81,8 @@ The `Poke` prototype contains only one function: `updateWith()`, which updates a
             value: (e) ->
                 return unless @target instanceof Element and typeof e is "object"
                 rect = @target.getBoundingClientRect()
-                @x = if @target.width? then (e?.pageX - rect.left) * @target.width / @target.clientWidth else e?.pageX - rect.left
-                @y = if @target.height? then (e?.pageY - rect.top) * @target.height / @target.clientHeight else e?.pageY - rect.top
+                @x = (e?.pageX - rect.left - @origin_x) * @origin_width / @target.clientWidth
+                @y = (e?.pageY - rect.top - @origin_y) * @origin_height / @target.clientHeight
     })
 
     Object.freeze Poke.prototype
@@ -88,12 +93,22 @@ The `Poke` prototype contains only one function: `updateWith()`, which updates a
 
 ####  The constructor  ####
 
-The `PokeList` constructor only takes in one argument, `elt`, which specifies the `Poke`s `target`.
-The constructor stores this value in `target`, then exits.
+The `PokeList` constructor takes in the same arguments as `Control` (see below), with the same meanings.
+The constructor stores these values for later, then exits.
 
-    PokeList = (elt) ->
-        elt = null unless elt instanceof Element
-        Object.defineProperty this, "target", {value: elt}
+    PokeList = (elt, x, y, width, height) ->
+        elt = document.body unless elt instanceof Element
+        x = 0 if isNaN(x = Number(x))
+        y = 0 if isNaN(y = Number(y))
+        width = (if elt.width? then elt.width else elt.clientWidth) if isNaN(width = Number(width))
+        height = (if elt.height? then elt.height else elt.clientHeight) if isNaN(height = Number(height))
+        Object.defineProperties this, {
+            height: {value: height}
+            target: {value: elt}
+            width: {value: width}
+            x: {value: x}
+            y: {value: y}
+        }
 
 ####  The prototype  ####
 
@@ -114,7 +129,7 @@ The `PokeList` prototype allows users to create new `Pokes` and access `Poke`s b
 
 `newPoke()` creates a new `Poke` from the specified `MouseEvent` or `Touch` at number `n`:
 
-        new: {value: (id, e, n) -> this[id] = new Poke(@target, e, n)}
+        new: {value: (id, e, n) -> this[id] = new Poke(@target, e, n, @x, @y, @width, @height)}
 
 We can now freeze the prototype:
 
@@ -128,19 +143,31 @@ We can now freeze the prototype:
 
 ####  The constructor  ####
 
-The `Control` constructor takes one argument: `elt`, which gives the element used for determining `Poke` coordinates.
-It defaults to `document.body`.
+The `Control` constructor takes five arguments: `elt`, which gives the element used for determining `Poke` coordinates, and `x`, `y`, `width`, and `height`, which determines the coordinate system.
+`elt` defaults to `document.body`.
 
-    Control = (elt = document.body) ->
+    Control = (elt = document.body, x, y, width, height) ->
+
+We start by setting defaults for any unset attributes:
+
+        elt = document.body unless elt instanceof Element
+        x = 0 if isNaN(x = Number(x))
+        y = 0 if isNaN(y = Number(y))
+        width = (if elt.width? then elt.width else elt.clientWidth) if isNaN(width = Number(width))
+        height = (if elt.height? then elt.height else elt.clientHeight) if isNaN(height = Number(height))
 
 Not much work happens in the `Control` constructor itself; most of the heavy-lifting takes place in the prototype. But, here are our property definitions:
 
-        @target = if elt instanceof Element then elt else null
-        @clicks = new PokeList(@target)
+        @target = elt
+        @clicks = new PokeList(elt, x, y, width, height)
         @codes = {}
+        @height = height
         @keys = {}
         @ownerDocument = @target?.ownerDocument || document
-        @touches = new PokeList(@target)
+        @touches = new PokeList(elt, x, y, width, height)
+        @width = width
+        @x = x
+        @y = y
 
 We then a number of event listeners to track what's going on:
 
@@ -221,12 +248,13 @@ When a key is down, we want to toggle it to `on`…
                         for code in [e.code, e.key, e.keyIdentifier, e.keyCode]
                             @toggleCode(code, off) if @isCodeDefined(code)
 
-On `"mousedown"`, we generate a new `Poke`.
+On `"mousedown"`, we generate a new `Poke` if the event was within our `target`'s bounds.
 The index of the `Poke` corresponds to the mouse button that was pressed.
 
                     when "mousedown"
                         e.preventDefault()
-                        @clicks.new(e.button, e, e.button)
+                        rect = @target?.getBoundingClientRect()
+                        @clicks.new(e.button, e, e.button) if rect and rect.left < e.pageX < rect.right and rect.top < e.pageY < rect.bottom
 
 On `"mousemove"`, we update the corresponding `Poke` with the mouse's new position.
 
@@ -252,7 +280,7 @@ On `"touchmove"`, we want to update the corresponding `Poke`s with their new pos
                         e.preventDefault()
                         @touches[touch.identifier].updateWith(touch) for touch in e.changedTouches
 
-On `"touchstart"`, we want to create a new `Poke` for the touch.
+On `"touchstart"`, we want to create a new `Poke` for the touch if the event was within our `target`'s bounds.
 This is a slightly more complicated process.
 
                     when "touchstart"
@@ -270,9 +298,10 @@ First, we need to get the number of the touch, by iterating through existing tou
                                 for i, touch of @touches
                                     j++ if j is touch.number
 
-Now we can add a `Poke` with the appropriate number
+Now we can add a `Poke` with the appropriate number if the `touch` was inside our `VIEW`.
 
-                            @touches.new(new_touch.identifier, touch, n)
+                            rect = @target?.getBoundingClientRect()
+                            @touches.new(new_touch.identifier, touch, n) if rect and rect.left < touch.pageX < rect.right and rect.top < touch.pageY < rect.bottom
 
 This function shouldn't return anything, because it's just an event handler.
 

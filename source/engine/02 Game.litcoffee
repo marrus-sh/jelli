@@ -252,6 +252,17 @@ We can now freeze the prototype and be on our way:
 
 ###  Final touches:  ###
 
+The `defineFunctions()` static method defines the `function_object` for the given `element`.
+
+    Game.defineFunctions = (element, function_object) ->
+        element = document.getElementById(element) unless element instanceof Element
+        element.functions = Object.freeze(function_object)
+
+The `getSymbol()` static method creates a unique identifier from the given `name`.
+If possible, this will be a `Symbol`; otherwise, it will be an `Object` with null prototype.
+
+    Game.getSymbol = (name) -> if Symbol? then Symbol(name) else Object.freeze(Object.create(null, {toString: {value: String.bind(null, name)}}))
+
 As always, we need to freeze `Game` and make it transparent to the window:
 
     @Game = Object.freeze(Game)

@@ -20,6 +20,46 @@ The Jelli Game Engine
 `Collection` creates a simple packaging for objects, and methods for interacting with them.
 [`Area`](03 Area.litcoffee) uses it to package its `Character`s and `PlacementImage`s.
 
+###  General functions:  ###
+
+`addNameless()` is used to create "nameless" instances in a `Collection`.
+It is not exposed to the window.
+
+    addNameless = (nameless, item) ->
+
+`nameless` and `item` need to be an object with `next` defined in order for `addNameless()` to work.
+
+        return unless typeof nameless is "object" and typeof item is "object" and nameless.next?
+
+We can now add the `item`:
+
+        nameless[nameless.next] = item
+
+Because `item`s can't actually be accessed, we need to ensure that they have a `kill()` function.
+
+        Object.defineProperty nameless[nameless.next], "kill", {value: this.kill.bind(nameless)}
+
+We can now increment `next` and return the new object.
+
+        return nameless[nameless.next++]
+
+`iterateNameless()` is used by `Collection` to iterate over "nameless" instances.
+It is not exposed to the window.
+
+    iterateNameless = (nameless, fn) ->
+
+`nameless` needs to be an object and `fn` needs to be a function, so we check that first:
+
+        return unless typeof nameless is "object" and (typeof fn is "function" or fn instanceof Function)
+
+Then we call `fn()` for each item in `nameless`
+
+        fn(item) for i, item of nameless when not @Type? or item instanceof @Type
+
+…And we're done:
+
+        return
+
 ###  The constructor:  ###
 
 The `Collection` constructor takes two arguments: a `parent` object, and the `constructor` for its objects.
@@ -37,11 +77,6 @@ If it is `Game`, we can only get `game`.
             game = parent.game
         else if parent instanceof Game then game = parent
 
-`nextIndex` gets the next index for nameless `Collection` objects.
-It starts out at zero:
-
-        nextIndex = 0
-
 We can now define the `Collection` properties.
 All of these need to be non-enumerable, so we use `Object.defineProperties()`.
 
@@ -49,11 +84,23 @@ All of these need to be non-enumerable, so we use `Object.defineProperties()`.
             area: {value: area || null}
             Type: {value: if typeof constructor is "function" or constructor instanceof Function then constructor else null}
             game: {value: game || null}
-            nextIndex: {
-                get: -> nextIndex
-                set: (n) -> if Number(n) > nextIndex then nextIndex = Number(n)
-            }
             parent: {value: if typeof parent is "object" then parent else null}
+        }
+
+The `nameless` object is used to manage "nameless" instances, through use of the `"\uD83D\uDE36+"()` and `doForEachNameless()` functions.
+The contents of this object **cannot** be accessed directly, and it is **highly recommended** that `"\uD83D\uDE36+"()` not be called manually either.
+Improper use of `"\uD83D\uDE36+"()` can create memory leaks.
+
+        nameless = {}
+
+        Object.defineProperty nameless, "next", {
+            value: 0
+            writable: yes
+        }
+
+        Object.defineProperties this, {
+            "\uD83D\uDE36+": {value: addNameless.bind(this, nameless)}
+            "doForNameless": {value: iterateNameless.bind(this, nameless)}
         }
 
 `Collection` objects store their contents as direct properties, so we can't freeze them or prevent extensions.
@@ -72,7 +119,9 @@ It returns the `Collection` itself.
 
         doForEach:
             value: (fn) ->
+                return unless typeof fn is "function" or fn instanceof Function
                 fn(value, key) for key, value of this when not @Type? or value instanceof @Type
+                @doForNameless(fn)
                 return this
 
 `kill()` deletes the instance specified by `name` from the `Collection`, if it exists, returning the deleted instance.
@@ -118,23 +167,12 @@ Calling `kill()` and then `load()` is the best way to overwrite an instance.
 `load()` attempts to bind `kill()` to the instance that it creates for convenience.
 
 `loadNameless()` is very similar to `load()`, but is intended for autonomous instances which rarely need to be referenced by name.
-Consequently, it has a few differences:
-
-1.  `loadNameless()` doesn't take `name` as an argument
-2.  `loadNameless()` returns the index of the created instance, not the instance itself
+Instances loaded with `loadNameless()` aren't accessible from the outside, so you should be careful when using it to avoid memory leaks.
 
 The code is below:
 
         loadNameless:
-            value: (args...) ->
-                @nextIndex++ while this[@nextIndex]?
-                Object.defineProperty this, @nextIndex, {
-                    configurable: yes
-                    enumerable: yes
-                    value: if typeof @Type is "function" or @Type instanceof Function then new @Type(this, @nextIndex, args...) else null
-                }
-                Object.defineProperty this[@nextIndex], "kill", {value: this.kill.bind(this, @nextIndex)}
-                return @nextIndex++
+            value: (args...) -> this["\uD83D\uDE36+"](if typeof @Type is "function" or @Type instanceof Function then new @Type(this, @nextIndex, args...) else null)
 
 We can now freeze the `Collection` prototype:
 

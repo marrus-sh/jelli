@@ -61,7 +61,7 @@
   var Control, Poke, PokeList,
     slice = [].slice;
 
-  Poke = function(elt, e, n) {
+  Poke = function(elt, e, n, x, y, width, height) {
     var rect;
     if (!(elt instanceof Element)) {
       elt = null;
@@ -70,20 +70,44 @@
       e = null;
     }
     rect = elt != null ? elt.getBoundingClientRect() : void 0;
+    if (isNaN(x = Number(x))) {
+      x = 0;
+    }
+    if (isNaN(y = Number(y))) {
+      y = 0;
+    }
+    if (isNaN(width = Number(width))) {
+      width = (elt.width != null ? elt.width : elt.clientWidth);
+    }
+    if (isNaN(height = Number(height))) {
+      height = (elt.height != null ? elt.height : elt.clientHeight);
+    }
     Object.defineProperties(this, {
-      target: {
-        value: elt
+      origin_height: {
+        value: height
       },
       number: {
         value: n
+      },
+      target: {
+        value: elt
+      },
+      origin_width: {
+        value: width
+      },
+      origin_x: {
+        value: x
+      },
+      origin_y: {
+        value: y
       }
     });
     Object.defineProperties(this, {
       start_x: {
-        value: (elt != null ? elt.width : void 0) != null ? ((e != null ? e.pageX : void 0) - rect.left) * elt.width / elt.clientWidth : (e != null ? e.pageX : void 0) - rect.left
+        value: ((e != null ? e.pageX : void 0) - rect.left - this.origin_x) * this.origin_width / elt.clientWidth
       },
       start_y: {
-        value: (elt != null ? elt.height : void 0) != null ? ((e != null ? e.pageY : void 0) - rect.top) * elt.height / elt.clientHeight : (e != null ? e.pageY : void 0) - rect.top
+        value: ((e != null ? e.pageY : void 0) - rect.top - this.origin_y) * this.origin_height / elt.clientHeight
       }
     });
     Object.defineProperties(this, {
@@ -107,20 +131,46 @@
           return;
         }
         rect = this.target.getBoundingClientRect();
-        this.x = this.target.width != null ? ((e != null ? e.pageX : void 0) - rect.left) * this.target.width / this.target.clientWidth : (e != null ? e.pageX : void 0) - rect.left;
-        return this.y = this.target.height != null ? ((e != null ? e.pageY : void 0) - rect.top) * this.target.height / this.target.clientHeight : (e != null ? e.pageY : void 0) - rect.top;
+        this.x = ((e != null ? e.pageX : void 0) - rect.left - this.origin_x) * this.origin_width / this.target.clientWidth;
+        return this.y = ((e != null ? e.pageY : void 0) - rect.top - this.origin_y) * this.origin_height / this.target.clientHeight;
       }
     }
   });
 
   Object.freeze(Poke.prototype);
 
-  PokeList = function(elt) {
+  PokeList = function(elt, x, y, width, height) {
     if (!(elt instanceof Element)) {
-      elt = null;
+      elt = document.body;
     }
-    return Object.defineProperty(this, "target", {
-      value: elt
+    if (isNaN(x = Number(x))) {
+      x = 0;
+    }
+    if (isNaN(y = Number(y))) {
+      y = 0;
+    }
+    if (isNaN(width = Number(width))) {
+      width = (elt.width != null ? elt.width : elt.clientWidth);
+    }
+    if (isNaN(height = Number(height))) {
+      height = (elt.height != null ? elt.height : elt.clientHeight);
+    }
+    return Object.defineProperties(this, {
+      height: {
+        value: height
+      },
+      target: {
+        value: elt
+      },
+      width: {
+        value: width
+      },
+      x: {
+        value: x
+      },
+      y: {
+        value: y
+      }
     });
   };
 
@@ -152,24 +202,43 @@
     },
     "new": {
       value: function(id, e, n) {
-        return this[id] = new Poke(this.target, e, n);
+        return this[id] = new Poke(this.target, e, n, this.x, this.y, this.width, this.height);
       }
     }
   });
 
   Object.freeze(PokeList.prototype);
 
-  Control = function(elt) {
+  Control = function(elt, x, y, width, height) {
     var ref;
     if (elt == null) {
       elt = document.body;
     }
-    this.target = elt instanceof Element ? elt : null;
-    this.clicks = new PokeList(this.target);
+    if (!(elt instanceof Element)) {
+      elt = document.body;
+    }
+    if (isNaN(x = Number(x))) {
+      x = 0;
+    }
+    if (isNaN(y = Number(y))) {
+      y = 0;
+    }
+    if (isNaN(width = Number(width))) {
+      width = (elt.width != null ? elt.width : elt.clientWidth);
+    }
+    if (isNaN(height = Number(height))) {
+      height = (elt.height != null ? elt.height : elt.clientHeight);
+    }
+    this.target = elt;
+    this.clicks = new PokeList(elt, x, y, width, height);
     this.codes = {};
+    this.height = height;
     this.keys = {};
     this.ownerDocument = ((ref = this.target) != null ? ref.ownerDocument : void 0) || document;
-    this.touches = new PokeList(this.target);
+    this.touches = new PokeList(elt, x, y, width, height);
+    this.width = width;
+    this.x = x;
+    this.y = y;
     if (this.ownerDocument != null) {
       this.ownerDocument.defaultView.addEventListener("keydown", this, false);
       this.ownerDocument.defaultView.addEventListener("keyup", this, false);
@@ -216,7 +285,7 @@
     },
     handleEvent: {
       value: function(e) {
-        var click, code, i, j, k, l, len, len1, len2, len3, len4, m, n, new_touch, o, p, ref, ref1, ref2, ref3, ref4, ref5, ref6, touch;
+        var click, code, i, j, k, l, len, len1, len2, len3, len4, m, n, new_touch, o, p, rect, ref, ref1, ref10, ref11, ref12, ref2, ref3, ref4, ref5, ref6, ref7, ref8, ref9, touch;
         if (!(e instanceof Event)) {
           return;
         }
@@ -244,13 +313,16 @@
             break;
           case "mousedown":
             e.preventDefault();
-            this.clicks["new"](e.button, e, e.button);
+            rect = (ref2 = this.target) != null ? ref2.getBoundingClientRect() : void 0;
+            if (rect && (rect.left < (ref3 = e.pageX) && ref3 < rect.right) && (rect.top < (ref4 = e.pageY) && ref4 < rect.bottom)) {
+              this.clicks["new"](e.button, e, e.button);
+            }
             break;
           case "mousemove":
             e.preventDefault();
-            ref2 = this.clicks;
-            for (i in ref2) {
-              click = ref2[i];
+            ref5 = this.clicks;
+            for (i in ref5) {
+              click = ref5[i];
               click.updateWith(e);
             }
             break;
@@ -261,37 +333,40 @@
           case "touchcancel":
           case "touchend":
             e.preventDefault();
-            ref3 = e.changedTouches;
-            for (m = 0, len2 = ref3.length; m < len2; m++) {
-              touch = ref3[m];
+            ref6 = e.changedTouches;
+            for (m = 0, len2 = ref6.length; m < len2; m++) {
+              touch = ref6[m];
               delete this.touches[touch.identifier];
             }
             break;
           case "touchmove":
             e.preventDefault();
-            ref4 = e.changedTouches;
-            for (o = 0, len3 = ref4.length; o < len3; o++) {
-              touch = ref4[o];
+            ref7 = e.changedTouches;
+            for (o = 0, len3 = ref7.length; o < len3; o++) {
+              touch = ref7[o];
               this.touches[touch.identifier].updateWith(touch);
             }
             break;
           case "touchstart":
-            ref5 = e.changedTouches;
-            for (p = 0, len4 = ref5.length; p < len4; p++) {
-              new_touch = ref5[p];
+            ref8 = e.changedTouches;
+            for (p = 0, len4 = ref8.length; p < len4; p++) {
+              new_touch = ref8[p];
               n = null;
               j = 0;
               while (n !== j) {
                 n = j;
-                ref6 = this.touches;
-                for (i in ref6) {
-                  touch = ref6[i];
+                ref9 = this.touches;
+                for (i in ref9) {
+                  touch = ref9[i];
                   if (j === touch.number) {
                     j++;
                   }
                 }
               }
-              this.touches["new"](new_touch.identifier, touch, n);
+              rect = (ref10 = this.target) != null ? ref10.getBoundingClientRect() : void 0;
+              if (rect && (rect.left < (ref11 = touch.pageX) && ref11 < rect.right) && (rect.top < (ref12 = touch.pageY) && ref12 < rect.bottom)) {
+                this.touches["new"](new_touch.identifier, touch, n);
+              }
             }
         }
       }
@@ -1522,21 +1597,7 @@
   The Jelli Game Engine
   ---------------------
    */
-  this.defineFunctions = function(function_object) {
-    var elt, script, scripts;
-    scripts = document.getElementsByTagName("script");
-    elt = script = scripts[scripts.length - 1];
-    while (elt = elt.parentElement) {
-      if (elt.classList.contains("CHARACTER") || elt.classList.contains("AREA") || elt === document.body) {
-        break;
-      }
-    }
-    if (elt == null) {
-      return;
-    }
-    elt.functions = function_object;
-    return Object.freeze(function_object);
-  };
+
 
 }).call(this);
 // Generated by CoffeeScript 1.10.0
@@ -1804,6 +1865,25 @@
 
   Object.freeze(Game.prototype);
 
+  Game.defineFunctions = function(element, function_object) {
+    if (!(element instanceof Element)) {
+      element = document.getElementById(element);
+    }
+    return element.functions = Object.freeze(function_object);
+  };
+
+  Game.getSymbol = function(name) {
+    if (typeof Symbol !== "undefined" && Symbol !== null) {
+      return Symbol(name);
+    } else {
+      return Object.freeze(Object.create(null, {
+        toString: {
+          value: String.bind(null, name)
+        }
+      }));
+    }
+  };
+
   this.Game = Object.freeze(Game);
 
 }).call(this);
@@ -1969,19 +2049,42 @@
   The Jelli Game Engine
   ---------------------
    */
-  var Collection,
+  var Collection, addNameless, iterateNameless,
     slice = [].slice;
 
+  addNameless = function(nameless, item) {
+    if (!(typeof nameless === "object" && typeof item === "object" && (nameless.next != null))) {
+      return;
+    }
+    nameless[nameless.next] = item;
+    Object.defineProperty(nameless[nameless.next], "kill", {
+      value: this.kill.bind(nameless)
+    });
+    return nameless[nameless.next++];
+  };
+
+  iterateNameless = function(nameless, fn) {
+    var i, item;
+    if (!(typeof nameless === "object" && (typeof fn === "function" || fn instanceof Function))) {
+      return;
+    }
+    for (i in nameless) {
+      item = nameless[i];
+      if ((this.Type == null) || item instanceof this.Type) {
+        fn(item);
+      }
+    }
+  };
+
   Collection = function(parent, constructor) {
-    var area, game, nextIndex;
+    var area, game, nameless;
     if (parent instanceof Area) {
       area = parent;
       game = parent.game;
     } else if (parent instanceof Game) {
       game = parent;
     }
-    nextIndex = 0;
-    return Object.defineProperties(this, {
+    Object.defineProperties(this, {
       area: {
         value: area || null
       },
@@ -1991,18 +2094,21 @@
       game: {
         value: game || null
       },
-      nextIndex: {
-        get: function() {
-          return nextIndex;
-        },
-        set: function(n) {
-          if (Number(n) > nextIndex) {
-            return nextIndex = Number(n);
-          }
-        }
-      },
       parent: {
         value: typeof parent === "object" ? parent : null
+      }
+    });
+    nameless = {};
+    Object.defineProperty(nameless, "next", {
+      value: 0,
+      writable: true
+    });
+    return Object.defineProperties(this, {
+      "\uD83D\uDE36+": {
+        value: addNameless.bind(this, nameless)
+      },
+      "doForNameless": {
+        value: iterateNameless.bind(this, nameless)
       }
     });
   };
@@ -2011,12 +2117,16 @@
     doForEach: {
       value: function(fn) {
         var key, value;
+        if (!(typeof fn === "function" || fn instanceof Function)) {
+          return;
+        }
         for (key in this) {
           value = this[key];
           if ((this.Type == null) || value instanceof this.Type) {
             fn(value, key);
           }
         }
+        this.doForNameless(fn);
         return this;
       }
     },
@@ -2058,22 +2168,11 @@
       value: function() {
         var args;
         args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-        while (this[this.nextIndex] != null) {
-          this.nextIndex++;
-        }
-        Object.defineProperty(this, this.nextIndex, {
-          configurable: true,
-          enumerable: true,
-          value: typeof this.Type === "function" || this.Type instanceof Function ? (function(func, args, ctor) {
-            ctor.prototype = func.prototype;
-            var child = new ctor, result = func.apply(child, args);
-            return Object(result) === result ? result : child;
-          })(this.Type, [this, this.nextIndex].concat(slice.call(args)), function(){}) : null
-        });
-        Object.defineProperty(this[this.nextIndex], "kill", {
-          value: this.kill.bind(this, this.nextIndex)
-        });
-        return this.nextIndex++;
+        return this["\uD83D\uDE36+"](typeof this.Type === "function" || this.Type instanceof Function ? (function(func, args, ctor) {
+          ctor.prototype = func.prototype;
+          var child = new ctor, result = func.apply(child, args);
+          return Object(result) === result ? result : child;
+        })(this.Type, [this, this.nextIndex].concat(slice.call(args)), function(){}) : null);
       }
     }
   });
@@ -2571,8 +2670,8 @@
           return frame;
         },
         set: function(n) {
-          if (!isNaN(n)) {
-            return frame = Number(n);
+          if (!(isNaN(n = Number(n)) || n < 0 || n >= this.sprites[this.sprite].frames)) {
+            return frame = n;
           }
         },
         enumerable: true
@@ -2989,14 +3088,13 @@
   var View;
 
   View = function(game, elt) {
-    var i, len, name, ref, ref1, screen;
+    var first_screen, i, len, name, ref, ref1, screen;
     if (!(game instanceof Game)) {
       game = null;
     }
     if (!(elt instanceof Element)) {
       elt = (game != null ? game.getDocElement(elt) : void 0) || null;
     }
-    this.control = new Control(elt);
     if (isNaN(this.height = Number(elt != null ? elt.getAttribute("data-height") : void 0))) {
       this.height = 0;
     }
@@ -3009,15 +3107,20 @@
       elt.textContent = "";
     }
     elt.style.visibility = "hidden";
+    first_screen = null;
     ref1 = (elt != null ? (ref = elt.getAttribute("data-screens")) != null ? ref.split(/\s+/) : void 0 : void 0) || [];
     for (i = 0, len = ref1.length; i < len; i++) {
       name = ref1[i];
       screen = game != null ? game.getDataElement("SCREEN", name) : void 0;
       if (screen) {
         this.screens[name] = new Screen(elt.appendChild(screen), "2d");
+        if (first_screen == null) {
+          first_screen = this.screens[name];
+        }
       }
     }
     Object.freeze(this.screens);
+    this.control = new Control((first_screen != null ? first_screen.canvas : elt), 0, 0, this.width, this.height);
     return Object.freeze(this);
   };
 

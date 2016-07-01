@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Jelli Tilemap Generator</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="user-scalable=no,width=device-width">
+        <link rel="stylesheet" type="text/css" href="style.css">
+        <script type="text/javascript" src="../../jelli.js"></script>
+    </head>
+    <body>
+        <div id="inputs">
+            <label>Tileset: <input id="imgsel" type="file" accept="image/*"></label>
+            <br>
+            <label>sprite-width: <input id="sw" type="number"></label>
+            <label>sprite-height: <input id="sh" type="number"></label>
+            <br>
+            <label>map-width: <input id="mw" type="number"></label>
+            <label>map-height: <input id="mh" type="number"></label>
+            <br>
+            <button id="button">Load</button>
+        </div>
+        <div class="DATA" hidden>
+            <canvas id="map_scrn" class="SCREEN"
+                data-type="animation"></canvas>
+            <canvas id="tile_scrn" class="SCREEN"></canvas>
+            <img id="image" class="IMAGE SHEET"
+                data-screen="tile_scrn">
+            <div id="sprites" class="SPRITELIST"
+                data-sheet="image"
+                data-origin-x="0"
+                data-origin-y="0"
+                >
+                <span id="sprite" class="SPRITE"
+                    data-index="0"
+                    data-length=""
+                    ></span>
+            </div>
+            <div id="tilechar" class="CHARACTER"
+                data-sprites="sprites"
+                data-screen="map_scrn"
+                ></div>
+            <div id="area" class="AREA" title="Tilemap Generator"></div>
+        </div>
+        <div id="outputs" hidden>
+            <div id="map" class="VIEW"
+                data-screens="map_scrn"></div>
+            <div id="tiles" class="VIEW"
+                data-screens="tile_scrn"></div>
+            <div id="outwrapper">
+                <b>Generated Map String:</b>
+                <p id="outstring"></p>
+            </div>
+        </div>
+        <script type="text/javascript">
+            (function () {
+                "use strict";
+                var datastring;
+                Game.defineFunctions(document.body, {
+                    init: function () {
+                        this.views.tiles.control.add("left").addCodes("left", 0x25, "ArrowLeft", "Left");
+                        this.views.tiles.control.add("right").addCodes("right", 0x27, "ArrowRight", "Right");
+                        this.area = 0;
+                        this.frametimer = 0
+                    },
+                    step: function () {
+                        if (this.frametimer) this.frametimer++;
+                        this.frametimer %= 10;
+                    }
+                });
+                Game.defineFunctions("area", {
+                    init: function () {
+                        var i;
+                        this.images.load("image");
+                        this.images.image.placed = true;
+                        this.characters.load("selected", "tilechar", 2, 2, 0);
+                        this.maptiles = [];
+                        for (i = 0; i < document.getElementById("mw").valueAsNumber * document.getElementById("mh").valueAsNumber; i++) {
+                            this.maptiles.push(this.characters.loadNameless("tilechar", (i % document.getElementById("mw").valueAsNumber + 1) * this.game.sheets.image.sprite_width + 4, Math.floor(i / document.getElementById("mw").valueAsNumber) * this.game.sheets.image.sprite_height, 0));
+                        }
+                        this.updateMapString = true;
+                    },
+                    step: function () {
+                        var poke;
+                        var i;
+                        var s;
+                        if ((poke = this.game.views.tiles.control.clicks[0] || this.game.views.tiles.control.touches[0]) && poke.x > 0 && poke.x < this.game.views.tiles.width && poke.y > 0 && poke.y < this.game.views.tiles.height) {
+                            var i = Math.floor(poke.x / this.game.sheets.image.sprite_width);
+                            var j = Math.floor(poke.y / this.game.sheets.image.sprite_height);
+                            this.characters.selected.frame = i + j * this.game.sheets.image.width;
+                        }
+                        if (!this.game.frametimer && this.game.views.tiles.control.isActive("right")) {
+                            this.characters.selected.frame++;
+                            this.game.frametimer++;
+                        }
+                        if (!this.game.frametimer && this.game.views.tiles.control.isActive("left")) {
+                            this.characters.selected.frame--;
+                            this.game.frametimer++;
+                        }
+                        if (this.updateMapString) {
+                            s = ""
+                            for (i = 0; i < this.maptiles.length; i++) {
+                                s += String.fromCharCode(this.maptiles[i].frame)
+                            }
+                            document.getElementById("outstring").textContent = window.btoa(s);
+                        }
+                    }
+                });
+                Game.defineFunctions("tilechar", {
+                    step: function () {
+                        var poke;
+                        if ((poke = this.game.views.map.control.clicks[0] || this.game.views.map.control.touches[0]) && poke.x > this.edges.left && poke.x < this.edges.right && poke.y > this.edges.top && poke.y < this.edges.bottom) {
+                            this.frame = this.area.characters.selected.frame;
+                            this.area.updateMapString = true;
+                        }
+                    }
+                })
+                function buttonclick() {
+                    var imgfile = document.getElementById("imgsel").files[0];
+                    document.getElementById("image").addEventListener("load", imgload, false);
+                    document.getElementById("image").src = URL.createObjectURL(imgfile);
+                    document.getElementById("button").removeEventListener("click", buttonclick, false);
+                }
+                function imgload() {
+                    var i = Math.floor(this.naturalWidth / document.getElementById("sw").valueAsNumber);
+                    var j = Math.floor(this.naturalHeight / document.getElementById("sh").valueAsNumber);
+                    document.getElementById("map").dataset.width = (i + 1) * document.getElementById("mw").value + 4;
+                    document.getElementById("map").dataset.height = j * document.getElementById("mh").value;
+                    document.getElementById("tiles").dataset.width = this.naturalWidth;
+                    document.getElementById("tiles").dataset.height = this.naturalHeight;
+                    this.dataset.spriteWidth = document.getElementById("sw").value
+                    this.dataset.spriteHeight = document.getElementById("sh").value
+                    document.getElementById("sprite").dataset.length = i * j;
+                    document.getElementById("inputs").hidden = true;
+                    document.getElementById("outputs").hidden = false;
+                    document.getElementById("image").removeEventListener("load", imgload, false);
+                    new Game();
+                }
+                document.getElementById("button").addEventListener("click", buttonclick, false);
+            })()
+        </script>
+    </body>
+</html>
