@@ -146,6 +146,12 @@ This is a note regarding a known issue.
 >   <p>And here is a block of HTML.</p>
 >   ```
 
+-   **This is a list of definitions**—
+    The word with imporance is the word being defined.
+
+-   `Here is some code`—
+    This is a definition item for explaining code.
+
 This is a line break:
 
 - - -

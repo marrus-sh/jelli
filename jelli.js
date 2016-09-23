@@ -457,15 +457,11 @@
   The Jelli Game Engine
   ---------------------
    */
-  var Data, array_size, byte_depth, getIndexOfDataArray, l, len, makeArrayFrom, ref, setIndexOfDataArray, typed_array,
+  var Data, TypedArray, array_size, byte_depth, getIndexOfDataArray, makeArrayFrom, setIndexOfDataArray,
     slice = [].slice;
 
-  ref = ["Int8Array", "Uint8Array", "Uint8ClampedArray", "Int16Array", "Uint16Array", "Int32Array", "Uint32Array", "Float32Array", "Float64Array"];
-  for (l = 0, len = ref.length; l < len; l++) {
-    typed_array = ref[l];
-    if (!(typed_array in window)) {
-      window[typed_array] = Array;
-    }
+  if ("Int8Array" in window) {
+    TypedArray = Object.getPrototypeOf(Int8Array);
   }
 
   array_size = [0, 8, 8, 16, 8, 16, 32, 8, 8, 32, 32];
@@ -481,10 +477,10 @@
   };
 
   makeArrayFrom = function(something, map_function, this_arg) {
-    var array_data, computed_array, first_point, item, j, k, length, ref1, second_point;
-    array_data = Object(something);
+    var array_data, computed_array, first_point, item, j, k, length, ref, second_point;
+    array_data = something != null ? Object(something) : [];
     if (array_data.length == null) {
-      array_data = (typeof something === "number" || (something instanceof Number) ? [something] : new String(something));
+      array_data = (typeof array_data.valueOf() === "number" || (array_data.valueOf() instanceof Number) ? [array_data] : String(array_data));
     }
     length = array_data.length < 0 ? 0 : array_data.length >>> 0;
     computed_array = [];
@@ -492,7 +488,7 @@
     k = 0;
     while (k < length) {
       item = typeof map_function === "function" || (map_function instanceof Function) ? map_function.call((this_arg != null ? this_arg : this), array_data[k]) : array_data[k];
-      if ((1 <= (ref1 = item.length) && ref1 <= 2) && (typeof item === "string" || (item instanceof String))) {
+      if ((1 <= (ref = item.length) && ref <= 2) && (typeof item === "string" || (item instanceof String))) {
         first_point = item.charCodeAt(0);
         if ((0xD800 <= first_point && first_point <= 0xDBFF)) {
           if (item.length === 2) {
@@ -528,82 +524,94 @@
   };
 
   Data = function(unit_size, length_or_data, byte_offset, length_for_buffer) {
-    var given_data, index, internal_array, internal_byte_depth, internal_byte_size, m, ref1;
-    this.unitSize = unit_size < 0 ? 0 : unit_size >>> 0;
-    if (this.unitSize > 32) {
-      this.unitSize = 32;
+    var given_data, index, internal_array, internal_byte_depth, internal_byte_length, internal_byte_size, l, ref, this_array;
+    if (!((this_array = this) instanceof Data)) {
+      this_array = Object.create(Data.prototype);
+    }
+    this_array.unitSize = unit_size < 0 ? 0 : unit_size >>> 0;
+    if (this_array.unitSize > 32) {
+      this_array.unitSize = 32;
     }
     if ((typeof ArrayBuffer !== "undefined" && ArrayBuffer !== null) && length_or_data instanceof ArrayBuffer) {
-      this.buffer = length_or_data;
-      if ((this.byteOffset = byte_offset) < 0) {
-        this.byteOffset = 0;
+      this_array.buffer = length_or_data;
+      if ((this_array.byteOffset = byte_offset) < 0) {
+        this_array.byteOffset = 0;
       }
-      if ((this.byteOffset >>>= 0) > this.buffer.byteLength) {
-        this.byteOffset = this.buffer.byteLength;
+      if ((this_array.byteOffset >>>= 0) > this_array.buffer.byteLength) {
+        this_array.byteOffset = this_array.buffer.byteLength;
       }
-      this.length = length_for_buffer < 0 ? 0 : length_for_buffer >>> 0;
-      internal_byte_depth = this.unitSize < 11 ? byte_depth[this.unitSize] : 1;
-      internal_byte_size = this.unitSize < 11 ? array_size[this.unitSize] : this.unitSize < 17 ? 16 : 32;
-      this.byteLength = Math.ceil(this.length / internal_byte_depth) * internal_byte_size / 8;
-      if (this.byteLength > this.buffer.byteLength - this.byteOffset) {
-        this.byteLength = this.buffer.byteLength - this.byteOffset;
+      this_array.length = length_for_buffer < 0 ? 0 : length_for_buffer >>> 0;
+      internal_byte_depth = this_array.unitSize < 11 ? byte_depth[this_array.unitSize] : 1;
+      internal_byte_size = this_array.unitSize < 11 ? array_size[this_array.unitSize] : this_array.unitSize < 17 ? 16 : 32;
+      internal_byte_length = Math.ceil(this_array.length / internal_byte_depth) * internal_byte_size / 8;
+      if (internal_byte_length > this_array.buffer.byteLength - this_array.byteOffset) {
+        internal_byte_length = this_array.buffer.byteLength - this_array.byteOffset;
       }
       internal_array = new ((function() {
-        switch (internal_byte_size) {
-          case 0:
-            return function() {};
-          case 8:
-            return Uint8Array;
-          case 16:
-            return Uint16Array;
-          default:
-            return Uint32Array;
+        if (TypedArray != null) {
+          switch (internal_byte_size) {
+            case 0:
+              return function() {};
+            case 8:
+              return Uint8Array;
+            case 16:
+              return Uint16Array;
+            default:
+              return Uint32Array;
+          }
+        } else {
+          return Array;
         }
-      })())(this.buffer, this.byteOffset, this.byteLength);
-      if (internal_array.length * internal_byte_depth < this.length) {
-        this.length = internal_array.length * internal_byte_depth;
+      })())(this_array.buffer, this_array.byteOffset, internal_byte_length);
+      if (internal_array.length * internal_byte_depth < this_array.length) {
+        this_array.length = internal_array.length * internal_byte_depth;
       }
+      this_array.byteLength = internal_array.byteLength;
       given_data = [];
     } else {
       if ((length_or_data != null) && (length_or_data instanceof Array || isNaN(length_or_data))) {
         given_data = makeArrayFrom(length_or_data);
-        this.length = given_data.length;
+        this_array.length = given_data.length;
       } else {
         given_data = [];
-        this.length = length_or_data < 0 ? 0 : length_or_data >>> 0;
+        this_array.length = length_or_data < 0 ? 0 : length_or_data >>> 0;
       }
-      internal_byte_depth = this.unitSize < 11 ? byte_depth[this.unitSize] : 1;
-      internal_byte_size = this.unitSize < 11 ? array_size[this.unitSize] : this.unitSize < 17 ? 16 : 32;
+      internal_byte_depth = this_array.unitSize < 11 ? byte_depth[this_array.unitSize] : 1;
+      internal_byte_size = this_array.unitSize < 11 ? array_size[this_array.unitSize] : this_array.unitSize < 17 ? 16 : 32;
       internal_array = new ((function() {
-        switch (internal_byte_size) {
-          case 0:
-            return function() {};
-          case 8:
-            return Uint8Array;
-          case 16:
-            return Uint16Array;
-          default:
-            return Uint32Array;
+        if (TypedArray != null) {
+          switch (internal_byte_size) {
+            case 0:
+              return function() {};
+            case 8:
+              return Uint8Array;
+            case 16:
+              return Uint16Array;
+            default:
+              return Uint32Array;
+          }
+        } else {
+          return Array;
         }
-      })())(byte_depth ? Math.ceil(this.length / internal_byte_depth) : 0);
-      this.buffer = internal_array.buffer;
-      this.byteOffset = 0;
-      this.byteLength = internal_array.byteLength;
+      })())(byte_depth ? Math.ceil(this_array.length / internal_byte_depth) : 0);
+      this_array.buffer = internal_array.buffer;
+      this_array.byteOffset = 0;
+      this_array.byteLength = internal_array.byteLength;
     }
-    if (this.length) {
-      for (index = m = 0, ref1 = this.length - 1; 0 <= ref1 ? m <= ref1 : m >= ref1; index = 0 <= ref1 ? ++m : --m) {
-        Object.defineProperty(this, index, {
-          get: getIndexOfDataArray.bind(this, internal_array, this.unitSize, index),
-          set: setIndexOfDataArray.bind(this, internal_array, this.unitSize, index),
+    if (this_array.length) {
+      for (index = l = 0, ref = this_array.length - 1; 0 <= ref ? l <= ref : l >= ref; index = 0 <= ref ? ++l : --l) {
+        Object.defineProperty(this_array, index, {
+          get: getIndexOfDataArray.bind(this_array, internal_array, this_array.unitSize, index),
+          set: setIndexOfDataArray.bind(this_array, internal_array, this_array.unitSize, index),
           enumerable: true
         });
         if (given_data[index] != null) {
-          this[index] = given_data[index];
+          this_array[index] = given_data[index];
         }
       }
     }
-    this.constructor = Data;
-    Object.defineProperties(this, {
+    this_array.constructor = Data;
+    Object.defineProperties(this_array, {
       buffer: {
         enumerable: false
       },
@@ -623,7 +631,7 @@
         enumerable: false
       }
     });
-    return Object.freeze(this);
+    return Object.freeze(this_array);
   };
 
   Data.prototype = Object.create(Array.prototype, {
@@ -639,19 +647,22 @@
         this[index + offset] = given_data[index];
         index++;
       }
+    },
+    subarray: function() {
+      throw new TypeError("subarray not supported for Data objects");
     }
   });
 
   Object.freeze(Data.prototype);
 
   Data.from = function(unit_size, given_data, map_function, this_arg) {
-    return new Data(unit_size, makeArrayFrom(given_data, map_function, this_arg));
+    return Data.call(this, unit_size, makeArrayFrom(given_data, map_function, this_arg));
   };
 
   Data.of = function() {
     var unit_size, values;
     unit_size = arguments[0], values = 2 <= arguments.length ? slice.call(arguments, 1) : [];
-    return new Data(unit_size, values);
+    return Data.call(this, unit_size, values);
   };
 
   Object.defineProperties(Data, {

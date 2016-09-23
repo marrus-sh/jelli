@@ -5,7 +5,143 @@ Typed arrays of varying bit-depths.
 
 ##  Introduction  ##
 
->   *To come.*
+A `Data` object describes an array-like view of an underlying binary data buffer.
+It is mostly equivalent to JavaScript's native [TypedArray](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray) except that it can handle units of any size (1–32 bit) rather than only 8, 16, or 32.
+The values at each index of a `Data` object are always interpreted as unsigned integers.
+
+###  Syntax:  ###
+
+>   ```coffeescript
+>       new Data(unitSize, length)
+>       new Data(unitSize, contents)
+>       new Data(unitSize, buffer [, byteOffset [, length]])
+>   ```
+
+>   **Note :**
+    The `new` operator is optional with `Data` objects, but recommended.
+
+####  Parameters  ####
+
+-   `unitSize`—
+    This gives the number of bits per item in the `Data` object.
+    It is roughly equivalent to `BYTES_PER_ELEMENT` for typed arrays, except that you have to specify it yourself.
+    `unitSize` must be between 0 and 32 and will be capped into this range.
+
+-   `length`—
+    When called with a `length` argument, a internal array buffer is created in memory of size `length` multiplied by `unitSize` bits containing 0 value.
+    The internal buffer will be padded as necessary to fit within a whole number of bytes.
+    Numeric strings are interpreted as valid lengths (`"2"` is interpreted as `2`) but singleton arrays (for example, `[2]`) are instead interpreted as `contents`.
+
+-   `contents`—
+    When not called with a `length` or `buffer` argument, the second argument of the `Data()` constructor is coerced into an iterable array, whose length and contents are used to initialize the `Data` object.
+    Non-iterable objects are converted into singleton arrays (for example, `null` becomes `[null]`), and strings are interpreted by code point (so `hello` becomes `[104, 101, 108, 108, 111]`).
+
+-   `buffer`, `byteOffset`, `length`—
+    When called with a `buffer` argument, `Data()` simply creates a new view for a preexisting `ArrayBuffer`. The `byteOffset` and `length` parameters specify the memory range that will be exposed by the `Data` object.  If both are omitted, all of buffer is viewed; if only `length` is omitted, the remainder of buffer is viewed.
+
+###  Description:  ###
+
+`Data` is built off of the ECMAScript 6 typed arrays, using them as compact storage mechanisms for data of any bit-depth.
+It is, for the most part, interchangable with `TypedArray`s, although internally it is actually more similar to (and inherits from) a standard `Array`.
+
+Because the bit-depth of the `Data` object and the bit-depth of its underlying `ArrayBuffer` are not necessarily the same, using a `Data` object might be slightly slower than using a corresponding typed array as defined by ECMAScript 6.
+However, the memory usage of a `Data` object may be significantly lower; for example, a 6-bit array of 250 units is 200 bytes in a `Data` object, instead of 250.
+No space improvements are given for `Data` objects with bit-depths of 7, 8, or greater than 10, but depths up to 32-bit are supported.
+
+The object returned by `Data()` is frozen—this is to say, it may not be reconfigured or extended.
+Consequently, users wishing to extend the `Data` class should call the constructor (or `Data.from`) at the end; for example:
+
+>   ```coffeescript
+>       ExtendedData = (unitSize, contents) ->
+>           @name = "Extended Data!!!"
+>
+>           # Note that if `ExtendedData` doesn't inherit from `Data`, `Data.from` will silently fail to modify `this`:
+>           Data.from.call(this, unitSize, contents)
+>
+>       ExtendedData.prototype = Object.create(Data.prototype)
+>   ```
+
+>   **Note :**
+    `Data` is thus not extendable through ECMAScript 2015 classes, as `this` would be uninitialized *before* the constructor call, and frozen *after*.
+
+`Data` objects interpret their values as unsigned integers and internally use `Uint8Array`, `Uint16Array`, and `Uint32Array` to do their work.
+In environments where typed arrays are not supported, `Array` is used instead.
+
+####  Property access  ####
+
+`Data` objects function just like typed arrays, and their properties can be accessed using standard bracket notation.
+Unlike with typed arrays, this lookup does check the prototype chain, however as `Data.prototype` is frozen this is unlikely to cause an issue.
+
+###  Properties:  ###
+
+-   `Data.BYTES_PER_ELEMENT`—
+    Always returns `NaN`.
+
+-   `Data.length`—
+    Has a value of `3`, like all typed array constructors.
+
+-   `Data.name`—
+    Returns the string value `"Data"`.
+
+-   `Data.prototype`—
+    Prototype for `Data` objects.
+
+###  Methods:  ###
+
+-   `Data.from(unitSize, source[, mapFn, thisArg])`—
+    The same as calling `new Data(unitSize, source)`, except that `source` is always interpreted as `contents`, above.
+
+-   `Data.of(unitSize[, …])`—
+    The same as calling `new Data(unitSize, values)`, where `values` is an array containing the arguments of `Data.of()`, starting from the second argument.
+
+###  Instances:  ###
+
+####  Properties  ####
+
+All properties of `Data` instances are read-only.
+
+-   `dataobj.unitSize`—
+    Returns the bit-depth of the `Data` instance—that is, the number of bits given to each element.
+
+-   `dataobj.constructor`—
+    Returns the `Data()` constructor.
+
+-   `dataobj.buffer`—
+    Gives access to the `Data` instance's `ArrayBuffer`.
+
+-   `dataobj.byteLength`—
+    Returns the length (in bytes) of the `Data` instance's `ArrayBuffer`.
+
+-   `dataobj.byteOffset`—
+    Returns the offset (in bytes) for the `Data` instance's `ArrayBuffer`.
+
+-   `dataobj.length`—
+    Returns the number of elements in the `Data` instance.
+
+####  Methods  ####
+
+`Data` inherits from `Array`, so the standard array-like methods apply.
+In addition, the following methods (also available with typed arrays) are defined:
+
+-   `Data.prototype.set(array [,offset])`—
+    Stores multiple values in a `Data` instance, reading input values from a specified array and beginning writing from `offset`.
+
+-   `Data.prototype.subarray()`—
+    This method does nothing and throws a `TypeError`.
+
+###  Examples:  ###
+
+####  Creating a 6-bit `Data` array with length `12`  ####
+
+>   ```coffeescript
+>       data_array = new Data(6, 12)
+>   ```
+
+####  Creating a `Data` array from a character string  ####
+
+>   ```coffeescript
+>       data_array = new Data(8, "hello world!")
+>   ```
 
 ##  Implementation  ##
 
@@ -21,14 +157,9 @@ The `Data` module provides access to large arrays of data using JavaScript's `Ar
 
 ###  Before we begin:  ###
 
-If the current browser doesn't support typed arrays, then we will just use normal ones.
-(This allows us to maintain support for IE9).
+If the current browser supports typed arrays, we can get the typed array prototype here.
 
->   **Note :**
-If you have your own polyfill and/or require typed array feature-detection, this must take place *before* loading the `Data` module, as this mapping is done globally.
-
-    for typed_array in ["Int8Array", "Uint8Array", "Uint8ClampedArray", "Int16Array", "Uint16Array", "Int32Array", "Uint32Array", "Float32Array", "Float64Array"]
-        window[typed_array] = Array unless typed_array of window
+    TypedArray = Object.getPrototypeOf(Int8Array) if "Int8Array" of window
 
 The size of the typed array that we use for our data depends on its bit-depth.
 The following array lists the sizes for various bit-depths of data:
@@ -53,7 +184,7 @@ A `32`-bit array is used for bit-depths from `17` to `32`.
 The following array lists how many data-bytes can fit within one array-byte:
 
     byte_depth = [
-        0           #  null:0
+        0           #  0:0
         8           #  8:1
         4           #  8:2
         5           #  16:3
@@ -93,7 +224,7 @@ These changes take place because the `Data` module only supports numeric data.
 
 First, we turn what we are given into an object; this is our array data.
 
-        array_data = Object(something)
+        array_data = if something? then Object(something) else []
 
 If our `something` is a number, we create a singleton array containing that number.
 Otherwise, if our `array_data` doesn't have a length, we instead use `something`'s string representation.
@@ -102,7 +233,7 @@ Otherwise, if our `array_data` doesn't have a length, we instead use `something`
     This is different from `Array.from()`, which returns an empty array for non-iterable objects.
     It means, for example, that `makeArrayFrom(2)` will process `2` as `[2]` and `null` as `"null"`.
 
-        array_data = (if typeof something is "number" or (something instanceof Number) then [something] else new String(something)) unless array_data.length?
+        array_data = (if typeof array_data.valueOf() is "number" or (array_data.valueOf() instanceof Number) then [array_data] else String(array_data)) unless array_data.length?
         length = if array_data.length < 0 then 0 else array_data.length >>> 0
 
 We can now create the array that will hold our data.
@@ -170,6 +301,12 @@ In each case, the first variable gives us the size of each data unit in bits (ie
 
     Data = (unit_size, length_or_data, byte_offset, length_for_buffer) ->
 
+It is possible that `Data()` was called without the `new` keyword.
+There is no specific reason to disallow this, but we should ensure that the prototype chain is respected regardless.
+We do this using `Object.create()`, disregarding the old `this` if it isn't already a `Data` instance.
+
+        this_array = Object.create(Data.prototype) unless (this_array = this) instanceof Data
+
 We need `unit_size` to be a number; if not specified, it defaults to `0`.
 If `length_or_data` is a number, then it gives the length.
 If it is an array or string, then it gives us our data.
@@ -180,33 +317,36 @@ If it is an array or string, then it gives us our data.
     This design choice was made to allow the reading of lengths directly from HTML/XML attributes, and can be effectively circumvented by using `Data.from()`.
     Because of this quirk in string handling, it is **strongly recommended** that data strings only be passed to `Data()` directly as arrays whenever their contents are not known.
 
-        @unitSize = if unit_size < 0 then 0 else unit_size >>> 0
+        this_array.unitSize = if unit_size < 0 then 0 else unit_size >>> 0
 
 Right now, `Data` does not support bytes more than `32` bits long.
 
-        @unitSize = 32 if @unitSize > 32
+        this_array.unitSize = 32 if this_array.unitSize > 32
 
 If we were given an `ArrayBuffer`, then we use that to set up our internal typed array.
 
         if ArrayBuffer? and length_or_data instanceof ArrayBuffer
-            @buffer = length_or_data
-            @byteOffset = 0 if (@byteOffset = byte_offset) < 0
-            @byteOffset = @buffer.byteLength if (@byteOffset >>>= 0) > @buffer.byteLength
-            @length = if length_for_buffer < 0 then 0 else length_for_buffer >>> 0
-            internal_byte_depth = if @unitSize < 11 then byte_depth[@unitSize] else 1
-            internal_byte_size = if @unitSize < 11 then array_size[@unitSize] else if @unitSize < 17 then 16 else 32
-            @byteLength = Math.ceil(@length / internal_byte_depth) * internal_byte_size / 8
-            @byteLength = @buffer.byteLength - @byteOffset if @byteLength > @buffer.byteLength - @byteOffset
+            this_array.buffer = length_or_data
+            this_array.byteOffset = 0 if (this_array.byteOffset = byte_offset) < 0
+            this_array.byteOffset = this_array.buffer.byteLength if (this_array.byteOffset >>>= 0) > this_array.buffer.byteLength
+            this_array.length = if length_for_buffer < 0 then 0 else length_for_buffer >>> 0
+            internal_byte_depth = if this_array.unitSize < 11 then byte_depth[this_array.unitSize] else 1
+            internal_byte_size = if this_array.unitSize < 11 then array_size[this_array.unitSize] else if this_array.unitSize < 17 then 16 else 32
+            internal_byte_length = Math.ceil(this_array.length / internal_byte_depth) * internal_byte_size / 8
+            internal_byte_length = this_array.buffer.byteLength - this_array.byteOffset if internal_byte_length > this_array.buffer.byteLength - this_array.byteOffset
             internal_array = new (
+                if TypedArray?
                     switch (internal_byte_size)
                         when 0 then ->
                         when 8 then Uint8Array
                         when 16 then Uint16Array
                         else Uint32Array
+                else Array
             )(
-                @buffer, @byteOffset, @byteLength
+                this_array.buffer, this_array.byteOffset, internal_byte_length
             )
-            @length = internal_array.length * internal_byte_depth if internal_array.length * internal_byte_depth < @length
+            this_array.length = internal_array.length * internal_byte_depth if internal_array.length * internal_byte_depth < this_array.length
+            this_array.byteLength = internal_array.byteLength
             given_data = []
 
 Otherwise, we have to create our own.
@@ -214,44 +354,46 @@ Otherwise, we have to create our own.
         else
             if length_or_data? and (length_or_data instanceof Array or isNaN(length_or_data))
                 given_data = makeArrayFrom(length_or_data)
-                @length = given_data.length
+                this_array.length = given_data.length
             else
                 given_data = []
-                @length = if length_or_data < 0 then 0 else length_or_data >>> 0
-            internal_byte_depth = if @unitSize < 11 then byte_depth[@unitSize] else 1
-            internal_byte_size = if @unitSize < 11 then array_size[@unitSize] else if @unitSize < 17 then 16 else 32
+                this_array.length = if length_or_data < 0 then 0 else length_or_data >>> 0
+            internal_byte_depth = if this_array.unitSize < 11 then byte_depth[this_array.unitSize] else 1
+            internal_byte_size = if this_array.unitSize < 11 then array_size[this_array.unitSize] else if this_array.unitSize < 17 then 16 else 32
             internal_array = new (
+                if TypedArray?
                     switch (internal_byte_size)
                         when 0 then ->
                         when 8 then Uint8Array
                         when 16 then Uint16Array
                         else Uint32Array
+                else Array
             )(
-                if byte_depth then Math.ceil(@length / internal_byte_depth) else 0
+                if byte_depth then Math.ceil(this_array.length / internal_byte_depth) else 0
             )
-            @buffer = internal_array.buffer
-            @byteOffset = 0
-            @byteLength = internal_array.byteLength
+            this_array.buffer = internal_array.buffer
+            this_array.byteOffset = 0
+            this_array.byteLength = internal_array.byteLength
 
 Next, we programmatically create our getters and setters for specific array values, from `0` through `@length - 1`.
 At the same time, we initialize the values of our data array based on `given_data`, if it was provided.
 
-        if @length
-            for index in [0 .. @length - 1]
-                Object.defineProperty(this, index, {
-                    get: getIndexOfDataArray.bind(this, internal_array, @unitSize, index)
-                    set: setIndexOfDataArray.bind(this, internal_array, @unitSize, index)
+        if this_array.length
+            for index in [0 .. this_array.length - 1]
+                Object.defineProperty(this_array, index, {
+                    get: getIndexOfDataArray.bind(this_array, internal_array, this_array.unitSize, index)
+                    set: setIndexOfDataArray.bind(this_array, internal_array, this_array.unitSize, index)
                     enumerable: true
                 })
-                this[index] = given_data[index] if given_data[index]?
+                this_array[index] = given_data[index] if given_data[index]?
 
 The `constructor` property just returns this constructor.
 
-        @constructor = Data
+        this_array.constructor = Data
 
-Properties which are not indices should not be enumerated, so we quickly adjust for that here:
+Non-index properties should not be enumerated, so we quickly adjust for that now:
 
-        Object.defineProperties(this, {
+        Object.defineProperties(this_array, {
             buffer: {enumerable: false}
             constructor: {enumerable: false}
             byteLength: {enumerable: false}
@@ -261,14 +403,33 @@ Properties which are not indices should not be enumerated, so we quickly adjust 
         })
 
 That's it!
-`Data` objects are themselves immutable, so we freeze the object, we're done.
+`Data` objects are themselves immutable, so we freeze the object and we're done.
 
-        Object.freeze this
+        Object.freeze this_array
 
 ###  The prototype:  ###
 
-The `Data` prototype provides the same methods as `TypedArray`s, with the exception of `subarray`, which is not presently feasible.
+The `Data` prototype provides the same methods as `TypedArray`s, with the exception of `subarray`, which is not presently feasible and throws a `TypeError`.
 It inherits from the `Array` prototype to make facilitating this simple.
+
+>   **Note :**
+    It would have been ideal to use the `TypedArray` prototype for `Data` inheritance, but unfortunately this is only compatible with ECMAScript-defined typed arrays and cannot be used with others.
+
+    Data.prototype = Object.create(Array.prototype, {
+
+The `set()` function reads input from a specified array and uses this to set the values of a `Data` object.
+
+        set: (given_data, offset) ->
+            return unless this instanceof Data
+            given_data = makeArrayFrom(given_data)
+            offset = if offset < 0 then 0 else offset >>> 0
+            index = 0
+            while index < given_data.length and index + offset < @length
+                this[index + offset] = given_data[index]
+                index++
+            return
+
+The `subarray()` function throws a `TypeError`, as it is not supported.
 
 >   [Issue #66](https://github.com/marrus-sh/jelli/issues/66) :
     Because the unit boundaries of `Data` arrays do not always line up with the byte boundaries of an `ArrayBuffer`, it is not possible to ensure that a new `Data` array can be created on the same `ArrayBuffer` store.
@@ -292,19 +453,7 @@ It inherits from the `Array` prototype to make facilitating this simple.
 
 >   As you can see, creating a new view on this `ArrayBuffer` which starts on the second unit of 6-bit data is not easily feasible, making `subarray` implementation difficult.
 
-    Data.prototype = Object.create(Array.prototype, {
-
-The `set()` function reads input from a specified array and uses this to set the values of a `Data` object.
-
-        set: (given_data, offset) ->
-            return unless this instanceof Data
-            given_data = makeArrayFrom(given_data)
-            offset = if offset < 0 then 0 else offset >>> 0
-            index = 0
-            while index < given_data.length and index + offset < @length
-                this[index + offset] = given_data[index]
-                index++
-            return
+        subarray: -> throw new TypeError("subarray not supported for Data objects")
 
 The `Data` prototype should not be extended, so we freeze it.
 
@@ -320,11 +469,11 @@ A few additional static methods have been defined for `Data` to ease its use.
 This makes handling of numeric strings consistent with other string arguments, as well as passing numbers in directly to create singleton `Data` objects.
 `Data.from()` works in a similar, but not identical, manner to `Array.from()`; for more information, see the above documentation for `makeArrayFrom()`.
 
-    Data.from = (unit_size, given_data, map_function, this_arg) -> new Data(unit_size, makeArrayFrom(given_data, map_function, this_arg))
+    Data.from = (unit_size, given_data, map_function, this_arg) -> Data.call(this, unit_size, makeArrayFrom(given_data, map_function, this_arg))
 
 `Data.of()` allows for the creation of a `Data` object from a list of arguments.
 
-    Data.of = (unit_size, values...) -> new Data(unit_size, values)
+    Data.of = (unit_size, values...) -> Data.call(this, unit_size, values)
 
 The `name`, `length`, and `BYTES_PER_ELEMENT` static properties are defined to make `Data` conform to other `TypedArray`s.
 However, note that the value of this last property is `NaN`, as the number of bytes per `Data` unit varies by object.
