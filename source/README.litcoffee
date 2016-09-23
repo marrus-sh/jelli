@@ -20,6 +20,11 @@ The anticipated (ie, untested) browser compatibility for the Jelli Game Engine a
 
 A few specific features have higher requirements, however:
 
+#####  Base64  #####
+
+The `Text` module allows for the passing of strings in Base64.
+For the time being, this feature requires Internet Explorer 10.
+
 #####  touch events  #####
 
 Touch events are often either not supported or hidden behind a preference on desktop browsers.
@@ -55,9 +60,13 @@ The modules at this time are:
 - [`Sheet`](modules/Sheet.litcoffee)
 - [`Letters`](modules/Letters.litcoffee)
 - [`Tileset`](modules/Tileset.litcoffee)
+- [`Data`](modules/Tileset.litcoffee)
 
->   [Issue #51](https://github.com/literallybenjam/jelli/issues/51) :
+>   [Issue #51](https://github.com/marrus-sh/jelli/issues/51) :
     Support for a `Filter` module is also planned.
+
+>   [Issue #63](https://github.com/marrus-sh/jelli/issues/63) :
+    Support for a `Media` module is also planned.
 
 You can view the source for each module by viewing the appropriately named `.litcoffee` file in the [modules](modules) directory.
 
@@ -86,10 +95,10 @@ A policy of focusing on the engine and looking up the other modules when needed 
 
 It is not necessary to understand the code behind this engine in order to put it into use.
 In fact, the extensive documentation provided for the engine exists precisely to make it accessible without forcing users to dig through code.
-When browsing the source, each block of code is usually explained in the paragraphs immediately preceeding or following it.
+When browsing the source, each block of code is usually explained in the paragraphs immediately preceding or following it.
 
 This engine is still under active development, and errors in the code are likely present.
-Issues may be submitted through [GitHub](https://github.com/literallybenjam/jelli/issues) should any bugs be discovered.
+Issues may be submitted through [GitHub](https://github.com/marrus-sh/jelli/issues) should any bugs be discovered.
 
 ###  Document structure:  ###
 
@@ -119,7 +128,7 @@ Here is a [link](http://example.com).
 2.  Here is item #2
 3.  Short list items like these don't end in periods
 
->   [Issue ##](https://github.com/literallybenjam/jelli/issues) :
+>   [Issue ##](https://github.com/marrus-sh/jelli/issues) :
 This is a note regarding a known issue.
 
 -   This is an unordered list with paragraph content.
@@ -173,10 +182,10 @@ In JavaScript, these become `dataset.bitdepth` and `dataset.spriteWidth`, respec
 
     ###
     THE JELLI GAME ENGINE
-    Programmed by Margaret Russel
+    Programmed by Go Shoemake <3
     -----------------------------
     Implemented through several modules in Literate CoffeeScript.
-    Source code and resources are available at https://github.com/literallybenjam/jelli/.
+    Source code and resources are available at https://github.com/marrus-sh/jelli/.
     Written for the CoffeeScript 1.10.0 compiler.
     ###
 
@@ -187,7 +196,7 @@ The Jelli Game Engine is licensed under an MIT License, provided below:
     ###
     MIT License
 
-    Copyright (c) 2016 Margaret Russel
+    Copyright (c) 2016 Margaret "Go" Shoemake
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
