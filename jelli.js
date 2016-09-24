@@ -83,14 +83,11 @@
       height = (elt.height != null ? elt.height : elt.clientHeight);
     }
     Object.defineProperties(this, {
-      origin_height: {
-        value: height
-      },
       number: {
         value: n
       },
-      target: {
-        value: elt
+      origin_height: {
+        value: height
       },
       origin_width: {
         value: width
@@ -100,6 +97,9 @@
       },
       origin_y: {
         value: y
+      },
+      target: {
+        value: elt
       }
     });
     Object.defineProperties(this, {
@@ -110,7 +110,7 @@
         value: ((e != null ? e.pageY : void 0) - rect.top - this.origin_y) * this.origin_height / elt.clientHeight
       }
     });
-    Object.defineProperties(this, {
+    return Object.defineProperties(this, {
       x: {
         value: this.start_x,
         writable: true
@@ -120,7 +120,6 @@
         writable: true
       }
     });
-    return Object.seal(this);
   };
 
   Poke.prototype = Object.create(Object.prototype, {
@@ -214,6 +213,9 @@
     if (elt == null) {
       elt = document.body;
     }
+    if (!(this instanceof Control)) {
+      return;
+    }
     if (!(elt instanceof Element)) {
       elt = document.body;
     }
@@ -229,16 +231,48 @@
     if (isNaN(height = Number(height))) {
       height = (elt.height != null ? elt.height : elt.clientHeight);
     }
-    this.target = elt;
-    this.clicks = new PokeList(elt, x, y, width, height);
-    this.codes = {};
-    this.height = height;
-    this.keys = {};
-    this.ownerDocument = ((ref = this.target) != null ? ref.ownerDocument : void 0) || document;
-    this.touches = new PokeList(elt, x, y, width, height);
-    this.width = width;
-    this.x = x;
-    this.y = y;
+    Object.defineProperties(this, {
+      "target": {
+        value: elt,
+        enumerable: true
+      },
+      "clicks": {
+        value: new PokeList(elt, x, y, width, height),
+        enumerable: true
+      },
+      "codes": {
+        value: {},
+        enumerable: true
+      },
+      "height": {
+        value: height,
+        enumerable: true
+      },
+      "keys": {
+        value: {},
+        enumerable: true
+      },
+      "ownerDocument": {
+        value: ((ref = this.target) != null ? ref.ownerDocument : void 0) || document,
+        enumerable: true
+      },
+      "touches": {
+        value: new PokeList(elt, x, y, width, height),
+        enumerable: true
+      },
+      "width": {
+        value: width,
+        enumerable: true
+      },
+      "x": {
+        value: x,
+        enumerable: true
+      },
+      "y": {
+        value: y,
+        enumerable: true
+      }
+    });
     if (this.ownerDocument != null) {
       this.ownerDocument.defaultView.addEventListener("keydown", this, false);
       this.ownerDocument.defaultView.addEventListener("keyup", this, false);
@@ -249,9 +283,8 @@
       this.ownerDocument.defaultView.addEventListener("touchcancel", this, false);
       this.ownerDocument.defaultView.addEventListener("mousedown", this, false);
       this.ownerDocument.defaultView.addEventListener("mouseup", this, false);
-      this.ownerDocument.defaultView.addEventListener("mousemove", this, false);
+      return this.ownerDocument.defaultView.addEventListener("mousemove", this, false);
     }
-    return Object.freeze(this);
   };
 
   Control.prototype = Object.create(Object.prototype, {
@@ -405,8 +438,15 @@
     },
     remove: {
       value: function(name) {
+        var code, k, len;
         if (name != null) {
           delete this.keys[name];
+        }
+        for (k = 0, len = codes.length; k < len; k++) {
+          code = codes[k];
+          if ((name != null) && this.codes[code] === name) {
+            delete this.codes[code];
+          }
         }
         return this;
       }
@@ -478,7 +518,10 @@
 
   makeArrayFrom = function(something, map_function, this_arg) {
     var array_data, computed_array, first_point, item, j, k, length, ref, second_point;
-    array_data = something != null ? Object(something) : [];
+    if (something == null) {
+      something = [];
+    }
+    array_data = Object(something);
     if (array_data.length == null) {
       array_data = (typeof array_data.valueOf() === "number" || (array_data.valueOf() instanceof Number) ? [array_data] : String(array_data));
     }

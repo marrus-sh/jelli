@@ -9,36 +9,6 @@ A `Data` object describes an array-like view of an underlying binary data buffer
 It is mostly equivalent to JavaScript's native [TypedArray](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray) except that it can handle units of any size (1–32 bit) rather than only 8, 16, or 32.
 The values at each index of a `Data` object are always interpreted as unsigned integers.
 
-###  Syntax:  ###
-
->   ```coffeescript
->       new Data(unitSize, length)
->       new Data(unitSize, contents)
->       new Data(unitSize, buffer [, byteOffset [, length]])
->   ```
-
->   **Note :**
-    The `new` operator is optional with `Data` objects, but recommended.
-
-####  Parameters  ####
-
--   `unitSize`—
-    This gives the number of bits per item in the `Data` object.
-    It is roughly equivalent to `BYTES_PER_ELEMENT` for typed arrays, except that you have to specify it yourself.
-    `unitSize` must be between 0 and 32 and will be capped into this range.
-
--   `length`—
-    When called with a `length` argument, a internal array buffer is created in memory of size `length` multiplied by `unitSize` bits containing 0 value.
-    The internal buffer will be padded as necessary to fit within a whole number of bytes.
-    Numeric strings are interpreted as valid lengths (`"2"` is interpreted as `2`) but singleton arrays (for example, `[2]`) are instead interpreted as `contents`.
-
--   `contents`—
-    When not called with a `length` or `buffer` argument, the second argument of the `Data()` constructor is coerced into an iterable array, whose length and contents are used to initialize the `Data` object.
-    Non-iterable objects are converted into singleton arrays (for example, `null` becomes `[null]`), and strings are interpreted by code point (so `hello` becomes `[104, 101, 108, 108, 111]`).
-
--   `buffer`, `byteOffset`, `length`—
-    When called with a `buffer` argument, `Data()` simply creates a new view for a preexisting `ArrayBuffer`. The `byteOffset` and `length` parameters specify the memory range that will be exposed by the `Data` object.  If both are omitted, all of buffer is viewed; if only `length` is omitted, the remainder of buffer is viewed.
-
 ###  Description:  ###
 
 `Data` is built off of the ECMAScript 6 typed arrays, using them as compact storage mechanisms for data of any bit-depth.
@@ -62,7 +32,7 @@ Consequently, users wishing to extend the `Data` class should call the construct
 >   ```
 
 >   **Note :**
-    `Data` is thus not extendable through ECMAScript 2015 classes, as `this` would be uninitialized *before* the constructor call, and frozen *after*.
+`Data` is thus not extendable through ECMAScript 2015 classes, as `this` would be uninitialized *before* the constructor call, and frozen *after*.
 
 `Data` objects interpret their values as unsigned integers and internally use `Uint8Array`, `Uint16Array`, and `Uint32Array` to do their work.
 In environments where typed arrays are not supported, `Array` is used instead.
@@ -72,61 +42,94 @@ In environments where typed arrays are not supported, `Array` is used instead.
 `Data` objects function just like typed arrays, and their properties can be accessed using standard bracket notation.
 Unlike with typed arrays, this lookup does check the prototype chain, however as `Data.prototype` is frozen this is unlikely to cause an issue.
 
-###  Properties:  ###
+###  The `Data` constructor:  ###
 
--   `Data.BYTES_PER_ELEMENT`—
-    Always returns `NaN`.
+####  Syntax  ####
 
--   `Data.length`—
-    Has a value of `3`, like all typed array constructors.
+>   ```coffeescript
+>       new Data(unitSize, length)
+>       new Data(unitSize, contents)
+>       new Data(unitSize, buffer [, byteOffset [, length]])
+>   ```
 
--   `Data.name`—
-    Returns the string value `"Data"`.
+>   **Note :**
+    The `new` operator is optional with `Data` objects, but recommended.
 
--   `Data.prototype`—
-    Prototype for `Data` objects.
+-   **`unitSize`**—
+    This gives the number of bits per item in the `Data` object.
+    It is roughly equivalent to `BYTES_PER_ELEMENT` for typed arrays, except that you have to specify it yourself.
+    `unitSize` must be between 0 and 32 and will be capped into this range.
 
-###  Methods:  ###
+-   **`length`**—
+    When called with a `length` argument, a internal array buffer is created in memory of size `length` multiplied by `unitSize` bits containing 0 value.
+    The internal buffer will be padded as necessary to fit within a whole number of bytes.
+    Numeric strings are interpreted as valid lengths (`"2"` is interpreted as `2`) but singleton arrays (for example, `[2]`) are instead interpreted as `contents`.
 
--   `Data.from(unitSize, source[, mapFn, thisArg])`—
-    The same as calling `new Data(unitSize, source)`, except that `source` is always interpreted as `contents`, above.
+-   **`contents`**—
+    When not called with a `length` or `buffer` argument, the second argument of the `Data()` constructor is coerced into an iterable array, whose length and contents are used to initialize the `Data` object.
+    Non-iterable objects are converted into singleton arrays (for example, `null` becomes `[null]`), and strings are interpreted by code point (so `hello` becomes `[104, 101, 108, 108, 111]`).
 
--   `Data.of(unitSize[, …])`—
-    The same as calling `new Data(unitSize, values)`, where `values` is an array containing the arguments of `Data.of()`, starting from the second argument.
-
-###  Instances:  ###
+-   **`buffer`, `byteOffset`, `length`**—
+    When called with a `buffer` argument, `Data()` simply creates a new view for a preexisting `ArrayBuffer`. The `byteOffset` and `length` parameters specify the memory range that will be exposed by the `Data` object.  If both are omitted, all of buffer is viewed; if only `length` is omitted, the remainder of buffer is viewed.
 
 ####  Properties  ####
 
-All properties of `Data` instances are read-only.
+-   **`Data.BYTES_PER_ELEMENT`**—
+    Always returns `NaN`.
 
--   `dataobj.unitSize`—
+-   **`Data.length`**—
+    Has a value of `3`, like all typed array constructors.
+
+-   **`Data.name`**—
+    Returns the string value `"Data"`.
+
+-   **`Data.prototype`**—
+    Prototype for `Data` objects.
+
+####  Methods  ####
+
+-   **`Data.from(unitSize, source[, mapFn, thisArg])`**—
+    The same as calling `new Data(unitSize, source)`, except that `source` is always interpreted as `contents`, above.
+
+-   **`Data.of(unitSize[, …])`**—
+    The same as calling `new Data(unitSize, values)`, where `values` is an array containing the arguments of `Data.of()`, starting from the second argument.
+
+###  `Data` instances:  ###
+
+####  Properties  ####
+
+All non–array-access properties of `Data` instances are read-only.
+
+-   **`dataobj.unitSize`**—
     Returns the bit-depth of the `Data` instance—that is, the number of bits given to each element.
 
--   `dataobj.constructor`—
+-   **`dataobj.constructor`**—
     Returns the `Data()` constructor.
 
--   `dataobj.buffer`—
+-   **`dataobj.buffer`**—
     Gives access to the `Data` instance's `ArrayBuffer`.
 
--   `dataobj.byteLength`—
+-   **`dataobj.byteLength`**—
     Returns the length (in bytes) of the `Data` instance's `ArrayBuffer`.
 
--   `dataobj.byteOffset`—
+-   **`dataobj.byteOffset`**—
     Returns the offset (in bytes) for the `Data` instance's `ArrayBuffer`.
 
--   `dataobj.length`—
+-   **`dataobj.length`**—
     Returns the number of elements in the `Data` instance.
+
+-   **`dataobj[n]`**—
+    Accesses the `n`th element in the `Data` instance.
 
 ####  Methods  ####
 
 `Data` inherits from `Array`, so the standard array-like methods apply.
 In addition, the following methods (also available with typed arrays) are defined:
 
--   `Data.prototype.set(array [,offset])`—
+-   **`Data.prototype.set(array [,offset])`**—
     Stores multiple values in a `Data` instance, reading input values from a specified array and beginning writing from `offset`.
 
--   `Data.prototype.subarray()`—
+-   **`Data.prototype.subarray()`**—
     This method does nothing and throws a `TypeError`.
 
 ###  Examples:  ###
@@ -220,11 +223,11 @@ This is essentially a polyfill for `Array.from()`, with a few modifications:
 
 These changes take place because the `Data` module only supports numeric data.
 
-    makeArrayFrom = (something, map_function, this_arg) ->
+    makeArrayFrom = (something = [], map_function, this_arg) ->
 
 First, we turn what we are given into an object; this is our array data.
 
-        array_data = if something? then Object(something) else []
+        array_data = Object(something)
 
 If our `something` is a number, we create a singleton array containing that number.
 Otherwise, if our `array_data` doesn't have a length, we instead use `something`'s string representation.

@@ -5,7 +5,328 @@ Keyboard input tracking; mouse and touch support
 
 ##  Introduction  ##
 
->   *To come.*
+The `Control` module allows for various control schemes: keyboard input tracking, as well as mouse and touchscreen support.
+
+###  Description:  ###
+
+`Control` objects provide a means of detecting keyboard, mouse, and touch input on `window`.
+Mouse and touch inputs are provided using `Poke` objects, whose coordinates are given relative to a specified element.
+
+####  Keyboard input  ####
+
+Keyboard input detection does *not* occur automatically; rather, keys must be manually added.
+You can create a new key using `ctrl.add(name)` and add codes to it using `ctrl.addCodes(name[, …])`.
+These can be strung together; for example, `ctrl.add("up").addCodes("up", 0x26, "ArrowUp", "Up")` associates the codes `0x26`, `"ArrowUp"`, and `"Up"` with the key `"up"`.
+Codes may be in the format of any one of `KeyboardEvent.code`, `KeyboardEvent.key`, `KeyboardEvent.keyIdentifier`, or `KeyboardEvent.keyCode`, and all of these are checked where supported.
+
+There is no limit to the number of codes which may be added for a given key; consequently, it might be beneficial to set up keys which map to more than one physical key on the keyboard (for example, allowing users to press either `W` or `Up`).
+You can use `ctrl.isActive(name)` to determine whether a key is currently being pressed.
+
+####  `Poke`s and `PokeList`s  ####
+
+Mouse clicks and screen touches are stored in `PokeList`s, available through the `ctrl.clicks` and `ctrl.touches` properties, respectively.
+`PokeList` items may be accessed by number using `poke_list.item(n)` or by id using `poke_list[id]`.
+For clicks, number and id are identical and correspond to the value of `MouseEvent.button` for the corresponding mouse event.
+For touches, the number provides the ordinal number of the touch (first, second, third, etc.), while the id provides a unique reference.
+After a `Poke` is created, its number will not change, so this is generally the most convenient means of `Poke` access.
+
+The starting location of a `Poke` is provided by `poke.start_x` and `poke.start_y`, while its current location is provided by `poke.x` and `poke.y`.
+For example, `ctrl.clicks.item(0).x` gives the current x-coordinate of the mouse if a left-click has occurred.
+If a left click has not occurred, `ctrl.clicks.item(0)` will return `null`, and the above example will throw a `TypeError`.
+
+It is not currently possible to detect the location of the mouse through the `Control` interface when no button has been pressed.
+
+###  The `Control` constructor:  ###
+
+####  Syntax  ####
+
+>   ```coffeescript
+>       new Control(elt, x, y, width, height)
+>   ```
+
+-   **`elt`**—
+    The target element to use as a basis for the control.
+    Clicks and touches are only detected if they occur within the bounding rectangle of this element.
+    The coordinate system for this detection can be further refined using the remaining arguments.
+    The default value of `elt` is `document.body`.
+
+-   **`x`, `y`**—
+    The distance from the left and top edges of `elt`, respectively, for the coordinate system's origin.
+    The unit of these distances is determined by `width` and `height`.
+    Both of these values default to `0`.
+
+-   **`width`, `height`**—
+    The number of units wide and tall, respectively, `elt` is.
+    For example, if `elt` is 200 pixels wide but a value of `100` is passed for `width`, then each control unit will be two pixels.
+    (This facilitates consistent relative coordinates for dynamically sized content.)
+    These values default to `elt.width` and `elt.height` if these are defined, or `elt.clientWidth` and `elt.clientHeight` if not.
+
+####  Properties  ####
+
+-   **`Control.prototype`**—
+    The `Control` prototype object.
+
+####  Methods  ####
+
+-   **`Control.Poke`**—
+    The `Poke` constructor.
+
+-   **`Control.PokeList`**—
+    The `PokeList` constructor.
+
+###  `Control` instances:  ###
+
+####  Properties  ####
+
+>   **Note :**
+    Because `Poke` coordinates are given using control-units, attemting to change the coordinate system after object creation is not feasible.
+    Consequently, coordinate-system–related attributes are read-only.
+
+-   **`ctrl.clicks`**—
+    A `PokeList` containing all detected clicks on `ctrl.target`.
+
+-   **`ctrl.codes`**—
+    An object whose own properties give the codes and their associated key names defined on the `Control` instance.
+    This object may be modified directly to add new codes, but it is **highly recommended** that the `Control` instance methods be used instead.
+    >   [Issue #67](https://github.com/marrus-sh/jelli/issues/67) :
+    Right now the prototype chain is also checked for `ctrl.codes`, but support for this is anticipated to be removed in the future
+
+-   **`ctrl.height`**—
+    The height of `ctrl.target`, in control-units.
+    This is set on object creation and **read-only**.
+
+-   **`ctrl.keys`**—
+    An object whose own properties give the keys defined on the `Control` instance, and their current state.
+    This object may be modified directly to add new keys, but it is **highly recommended** that the `Control` instance methods be used instead.
+    >   [Issue #67](https://github.com/marrus-sh/jelli/issues/67) :
+    Right now the prototype chain is also checked for `ctrl.keys`, but support for this is anticipated to be removed in the future.
+
+-   **`ctrl.ownerDocument`**—
+    The `document` whose `defaultView` is used for event detection.
+    This defaults to `ctrl.target.ownerDocument`, and uses `document` as a fallback in case the former is not defined.
+
+-   **`ctrl.target`**—
+    The target element.
+    Only clicks and touches which occur within the bounds of this element are considered.
+    This value is **read-only**.
+
+-   **`ctrl.touches`**—
+    A `PokeList` containing all detected touches on `ctrl.target`.
+
+-   **`ctrl.width`**—
+    The width of `ctrl.target`, in control-units.
+    This is set on object creation and **read-only**.
+
+-   **`ctrl.x`, `ctrl.y`**—
+    The coordinates of the origin of the control coordinate system, in control-units.
+    These are set on object creation and **read-only**.
+
+####  Methods  ####
+
+Unless otherwise specified, `Control` instance methods return the given instance to allow the chaining of commands.
+
+-   **`Control.prototype.add(name)`**—
+    Adds a new key to the control with name `name`.
+
+-   **`Control.prototype.addCodes(name[, …])`**—
+    Adds any number of codes to the key with name `name`.
+    These should match the form of `KeyboardEvent.code`, `KeyboardEvent.key`, `KeyboardEvent.keyIdentifier`, or `KeyboardEvent.keyCode`.
+    If `name` has not been added to the control instance as a key, this method does nothing.
+    Note that each code may only be associated with one key at a time.
+
+-   **`Control.prototype.getName(code)`**—
+    Given a code `code`, returns the associated key name.
+    If no key has been specified for the given code, returns `undefined`.
+
+-   **`Control.prototype.handleEvent(event)`**—
+    Used to handle mouse, touch, and keyboard events.
+    The listeners for event handling are created automatically upon `Control` creation, so this method should not ever be called directly.
+    Returns `undefined`.
+
+-   **`Control.prototype.isActive(name)`**—
+    Checks to see whether the key with name `name` is currently active.
+    This is a safer alternative to calling `!!ctrl.keys[name]`.
+
+-   **`Control.prototype.isCodeActive(code)`**—
+    Checks to see whether the key associated with `code` is currently active.
+    Note that this does not necessarily mean that `code` itself is currently in use.
+
+-   **`Control.prototype.isCodeDefined(code)`**—
+    Checks to see whether the code given by `code` is currently defined and associated with a valid key.
+
+-   **`Control.prototype.isDefined(name)`**—
+    Checks to see whether the key with name `name` has been defined.
+    This is a safer alternative to calling `ctrl.keys.hasOwnProperty(name)`.
+    >   [Issue #67](https://github.com/marrus-sh/jelli/issues/67) :
+    Right now the prototype chain is also checked for `Control.prototype.isDefined`, but support for this is anticipated to be removed in the future
+
+-   **`Control.prototype.remove(name)`**—
+    Removes the key with name `name` and all associated codes.
+
+-   **`Control.prototype.removeCodes([…])`**—
+    Removes the given codes.
+
+-   **`Control.prototype.toggle(name[, value])`**—
+    Toggles the key with name `name`.
+    If `value` is provided, the key with name `name` is instead set to `!!value`.
+    This can be used to emulate keyboard keys (for example, on touch devices), or to toggle "hidden" keys (keys with no codes attached).
+    This method returns the value which the key was set to if successful, or `undefined` if not.
+
+-   **`Control.prototype.toggleCode(code[, value])`**—
+    Toggles the key associated with code `code`.
+    If `value` is provided, the key associated with code `code` is instead set to `!!value`.
+    This method returns the value which the key was set to if successful, or `undefined` if not.
+
+###  The `Poke` constructor:  ###
+
+####  Syntax  ####
+
+>   ```coffeescript
+>       new Control.Poke(elt, e, n, x, y, width, height)
+>   ```
+
+-   **`elt`**—
+    The target element to use as a basis for the `Poke` instance.
+
+-   **`e`**—
+    The `MouseEvent` or `Touch` to use when creating the `Poke`.
+    `Poke()` uses `e.pageX` and `e.pageY` to determine the location of the `Poke` instance.
+    >   [Issue #58](https://github.com/marrus-sh/jelli/issues/58) :
+        `Poke()` may use different attributes for determining `Poke` location in the future.
+
+-   **`n`**—
+    The "number" of the `Poke`.
+    This *should* be a JavaScript number, but this is not enforced.
+
+-   **`x`, `y`**—
+    The distance from the left and top edges of `elt`, respectively, for the coordinate system's origin.
+    The unit of these distances is determined by `width` and `height`.
+    Both of these values default to `0`.
+
+-   **`width`, `height`**—
+    The number of units wide and tall, respectively, `elt` is.
+    For example, if `elt` is 200 pixels wide but a value of `100` is passed for `width`, then each control unit will be two pixels.
+    (This facilitates consistent relative coordinates for dynamically sized content.)
+    These values default to `elt.width` and `elt.height` if these are defined, or `elt.clientWidth` and `elt.clientHeight` if not.
+
+####  Properties  ####
+
+-   **`Poke.prototype`**—
+    The `Poke` prototype object.
+
+####  Methods  ####
+
+The `Poke` constructor does not have any methods.
+
+###  `Poke` instances:  ###
+
+####  Properties  ####
+
+All `Poke` properties are **read-only**, with the exception of `x` and `y`.
+
+-   **`poke.number`**—
+    The number of the `Poke` instance.
+
+-   **`poke.origin_height`, `poke.origin_width`, `poke.origin_x`, `poke.origin_y`**—
+    These define the coordinate system used to place the `Poke` instance within `poke.target`.
+
+-   **`poke.start_x`, `poke.start_y`**—
+    The starting position of the `Poke` instance.
+
+-   **`poke.target`**—
+    The target of the `Poke`.
+
+-   **`poke.x`, `poke.y`**—
+    The current position of the `Poke` instance.
+
+####  Methods  ####
+
+-   **`Poke.prototype.updateWith(e)`**—
+    Updates the `Poke` using the given `MouseEvent` or `Touch`.
+    `Poke.prototype.updateWith()` uses `e.pageX` and `e.pageY` to determine the location of the `Poke` instance.
+    >   [Issue #58](https://github.com/marrus-sh/jelli/issues/58) :
+        `Poke.prototype.updateWith()` may use different attributes for determining `Poke` location in the future.
+
+###  The `PokeList` constructor:  ###
+
+####  Syntax  ####
+
+>   ```coffeescript
+>       new Control.PokeList(elt, x, y, width, height)
+>   ```
+
+`PokeList()` takes the same arguments as `Control`, with the same meanings.
+
+####  Properties  ####
+
+-   **`PokeList.prototype`**—
+    The `PokeList` prototype object.
+
+####  Methods  ####
+
+The `PokeList` constructor does not have any methods.
+
+###  `PokeList` instances:  ###
+
+####  Properties  ####
+
+-   **`poke_list.height`, `poke_list.width`, `poke_list.x`, `poke_list.y`**—
+    These define the coordinate system used to place the `PokeList` instance within `poke_list.target`.
+
+-   **`poke_list.target`**—
+    The target of the `PokeList`.
+
+-   **`poke_list[id]`**—
+    Accesses the `Poke` with id `id`.
+
+####  Methods  ####
+
+-   **`PokeList.prototype.deleteItem(n)`**—
+    Deletes the `Poke` with number `n` from the `PokeList` instance.
+
+-   **`PokeList.prototype.item(n)`**—
+    Accesses the `Poke` with number `n` from the `PokeList` instance.
+
+-   **`PokeList.prototype.add(id, e, n)`**—
+    Creates a new `Poke` with id `id` and number `n` from the `MouseEvent` or `Touch` `e` and adds it to the `PokeList` instance.
+
+###  Examples:  ###
+
+####  Creating a control and tracking the arrow keys  ####
+
+>   ```coffeescript
+>       ctrl = new Control()
+>       ctrl.add("down").addCodes("down", 0x28, "ArrowDown", "Down")
+>       ctrl.add("left").addCodes("left", 0x25, "ArrowLeft", "Left")
+>       ctrl.add("right").addCodes("right", 0x27, "ArrowRight", "Right")
+>       ctrl.add("up").addCodes("up", 0x26, "ArrowUp", "Up")
+>   ```
+
+####  Using percentages as control-units  ####
+
+>   ```coffeescript
+>       ctrl = new Control(document.body, 0, 0, 100, 100)
+>   ```
+
+####  Simulating keyboard input  ####
+
+>   ```html
+>       <div id="faux_spacebar"></div>
+>   ```
+
+>   ```coffeescript
+>       ctrl = new Control()
+>       ctrl.add("space").addCodes("space", 0x31, "Space")
+>       document.getElementById("faux_spacebar").addEventListener("mousedown", ctrl.toggle.bind(null, "space", true), false)
+>       document.getElementById("faux_spacebar").addEventListener("mouseup", ctrl.toggle.bind(null, "space", false), false)
+>   ```
+
+####  Using the mouse to simulate touches  ####
+
+>   ```coffeescript
+>       ctrl = new Control()
+>       touch_or_mouse = ctrl.touches.item(0) || ctrl.clicks.item(0)
+>   ```
 
 ##  Implementation  ##
 
@@ -40,12 +361,12 @@ We should start with a few quick lines of argument checking to make sure everyth
 Now we can define the properties of the `Poke`:
 
         Object.defineProperties this, {
-            origin_height: {value: height}
             number: {value: n}
-            target: {value: elt}
+            origin_height: {value: height}
             origin_width: {value: width}
             origin_x: {value: x}
             origin_y: {value: y}
+            target: {value: elt}
         }
 
 `start_x` and `start_y` give the initial coordinates of the `Poke`, relative to `elt`.
@@ -67,10 +388,6 @@ They start out as equal to `start_x` and `start_y`, but can be overwritten.
                 value: @start_y
                 writable: yes
         }
-
-We can now seal (but not freeze) the `Poke`:
-
-        Object.seal this
 
 ####  The prototype  ####
 
@@ -148,7 +465,12 @@ The `Control` constructor takes five arguments: `elt`, which gives the element u
 
     Control = (elt = document.body, x, y, width, height) ->
 
-We start by setting defaults for any unset attributes:
+`Control` instances depend strongly on their prototypes.
+Consequently, we should only proceed if `this` is, in fact, a `Control` instance proper.
+
+        return unless this instanceof Control
+
+We can then start by setting defaults for any unset attributes:
 
         elt = document.body unless elt instanceof Element
         x = 0 if isNaN(x = Number(x))
@@ -156,18 +478,23 @@ We start by setting defaults for any unset attributes:
         width = (if elt.width? then elt.width else elt.clientWidth) if isNaN(width = Number(width))
         height = (if elt.height? then elt.height else elt.clientHeight) if isNaN(height = Number(height))
 
-Not much work happens in the `Control` constructor itself; most of the heavy-lifting takes place in the prototype. But, here are our property definitions:
+Not much work happens in the `Control` constructor itself; most of the heavy-lifting takes place in the prototype.
+But, here are our property definitions:
 
-        @target = elt
-        @clicks = new PokeList(elt, x, y, width, height)
-        @codes = {}
-        @height = height
-        @keys = {}
-        @ownerDocument = @target?.ownerDocument || document
-        @touches = new PokeList(elt, x, y, width, height)
-        @width = width
-        @x = x
-        @y = y
+        Object.defineProperties(this, {
+            "target": {value: elt, enumerable: true}
+            "clicks": {value: new PokeList(elt, x, y, width, height), enumerable: true}
+            "codes": {value: {}, enumerable: true}
+            "height": {value: height, enumerable: true}
+            "keys": {value: {}, enumerable: true}
+            "ownerDocument": {value: @target?.ownerDocument || document, enumerable: true}
+            "touches": {value: new PokeList(elt, x, y, width, height), enumerable: true}
+            "width": {value: width, enumerable: true}
+            "x": {value: x, enumerable: true}
+            "y": {value: y, enumerable: true}
+        })
+
+We use `Object.defineProperties` because all of these properties are read-only.
 
 We then a number of event listeners to track what's going on:
 
@@ -183,9 +510,7 @@ We then a number of event listeners to track what's going on:
             @ownerDocument.defaultView.addEventListener("mouseup", this, false)
             @ownerDocument.defaultView.addEventListener("mousemove", this, false)
 
-And we freeze `Control` to make it formally immutable:
-
-        Object.freeze this
+…And we are done!
 
 ####  The prorotype  ####
 
@@ -321,6 +646,9 @@ Both take a single argument, the `name` of the key.
 
         isDefined: {value: (name) -> @keys[name]? if name?}
 
+>   [Issue #67](https://github.com/marrus-sh/jelli/issues/67) :
+    `isDefined` should use `Object.prototype.hasOwnProperty()`.
+
 It's equally possible, though, that you don't have the `name` of the key but rather only that of an associated code.
 `isCodeActive()` and `isCodeDefined()` do the same as the above, only with an argument of a `code`.
 
@@ -333,6 +661,7 @@ If we can add keys, we should be able to remove them!
         remove:
             value: (name) ->
                 delete @keys[name] if name?
+                delete @codes[code] for code in codes when name? and @codes[code] is name
                 return this
 
 And likewise with codes:

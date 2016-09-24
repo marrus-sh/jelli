@@ -149,7 +149,7 @@ This is a note regarding a known issue.
 -   **This is a list of definitions**—
     The word with imporance is the word being defined.
 
--   `Here is some code`—
+-   **`Here is some code`**—
     This is a definition item for explaining code.
 
 This is a line break:
