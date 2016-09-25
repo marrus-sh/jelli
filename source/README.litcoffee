@@ -141,6 +141,13 @@ This is a note regarding a known issue.
 >   It will not appear in the compiled source."
 >   ```
 
+>   ```javascript
+>   /*
+>       Usually, though, documentation examples are written in plain
+>       JavaScript.
+>   */
+>   ```
+
 >   ```html
 >   <!DOCTYPE html>
 >   <p>And here is a block of HTML.</p>

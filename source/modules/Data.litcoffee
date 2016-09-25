@@ -16,12 +16,13 @@ No space improvements are given for `Data` objects with bit-depths of 7, 8, or g
 The object returned by `Data()` is frozen—this is to say, it may not be reconfigured or extended.
 Consequently, users wishing to extend the `Data` class should call the constructor (or `Data.from`) at the end; for example:
 
->   ```coffeescript
->       ExtendedData = (unitSize, contents) ->
->           @name = "Extended Data!!!"
->           # Note that if `ExtendedData` doesn't inherit from `Data`, `Data.from` will silently fail to modify `this`:
->           Data.from.call(this, unitSize, contents)
->       ExtendedData.prototype = Object.create(Data.prototype)
+>   ```javascript
+>   ExtendedData = function (unitSize, contents) {
+>       this.name = "Extended Data!!!";
+>       // Note that if `ExtendedData` doesn't inherit from `Data`, `Data.from` will silently fail to modify `this`:
+>       Data.from.call(this, unitSize, contents);
+>   }
+>   ExtendedData.prototype = Object.create(Data.prototype);
 >   ```
 
 >   **Note :**
@@ -41,10 +42,12 @@ Unlike with typed arrays, this lookup does check the prototype chain, however as
 
 #####  SYNTAX  #####
 
->   ```coffeescript
->       new Data(unitSize, length)
->       new Data(unitSize, contents)
->       new Data(unitSize, buffer [, byteOffset [, length]])
+>   ```javascript
+>   new Data(unitSize, length);
+>   new Data(unitSize, contents);
+>   new Data(unitSize, buffer);
+>   new Data(unitSize, buffer, byteOffset);
+>   new Data(unitSize, buffer, byteOffset, length);
 >   ```
 
 >   **Note :**
@@ -131,14 +134,14 @@ In addition, the following methods (also available with typed arrays) are define
 
 ####  Creating a 6-bit `Data` array with length `12`  ####
 
->   ```coffeescript
->       data_array = new Data(6, 12)
+>   ```javascript
+>   data_array = new Data(6, 12);
 >   ```
 
 ####  Creating a `Data` array from a character string  ####
 
->   ```coffeescript
->       data_array = new Data(8, "hello world!")
+>   ```javascript
+>   data_array = new Data(8, "hello world!");
 >   ```
 
 ##  Implementation  ##

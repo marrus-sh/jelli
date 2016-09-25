@@ -41,8 +41,10 @@ If you have multiple screens, you may want to assign a separate `Control` to eac
 
 #####  SYNTAX  #####
 
->   ```coffeescript
->       new Control(elt, x, y, width, height)
+>   ```javascript
+>       new Control(elt);
+>       new Control(elt, x, y);
+>       new Control(elt, x, y, width, height);
 >   ```
 
 -   **`elt`**—
@@ -187,8 +189,10 @@ You shouldn't ever have to create these yourself.
 
 #####  SYNTAX  #####
 
->   ```coffeescript
->       new Control.Poke(elt, e, n, x, y, width, height)
+>   ```javascript
+>       new Control.Poke(elt, e, n);
+>       new Control.Poke(elt, e, n, x, y);
+>       new Control.Poke(elt, e, n, x, y, width, height);
 >   ```
 
 -   **`elt`**—
@@ -262,8 +266,10 @@ You shouldn't ever have to create these yourself.
 
 #####  SYNTAX  #####
 
->   ```coffeescript
->       new Control.PokeList(elt, x, y, width, height)
+>   ```javascript
+>   new Control.PokeList(elt);
+>   new Control.PokeList(elt, x, y);
+>   new Control.PokeList(elt, x, y, width, height);
 >   ```
 
 `PokeList()` takes the same arguments as `Control`, with the same meanings.
@@ -305,38 +311,38 @@ The `PokeList()` constructor does not have any methods.
 
 ####  Creating a control and tracking the arrow keys  ####
 
->   ```coffeescript
->       ctrl = new Control()
->       ctrl.add("down").addCodes("down", 0x28, "ArrowDown", "Down")
->       ctrl.add("left").addCodes("left", 0x25, "ArrowLeft", "Left")
->       ctrl.add("right").addCodes("right", 0x27, "ArrowRight", "Right")
->       ctrl.add("up").addCodes("up", 0x26, "ArrowUp", "Up")
+>   ```javascript
+>   ctrl = new Control();
+>   ctrl.add("down").addCodes("down", 0x28, "ArrowDown", "Down");
+>   ctrl.add("left").addCodes("left", 0x25, "ArrowLeft", "Left");
+>   ctrl.add("right").addCodes("right", 0x27, "ArrowRight", "Right");
+>   ctrl.add("up").addCodes("up", 0x26, "ArrowUp", "Up");
 >   ```
 
 ####  Using percentages as control-units  ####
 
->   ```coffeescript
->       ctrl = new Control(document.body, 0, 0, 100, 100)
+>   ```javascript
+>   ctrl = new Control(document.body, 0, 0, 100, 100);
 >   ```
 
 ####  Simulating keyboard input  ####
 
 >   ```html
->       <div id="faux_spacebar"></div>
->   ```
-
->   ```coffeescript
->       ctrl = new Control()
->       ctrl.add("space").addCodes("space", 0x31, "Space")
->       document.getElementById("faux_spacebar").addEventListener("mousedown", ctrl.toggle.bind(null, "space", true), false)
->       document.getElementById("faux_spacebar").addEventListener("mouseup", ctrl.toggle.bind(null, "space", false), false)
+>   <!DOCTYPE html>
+>   <div id="faux_spacebar"></div>
+>   <script type="text/javascript">
+>       ctrl = new Control();
+>       ctrl.add("space").addCodes("space", 0x31, "Space");
+>       document.getElementById("faux_spacebar").addEventListener("mousedown", ctrl.toggle.bind(null, "space", true), false);
+>       document.getElementById("faux_spacebar").addEventListener("mouseup", ctrl.toggle.bind(null, "space", false), false);
+>   </script>
 >   ```
 
 ####  Using the mouse to simulate touches  ####
 
->   ```coffeescript
->       ctrl = new Control()
->       touch_or_mouse = ctrl.touches.item(0) || ctrl.clicks.item(0)
+>   ```javascript
+>   ctrl = new Control();
+>   touch_or_mouse = ctrl.touches.item(0) || ctrl.clicks.item(0);
 >   ```
 
 ##  Implementation  ##
@@ -492,18 +498,22 @@ We can then start by setting defaults for any unset attributes:
 Not much work happens in the `Control` constructor itself; most of the heavy-lifting takes place in the prototype.
 But, here are our property definitions:
 
-        Object.defineProperties(this, {
-            "target": {value: elt, enumerable: true}
-            "clicks": {value: new PokeList(elt, x, y, width, height), enumerable: true}
-            "codes": {value: {}, enumerable: true}
-            "height": {value: height, enumerable: true}
-            "keys": {value: {}, enumerable: true}
-            "ownerDocument": {value: @target?.ownerDocument || document, enumerable: true}
-            "touches": {value: new PokeList(elt, x, y, width, height), enumerable: true}
-            "width": {value: width, enumerable: true}
-            "x": {value: x, enumerable: true}
-            "y": {value: y, enumerable: true}
-        })
+        Object.defineProperties this, {
+            "target": {value: elt}
+            "clicks":
+                value: new PokeList(elt, x, y, width, height),
+                enumerable: true
+            "codes": {value: {}}
+            "height": {value: height}
+            "keys": {value: {}}
+            "ownerDocument": {value: @target?.ownerDocument || document}
+            "touches":
+                value: new PokeList(elt, x, y, width, height),
+                enumerable: true
+            "width": {value: width}
+            "x": {value: x}
+            "y": {value: y}
+        }
 
 We use `Object.defineProperties` because all of these properties are read-only.
 

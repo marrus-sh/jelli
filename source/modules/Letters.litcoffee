@@ -25,12 +25,12 @@ It is possible that the `<img>` element that you pass to the `Letters()` constru
 In this case, the internal `<canvas>` will be empty and no letters can be drawn.
 You can reset the internal `<canvas>` using `ltrs.clearColor()`, which will make another attempt to draw the alphabet from source:
 
->   ```coffeescript
->       img = new Image(64, 64) # Not yet loaded
->       img.src = "http://example.com/some_image.png"
->       ltrs = new Letters(img, 8, 16, document)
->       img.addEventListener("load", ltrs.clearColor.bind(ltrs), false) # Re-processes `img` after it has loaded
->       document.appendChild(img) # Begins `img` loading
+>   ```javascript
+>   img = new Image(64, 64); // Not yet loaded
+>   img.src = "http://example.com/some_image.png";
+>   ltrs = new Letters(img, 8, 16, document);
+>   img.addEventListener("load", ltrs.clearColor.bind(ltrs), false); // Re-processes `img` after it has loaded
+>   document.appendChild(img); // Begins `img` loading
 >   ```
 
 >   [Issue #68](https://github.com/marrus-sh/jelli/issues/68) :
@@ -51,8 +51,9 @@ It uses its own personal `<canvas>` element to do so, which allows for text effe
 
 #####  SYNTAX  #####
 
->   ```coffeescript
->       new Letters(source, letter_width, letter_height, doc)
+>   ```javascript
+>   new Letters(source, letter_width, letter_height);
+>   new Letters(source, letter_width, letter_height, doc);
 >   ```
 
 -   **`source`**—
@@ -99,7 +100,7 @@ All properties of `Letters` instances are read-only, with the exception of `ltrs
     If no alphabet was able to be loaded, this is set to `null`.
 
 -   **`ltrs.color`**—
-    On getting, provides the current color of the `Letters` alphabet.
+    On getting, provides the current colour of the `Letters` alphabet.
     On setting, changes the colour of the `Letters` alphabet.
     This can be reset with `Letters.prototype.clearColor()`, or by setting `ltrs.color` to `Letters.NO_COLOR`.
 
@@ -110,7 +111,7 @@ All properties of `Letters` instances are read-only, with the exception of `ltrs
 -   **`ltrs.height`, `ltrs.width`**—
     The width and height of `ltrs.canvas`.
 
--   **`ltrs.letter_width`**, `ltrs.letter_height`—
+-   **`ltrs.letter_width`, `ltrs.letter_height`**—
     The width and height of each letter in the alphabet.
 
 -   **`ltrs.size`**—
@@ -148,8 +149,8 @@ You shouldn't ever need to call this constructor directly, as `ltrs.item(i)` pro
 
 #####  SYNTAX  #####
 
->   ```coffeescript
->       new Letters.Letter(letters, index)
+>   ```javascript
+>   new Letters.Letter(letters, index);
 >   ```
 
 -   **`letters`**—
@@ -200,12 +201,12 @@ The `LetterString` object defines a single line of text.
 `LetterString`s are generally not needed for external use, but provide the internal storage mechanism for `LetterBlock`s.
 If, for some reason, you *do* need to create a `LetterString` object, the most convenient means of doing this is through `ltrs.createString(data)`.
 
-####  The constructor:  ####
+####  The constructor  ####
 
 #####  SYNTAX  #####
 
->   ```coffeescript
->       new Letters.String(letters, data)
+>   ```javascript
+>   new Letters.String(letters, data);
 >   ```
 
 -   **`letters`**—
@@ -299,12 +300,12 @@ A workaround for this is listed in the Examples.
 
 Generally the easiest way to create a new `LetterBlock` is not with the constructor, but using `ltrs.createBlock(context, x, y[, …])`.
 
-####  The constructor:  ####
+####  The constructor  ####
 
 #####  SYNTAX  #####
 
->   ```coffeescript
->       new Letters.Block(letters, context, x, y[, …])
+>   ```javascript
+>   new Letters.Block(letters, context, x, y/*, strings…*/);
 >   ```
 
 -   **`letters`**—
@@ -316,7 +317,7 @@ Generally the easiest way to create a new `LetterBlock` is not with the construc
 -   **`x`, `y`**—
     The position at which the `LetterBlock` instance should be drawn.
 
--   **`…`**—
+-   **`strings…`**—
     Any number of strings or `LetterString`s, each containing a single line of character data.
     Note that `LetterString`s are not duplicated when passed to the constructor directly.
 
@@ -371,58 +372,56 @@ In addition, the following methods are defined:
 ####  Advancing a block of text one character at a time  ####
 
 >   ```html
->       <!DOCTYPE html>
->       <canvas id="canvas"></canvas>
->       <img id="src" src="letters.png">
->       <script src="script.js"></script>
->   ```
-
->   ```coffeescript
->       #  Load images and canvases:
->       src = document.getElementById("src")
->       cnvs = document.getElementById("canvas")
->       ctx = cnvs.getContext("2d")
->       #  Create Letters and a LetterBlock:
->       ltrs = new Letters(src, 8, 16)
->       ltrblk = ltrs.createBlock(ctx, 0, 0, "Line number one", "Line number two", "Line number three")
->       #  Logic:
->       logic = ->
->           ltrblk.advance()
->           window.setTimeout(logic, 1000/24) #  Constant 24 calls per second
->       #  Rendering:
->       render = ->
->           ltrblk.draw()
->           window.requestAnimationFrame(render) #  Renders as smoothly as possible
+>   <!DOCTYPE html>
+>   <canvas id="canvas"></canvas>
+>   <img id="src" src="letters.png">
+>   <script type="text/javascript">
+>       //  Load images and canvases:
+>       src = document.getElementById("src");
+>       cnvs = document.getElementById("canvas");
+>       ctx = cnvs.getContext("2d");
+>       //  Create Letters and a LetterBlock:
+>       ltrs = new Letters(src, 8, 16);
+>       ltrblk = ltrs.createBlock(ctx, 0, 0, "Line number one", "Line number two", "Line number three");
+>       //  Logic:
+>       logic = function () {
+>           ltrblk.advance();
+>           window.setTimeout(logic, 1000/24);  //  Constant 24 calls per second
+>       }
+>       //  Rendering:
+>       render = function () {
+>           ltrblk.draw();
+>           window.requestAnimationFrame(render);  //  Renders as smoothly as possible
+>       }
+>   </script>
 >   ```
 
 ####  Drawing the same block of text to multiple canvases  ####
 
 >   ```html
->       <!DOCTYPE html>
->       <canvas id="canvas1"></canvas>
->       <canvas id="canvas2"></canvas>
->       <img id="src" src="letters.png">
->       <script src="script.js"></script>
->   ```
-
->   ```coffeescript
->       #  Load images and canvases:
->       src = document.getElementById("src")
->       cnvs1 = document.getElementById("canvas1")
->       ctx1 = cnvs1.getContext("2d")
->       cnvs2 = document.getElementById("canvas2")
->       ctx2 = cnvs2.getContext("2d")
->       #  Create Letters and Strings:
->       ltrs = new Letters(src, 8, 16)
+>   <!DOCTYPE html>
+>   <canvas id="canvas1"></canvas>
+>   <canvas id="canvas2"></canvas>
+>   <img id="src" src="letters.png">
+>   <script type="text/javascript">
+>       //  Load images and canvases:
+>       src = document.getElementById("src");
+>       cnvs1 = document.getElementById("canvas1");
+>       ctx1 = cnvs1.getContext("2d");
+>       cnvs2 = document.getElementById("canvas2");
+>       ctx2 = cnvs2.getContext("2d");
+>       //  Create Letters and Strings:
+>       ltrs = new Letters(src, 8, 16);
 >       strings = [
 >           ltrs.createString("Line one"),
 >           ltrs.createString("Line two")
->       ]
->       #  Create multiple blocks using the same strings:
->       blk1 = ltrs.createBlock.apply(ltrs, [ctx1, 0, 0].concat(strings))
->       blk2 = ltrs.createBlock.apply(ltrs, [ctx2, 0, 0].concat(strings))
->       #  Note that the strings are now shared:
->       blk1.fill()  #  Fills both blocks
+>       ];
+>       //  Create multiple blocks using the same strings:
+>       blk1 = ltrs.createBlock.apply(ltrs, [ctx1, 0, 0].concat(strings));
+>       blk2 = ltrs.createBlock.apply(ltrs, [ctx2, 0, 0].concat(strings));
+>       //  Note that the strings are now shared:
+>       blk1.fill();  //  Fills both blocks
+>   </script>
 >   ```
 
 ##  Implementation  ##
@@ -486,13 +485,14 @@ First we need to make sure that the arguments are what we expect:
 We can now define the letter properties.
 As you can see, `Letter` is a very simple constructor.
 
-        @canvas = if letters then letters.canvas else null
-        Object.defineProperty this, "draw", {value: drawLetter.bind(this, letters, index)}
-        @height = if letters then letters.letter_height else 0
-        @index = index
-        @letters = letters
-        @width = if letters then letters.letter_width else 0
-        return this
+        Object.defineProperties this, {
+            canvas: {value: (if letters then letters.canvas else null)}
+            draw: {value: drawLetter.bind(this, letters, index)}
+            height: {value: (if letters then letters.letter_height else 0)}
+            index: {value: index}
+            letters: {value: letters}
+            width: {value: (if letters then letters.letter_width else 0)}
+        }
 
 ####  The prototype  ####
 
@@ -935,8 +935,7 @@ In order to keep these indices immutable, this memorization takes place in a sep
 
         index = this.size
         memory = []
-        getIndex = (i) ->
-            return if memory[i]? then memory[i] else memory[i] = new Letter(this, i)
+        getIndex = (i) -> if memory[i]? then memory[i] else memory[i] = new Letter(this, i)
 
         Object.defineProperty(this, index, {get: getIndex.bind(this, index)}) while (index-- > 0)
         return this

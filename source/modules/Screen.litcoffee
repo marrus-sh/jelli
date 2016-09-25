@@ -3,9 +3,75 @@ Convenient canvas and context packaging
 
 - - -
 
-##  Introduction  ##
+##  Description  ##
 
->   *To come.*
+The `Screen` module provides a convenient wrapper object for HTML `<canvas>`s.
+
+###  The `Screen` object:  ###
+
+####  The constructor  ####
+
+#####  SYNTAX  #####
+
+>   ```javascript
+>   new Screen(canvas, context);
+>   ```
+
+-   **`canvas`**—
+    An `HTMLCanvasElement`, or the `id` of one.
+    Note that if an `id` is provided, it is assumed to belong to `window.document`.
+
+-   **`context`**—
+    The string to pass to `canvas.getContext()`.
+    This defaults to `"2d"`.
+
+#####  PROPERTIES  #####
+
+-   **`Screen.prototype`**—
+    The `Screen` prototype object.
+
+#####  METHODS  #####
+
+The `Screen()` constructor does not have any methods.
+
+####  `Screen` instances  ####
+
+#####  PROPERTIES  #####
+
+If no canvas has been defined, all of the following properties return `undefined`.
+
+-   **`scrn.canvas`**—
+    The `HTMLCanvasElement` associated with the `Screen` instance.
+    **Read-only.**
+
+-   **`scrn.context`**—
+    The rendering context associated with the `Screen` instance.
+    **Read-only.**
+
+-   **`scrn.height`, `scrn.width`**—
+    The width and height of the canvas.
+
+-   **`scrn.ownerDocument`**—
+    An alias for `scrn.canvas.ownerDocument`.
+    **Read-only.**
+
+#####  METHODS  #####
+
+-   **`Screen.prototype.clear()`**—
+    Clears the canvas.
+    This uses `scrn.context.clearRect()` for `CanvasRenderingContext2D`s and `scrn.context.clear()` for `WebGLRenderingContext`s.
+    For other contexts (ie, as a fallback), it calls `scrn.canvas.width = scrn.canvas.width`, which is much slower and less efficient.
+
+###  Examples:  ###
+
+####  Setting up a 2D screen  ####
+
+>   ```html
+>   <!DOCTYPE html>
+>   <canvas id="canvas"></canvas>
+>   <script type="text/javascript"
+>       scrn = new Screen("canvas", "2d");  //  The "2d" is optional.
+>   </script>
 
 ##  Implementation  ##
 
@@ -38,28 +104,25 @@ Note `doc` is used here to store the owner document, which is not assumed to be 
         else doc = canvas.ownerDocument
 
 Note in the above code that if no `HTMLCanvasElement` can be found, `canvas` is set to `undefined`.
-Now we go ahead and set the properties:
-
-        @canvas = canvas
-        @context = canvas.getContext(context) if canvas
-        @ownerDocument = doc
 
 The width and height of the canvas are accessible through `Screen` attributes, but require some special getters and setters in case the canvas isn't defined.
+Now we go ahead and set the properties:
 
         Object.defineProperties this, {
+            canvas:
+                value: canvas
+                enumerable: yes
+            context:
+                value: (canvas.getContext(context) if canvas)
+                enumerable: yes
             height:
                 get: -> @canvas.height if @canvas
                 set: (n) -> @canvas.height = n if @canvas
-                enumerable: yes
+            ownerDocument: {value: doc}
             width:
                 get: ->  @canvas.width if @canvas
                 set: (n) -> @canvas.width = n if @canvas
-                enumerable: yes
         }
-
-`Screen`s are completely immutable, so here `Object.freeze` prevents them from being modified:
-
-        Object.freeze this
 
 ###  The prototype:  ###
 
@@ -77,6 +140,8 @@ If the canvas isn't a canvas element, then this function does nothing.
                 switch
                     when @context instanceof CanvasRenderingContext2D then @context.clearRect(0, 0, @canvas.width, @canvas.height)
                     when @context instanceof WebGLRenderingContext then @context.clear(@context.COLOR_BUFFER_BIT | context.DEPTH_BUFFER_BIT)
+                    else @canvas.width = @canvas.width
+                return
 
 Right now `clear()` is the only prototype function for `Screen`, but more may be added later.
 Again, the `Screen` prototype is immutable, so we freeze it:

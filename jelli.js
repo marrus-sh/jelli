@@ -233,44 +233,36 @@
     }
     Object.defineProperties(this, {
       "target": {
-        value: elt,
-        enumerable: true
+        value: elt
       },
       "clicks": {
         value: new PokeList(elt, x, y, width, height),
         enumerable: true
       },
       "codes": {
-        value: {},
-        enumerable: true
+        value: {}
       },
       "height": {
-        value: height,
-        enumerable: true
+        value: height
       },
       "keys": {
-        value: {},
-        enumerable: true
+        value: {}
       },
       "ownerDocument": {
-        value: ((ref = this.target) != null ? ref.ownerDocument : void 0) || document,
-        enumerable: true
+        value: ((ref = this.target) != null ? ref.ownerDocument : void 0) || document
       },
       "touches": {
         value: new PokeList(elt, x, y, width, height),
         enumerable: true
       },
       "width": {
-        value: width,
-        enumerable: true
+        value: width
       },
       "x": {
-        value: x,
-        enumerable: true
+        value: x
       },
       "y": {
-        value: y,
-        enumerable: true
+        value: y
       }
     });
     if (this.ownerDocument != null) {
@@ -763,15 +755,26 @@
     if (isNaN(index = Number(index))) {
       index = 0;
     }
-    this.canvas = letters ? letters.canvas : null;
-    Object.defineProperty(this, "draw", {
-      value: drawLetter.bind(this, letters, index)
+    return Object.defineProperties(this, {
+      canvas: {
+        value: (letters ? letters.canvas : null)
+      },
+      draw: {
+        value: drawLetter.bind(this, letters, index)
+      },
+      height: {
+        value: (letters ? letters.letter_height : 0)
+      },
+      index: {
+        value: index
+      },
+      letters: {
+        value: letters
+      },
+      width: {
+        value: (letters ? letters.letter_width : 0)
+      }
     });
-    this.height = letters ? letters.letter_height : 0;
-    this.index = index;
-    this.letters = letters;
-    this.width = letters ? letters.letter_width : 0;
-    return this;
   };
 
   Letter.prototype = Object.create(Object.prototype, {
@@ -1264,12 +1267,15 @@
     } else {
       doc = canvas.ownerDocument;
     }
-    this.canvas = canvas;
-    if (canvas) {
-      this.context = canvas.getContext(context);
-    }
-    this.ownerDocument = doc;
-    Object.defineProperties(this, {
+    return Object.defineProperties(this, {
+      canvas: {
+        value: canvas,
+        enumerable: true
+      },
+      context: {
+        value: (canvas ? canvas.getContext(context) : void 0),
+        enumerable: true
+      },
       height: {
         get: function() {
           if (this.canvas) {
@@ -1280,8 +1286,10 @@
           if (this.canvas) {
             return this.canvas.height = n;
           }
-        },
-        enumerable: true
+        }
+      },
+      ownerDocument: {
+        value: doc
       },
       width: {
         get: function() {
@@ -1293,11 +1301,9 @@
           if (this.canvas) {
             return this.canvas.width = n;
           }
-        },
-        enumerable: true
+        }
       }
     });
-    return Object.freeze(this);
   };
 
   Screen.prototype = Object.create(Object.prototype, {
@@ -1308,9 +1314,13 @@
         }
         switch (false) {
           case !(this.context instanceof CanvasRenderingContext2D):
-            return this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            break;
           case !(this.context instanceof WebGLRenderingContext):
-            return this.context.clear(this.context.COLOR_BUFFER_BIT | context.DEPTH_BUFFER_BIT);
+            this.context.clear(this.context.COLOR_BUFFER_BIT | context.DEPTH_BUFFER_BIT);
+            break;
+          default:
+            this.canvas.width = this.canvas.width;
         }
       }
     }
