@@ -14,6 +14,7 @@ The `Screen` module provides a convenient wrapper object for HTML `<canvas>`s.
 #####  SYNTAX  #####
 
 >   ```javascript
+>   new Screen(canvas);
 >   new Screen(canvas, context);
 >   ```
 
@@ -69,8 +70,10 @@ If no canvas has been defined, all of the following properties return `undefined
 >   ```html
 >   <!DOCTYPE html>
 >   <canvas id="canvas"></canvas>
->   <script type="text/javascript"
->       scrn = new Screen("canvas", "2d");  //  The "2d" is optional.
+>   <script type="text/javascript">
+>       scrn = new Screen("canvas");  //  The "2d" is optional.
+>       scrn.context.fillStyle = "red";
+>       scrn.context.fillRect(0, 0, scrn.width, scrn.height);
 >   </script>
 
 ##  Implementation  ##
