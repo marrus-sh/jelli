@@ -32,9 +32,14 @@ If a left click has not occurred, `ctrl.clicks.item(0)` will return `null`, and 
 
 It is not currently possible to detect the location of the mouse through the `Control` interface when no button has been pressed.
 
-###  The `Control()` constructor:  ###
+###  The `Control` object:  ###
 
-####  Syntax  ####
+The `Control` object is the main point of interface for the `Control` module.
+If you have multiple screens, you may want to assign a separate `Control` to each.
+
+####  The constructor  ####
+
+#####  SYNTAX  #####
 
 >   ```coffeescript
 >       new Control(elt, x, y, width, height)
@@ -57,12 +62,12 @@ It is not currently possible to detect the location of the mouse through the `Co
     (This facilitates consistent relative coordinates for dynamically sized content.)
     These values default to `elt.width` and `elt.height` if these are defined, or `elt.clientWidth` and `elt.clientHeight` if not.
 
-####  Properties  ####
+#####  PROPERTIES  #####
 
 -   **`Control.prototype`**—
     The `Control` prototype object.
 
-####  Methods  ####
+#####  METHODS  #####
 
 -   **`Control.Poke(elt, e, n, x, y, width, height)`**—
     The `Poke` constructor.
@@ -70,9 +75,9 @@ It is not currently possible to detect the location of the mouse through the `Co
 -   **`Control.PokeList(elt, x, y, width, height)`**—
     The `PokeList` constructor.
 
-###  `Control` instances:  ###
+####  `Control` instances  ####
 
-####  Properties  ####
+#####  PROPERTIES  #####
 
 >   **Note :**
     Because `Poke` coordinates are given using control-units, attemting to change the coordinate system after object creation is not feasible.
@@ -117,7 +122,7 @@ It is not currently possible to detect the location of the mouse through the `Co
     The coordinates of the origin of the control coordinate system, in control-units.
     These are set on object creation and **read-only**.
 
-####  Methods  ####
+#####  METHODS  #####
 
 Unless otherwise specified, `Control` instance methods return the given instance to allow the chaining of commands.
 
@@ -173,9 +178,14 @@ Unless otherwise specified, `Control` instance methods return the given instance
     If `value` is provided, the key associated with code `code` is instead set to `!!value`.
     This method returns the value which the key was set to if successful, or `undefined` if not.
 
-###  The `Poke()` constructor:  ###
+###  The `Poke` object:  ###
 
-####  Syntax  ####
+The `Poke` object is used to store information about clicks and touches.
+You shouldn't ever have to create these yourself.
+
+####  The constructor  ####
+
+#####  SYNTAX  #####
 
 >   ```coffeescript
 >       new Control.Poke(elt, e, n, x, y, width, height)
@@ -205,18 +215,18 @@ Unless otherwise specified, `Control` instance methods return the given instance
     (This facilitates consistent relative coordinates for dynamically sized content.)
     These values default to `elt.width` and `elt.height` if these are defined, or `elt.clientWidth` and `elt.clientHeight` if not.
 
-####  Properties  ####
+#####  PROPERTIES  #####
 
 -   **`Poke.prototype`**—
     The `Poke` prototype object.
 
-####  Methods  ####
+#####  METHODS  #####
 
 The `Poke()` constructor does not have any methods.
 
-###  `Poke` instances:  ###
+####  `Poke` instances  ####
 
-####  Properties  ####
+#####  PROPERTIES  #####
 
 All `Poke` properties are **read-only**, with the exception of `x` and `y`.
 
@@ -235,7 +245,7 @@ All `Poke` properties are **read-only**, with the exception of `x` and `y`.
 -   **`poke.x`, `poke.y`**—
     The current position of the `Poke` instance.
 
-####  Methods  ####
+#####  METHODS  #####
 
 -   **`Poke.prototype.updateWith(e)`**—
     Updates the `Poke` using the given `MouseEvent` or `Touch`.
@@ -243,9 +253,14 @@ All `Poke` properties are **read-only**, with the exception of `x` and `y`.
     >   [Issue #58](https://github.com/marrus-sh/jelli/issues/58) :
         `Poke.prototype.updateWith()` may use different attributes for determining `Poke` location in the future.
 
-###  The `PokeList()` constructor:  ###
+###  The `PokeList` object:  ###
 
-####  Syntax  ####
+The `PokeList` object is used to collect `Poke`s in an ordered manner.
+You shouldn't ever have to create these yourself.
+
+####  The constructor  ####
+
+#####  SYNTAX  #####
 
 >   ```coffeescript
 >       new Control.PokeList(elt, x, y, width, height)
@@ -253,18 +268,18 @@ All `Poke` properties are **read-only**, with the exception of `x` and `y`.
 
 `PokeList()` takes the same arguments as `Control`, with the same meanings.
 
-####  Properties  ####
+#####  PROPERTIES  #####
 
 -   **`PokeList.prototype`**—
     The `PokeList` prototype object.
 
-####  Methods  ####
+#####  METHODS  #####
 
 The `PokeList()` constructor does not have any methods.
 
-###  `PokeList` instances:  ###
+####  `PokeList` instances  ####
 
-####  Properties  ####
+#####  PROPERTIES  #####
 
 -   **`poke_list.height`, `poke_list.width`, `poke_list.x`, `poke_list.y`**—
     These define the coordinate system used to place the `PokeList` instance within `poke_list.target`.
@@ -275,7 +290,7 @@ The `PokeList()` constructor does not have any methods.
 -   **`poke_list[id]`**—
     Accesses the `Poke` with id `id`.
 
-####  Methods  ####
+#####  METHODS  #####
 
 -   **`PokeList.prototype.deleteItem(n)`**—
     Deletes the `Poke` with number `n` from the `PokeList` instance.

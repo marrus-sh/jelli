@@ -49,7 +49,7 @@ It uses its own personal `<canvas>` element to do so, which allows for text effe
 
 ####  The constructor  ####
 
-#####  syntax  #####
+#####  SYNTAX  #####
 
 >   ```coffeescript
 >       new Letters(source, letter_width, letter_height, doc)
@@ -69,7 +69,7 @@ It uses its own personal `<canvas>` element to do so, which allows for text effe
     The document that the letters will be drawn on.
     This defaults to `document` if not provided.
 
-#####  properties  #####
+#####  PROPERTIES  #####
 
 -   **`Letters.NO_COLOR`**—
     A constant value representing no colour.
@@ -77,7 +77,7 @@ It uses its own personal `<canvas>` element to do so, which allows for text effe
 -   **`Letters.prototype`**—
     The `Letters` object prototype.
 
-#####  methods  #####
+#####  METHODS  #####
 
 -   **`Letters.Letter(letters, index)`**—
     The `Letter` constructor.
@@ -90,7 +90,7 @@ It uses its own personal `<canvas>` element to do so, which allows for text effe
 
 ####  `Letters` instances  ####
 
-#####  properties  #####
+#####  PROPERTIES  #####
 
 All properties of `Letters` instances are read-only, with the exception of `ltrs.color`.
 
@@ -123,7 +123,7 @@ All properties of `Letters` instances are read-only, with the exception of `ltrs
     The `Letter` object at index `n`.
     For efficiency's sake, these `Letter` objects are not created until they are accessed, and this result is stored internally afterwards.
 
-#####  methods  #####
+#####  METHODS  #####
 
 -   **`Letters.prototype.clearColor()`**—
     This is simply an alias for `ltrs.color = Letters.NO_COLOR`.
@@ -146,7 +146,7 @@ You shouldn't ever need to call this constructor directly, as `ltrs.item(i)` pro
 
 ####  The constructor  ####
 
-#####  syntax  #####
+#####  SYNTAX  #####
 
 >   ```coffeescript
 >       new Letters.Letter(letters, index)
@@ -158,18 +158,18 @@ You shouldn't ever need to call this constructor directly, as `ltrs.item(i)` pro
 -   **`index`**—
     The index of the `Letter` to create.
 
-#####  properties  #####
+#####  PROPERTIES  #####
 
 -   **`Letter.prototype`**—
     The `Letter` object prototype.
 
-#####  methods  #####
+#####  METHODS  #####
 
 The `Letter()` constructor does not have any methods.
 
 ####  `Letter` instances  ####
 
-#####  properties  #####
+#####  PROPERTIES  #####
 
 All `Letter` properties are read-only.
 
@@ -185,7 +185,7 @@ All `Letter` properties are read-only.
 -   **`ltr.letters`**—
     The `Letters` object that the `Letter` instance belongs to.
 
-#####  methods  #####
+#####  METHODS  #####
 
 -   **`Letter.prototype.draw()`**—
     This function intentionally does nothing.
@@ -202,7 +202,7 @@ If, for some reason, you *do* need to create a `LetterString` object, the most c
 
 ####  The constructor:  ####
 
-#####  syntax  #####
+#####  SYNTAX  #####
 
 >   ```coffeescript
 >       new Letters.String(letters, data)
@@ -219,18 +219,18 @@ If, for some reason, you *do* need to create a `LetterString` object, the most c
     >   [Issue #69](https://github.com/literallybenjam/jelli/issues/69) :
         Iterable objects other than strings should be supported in the future.
 
-#####  properties  #####
+#####  PROPERTIES  #####
 
 -   **`LetterString.prototype`**—
     The `LetterString` object prototype.
 
-#####  methods  #####
+#####  METHODS  #####
 
 The `LetterString()` constructor does not have any methods.
 
 ####  `LetterString` instances  ####
 
-#####  properties #####
+#####  PROPERTIES #####
 
 -   **`ltrstr.data`**—
     The `data` string.
@@ -261,7 +261,7 @@ The `LetterString()` constructor does not have any methods.
     The `Letter` object corresponding to the character at index `n`.
     **Read-only.**
 
-#####  methods  #####
+#####  METHODS  #####
 
 -   **`LetterString.prototype.advance(amount)`**—
     Advances `ltrstr.index` by the specified `amount` (can be negative, defaults to `1`).
@@ -301,7 +301,7 @@ Generally the easiest way to create a new `LetterBlock` is not with the construc
 
 ####  The constructor:  ####
 
-#####  syntax  #####
+#####  SYNTAX  #####
 
 >   ```coffeescript
 >       new Letters.Block(letters, context, x, y[, …])
@@ -320,18 +320,18 @@ Generally the easiest way to create a new `LetterBlock` is not with the construc
     Any number of strings or `LetterString`s, each containing a single line of character data.
     Note that `LetterString`s are not duplicated when passed to the constructor directly.
 
-#####  properties  #####
+#####  PROPERTIES  #####
 
 -   **`LetterBlock.prototype`**—
 The `LetterBlock` object prototype.
 
-#####  methods  #####
+#####  METHODS  #####
 
 The `LetterBlock()` constructor does not have any methods.
 
 ####  `LetterBlock` instances  ####
 
-#####  properties  #####
+#####  PROPERTIES  #####
 
 -   **`ltrblk.context`**—
     The `CanvasRenderingContext2D` on which the `LetterBlock` instance should be drawn.
@@ -356,7 +356,7 @@ The `LetterBlock()` constructor does not have any methods.
 -   **`ltrblk[n]`**—
     The `LetterString` object corresponding to line `n`.
 
-#####  methods  #####
+#####  METHODS  #####
 
 `LetterBlock` inherits from `LetterString`, and has all of the latter's methods, except that `LetterBlock.prototype.draw()` takes zero arguments.
 (Note that `LetterBlock.prototype.item(n)` returns the nth *`Letter`*, not *`LetterString`*, and thus is **not** equivalent to `ltrblk[n]`.)

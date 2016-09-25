@@ -35,9 +35,11 @@ In environments where typed arrays are not supported, `Array` is used instead.
 `Data` objects function just like typed arrays, and their properties can be accessed using standard bracket notation.
 Unlike with typed arrays, this lookup does check the prototype chain, however as `Data.prototype` is frozen this is unlikely to cause an issue.
 
-###  The `Data()` constructor:  ###
+###  The `Data` object:  ###
 
-####  Syntax  ####
+####  The constructor  ####
+
+#####  SYNTAX  #####
 
 >   ```coffeescript
 >       new Data(unitSize, length)
@@ -65,7 +67,7 @@ Unlike with typed arrays, this lookup does check the prototype chain, however as
 -   **`buffer`, `byteOffset`, `length`**—
     When called with a `buffer` argument, `Data()` simply creates a new view for a preexisting `ArrayBuffer`. The `byteOffset` and `length` parameters specify the memory range that will be exposed by the `Data` object.  If both are omitted, all of buffer is viewed; if only `length` is omitted, the remainder of buffer is viewed.
 
-####  Properties  ####
+#####  PROPERTIES  #####
 
 -   **`Data.BYTES_PER_ELEMENT`**—
     Always returns `NaN`.
@@ -79,7 +81,7 @@ Unlike with typed arrays, this lookup does check the prototype chain, however as
 -   **`Data.prototype`**—
     Prototype for `Data` objects.
 
-####  Methods  ####
+#####  METHODS  #####
 
 -   **`Data.from(unitSize, source[, mapFn, thisArg])`**—
     The same as calling `new Data(unitSize, source)`, except that `source` is always interpreted as `contents`, above.
@@ -87,9 +89,9 @@ Unlike with typed arrays, this lookup does check the prototype chain, however as
 -   **`Data.of(unitSize[, …])`**—
     The same as calling `new Data(unitSize, values)`, where `values` is an array containing the arguments of `Data.of()`, starting from the second argument.
 
-###  `Data` instances:  ###
+####  `Data` instances  ####
 
-####  Properties  ####
+#####  PROPERTIES  #####
 
 All non–array-access properties of `Data` instances are read-only.
 
@@ -114,7 +116,7 @@ All non–array-access properties of `Data` instances are read-only.
 -   **`dataobj[n]`**—
     Accesses the `n`th element in the `Data` instance.
 
-####  Methods  ####
+#####  METHODS  #####
 
 `Data` inherits from `Array`, so the standard array-like methods apply.
 In addition, the following methods (also available with typed arrays) are defined:
