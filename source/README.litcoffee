@@ -103,7 +103,7 @@ Issues may be submitted through [GitHub](https://github.com/marrus-sh/jelli/issu
 ###  Document structure:  ###
 
 Each source file is split into two main parts.
-The first, titled "Introduction", outlines and documents the features of the module and how to use them.
+The first, titled "Description", outlines and documents the features of the module and how to use them.
 The second, titled "Implementation", provides and explains the source code of the module.
 Readers looking to use the engine need largely only concern themselves with the first section, but readers aiming for a deeper understanding of how the engine operates should read both.
 

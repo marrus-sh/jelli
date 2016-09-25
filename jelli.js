@@ -771,7 +771,7 @@
     this.index = index;
     this.letters = letters;
     this.width = letters ? letters.letter_width : 0;
-    return Object.freeze(this);
+    return this;
   };
 
   Letter.prototype = Object.create(Object.prototype, {
@@ -836,9 +836,12 @@
     });
     for (q = k = 0, len = data.length; k < len; q = ++k) {
       letter = data[q];
-      this[q] = letters != null ? letters.item(data.charCodeAt(q)) : void 0;
+      Object.defineProperty(this, q, {
+        value: letters != null ? letters.item(data.charCodeAt(q)) : void 0,
+        enumerable: true
+      });
     }
-    return Object.freeze(this);
+    return this;
   };
 
   LetterString.prototype = Object.create(Object.prototype, {
@@ -941,7 +944,10 @@
     }
     for (q = k = 0, len = strings.length; k < len; q = ++k) {
       string = strings[q];
-      this[q] = (string instanceof LetterString ? string : new LetterString(letters, string));
+      Object.defineProperty(this, q, {
+        value: (string instanceof LetterString ? string : new LetterString(letters, string)),
+        enumerable: true
+      });
     }
     Object.defineProperties(this, {
       context: {
@@ -1012,7 +1018,7 @@
         return n;
       }
     });
-    Object.defineProperties(this, {
+    return Object.defineProperties(this, {
       x: {
         get: function() {
           return x;
@@ -1038,7 +1044,6 @@
         }
       }
     });
-    return Object.freeze(this);
   };
 
   LetterBlock.prototype = Object.create(LetterString.prototype, {
@@ -1105,16 +1110,16 @@
     if (source instanceof Element && source.ownerDocument !== doc) {
       source = doc.importNode(source, true);
     }
-    if (!((source != null) && !isNaN(source_width = Number(source.naturalWidth != null ? source.naturalWidth : source.width)))) {
+    if (!((source != null) && !isNaN(source_width = Number(source.naturalWidth ? source.naturalWidth : source.width)))) {
       source_width = 0;
     }
-    if (!((source != null) && !isNaN(source_height = Number(source.naturalHeight != null ? source.naturalHeight : source.height)))) {
+    if (!((source != null) && !isNaN(source_height = Number(source.naturalHeight ? source.naturalHeight : source.height)))) {
       source_height = 0;
     }
     if (source != null) {
       canvas = doc.createElement("canvas");
-      canvas.width = source_width;
-      canvas.height = source_height;
+      canvas.width = Math.floor(source_width / letter_width) * letter_width;
+      canvas.height = Math.floor(source_height / letter_height) * letter_height;
       context = canvas.getContext("2d");
       if (!(source instanceof HTMLImageElement && !source.complete)) {
         context.drawImage(source, 0, 0);
@@ -1187,7 +1192,7 @@
         get: getIndex.bind(this, index)
       });
     }
-    return Object.freeze(this);
+    return this;
   };
 
   Letters.prototype = Object.create(Object.prototype, {

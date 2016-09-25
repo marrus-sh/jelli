@@ -3,16 +3,11 @@ Typed arrays of varying bit-depths.
 
 - - -
 
-##  Introduction  ##
-
-A `Data` object describes an array-like view of an underlying binary data buffer.
-It is mostly equivalent to JavaScript's native [TypedArray](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray) except that it can handle units of any size (1–32 bit) rather than only 8, 16, or 32.
-The values at each index of a `Data` object are always interpreted as unsigned integers.
-
-###  Description:  ###
+##  Description  ##
 
 `Data` is built off of the ECMAScript 6 typed arrays, using them as compact storage mechanisms for data of any bit-depth.
-It is, for the most part, interchangable with `TypedArray`s, although internally it is actually more similar to (and inherits from) a standard `Array`.
+It is, for the most part, interchangable with `TypedArray`s, although internally it is probably more similar to (and inherits from) a standard `Array`.
+The values at each index of a `Data` object are always interpreted as unsigned integers.
 
 Because the bit-depth of the `Data` object and the bit-depth of its underlying `ArrayBuffer` are not necessarily the same, using a `Data` object might be slightly slower than using a corresponding typed array as defined by ECMAScript 6.
 However, the memory usage of a `Data` object may be significantly lower; for example, a 6-bit array of 250 units is 200 bytes in a `Data` object, instead of 250.
@@ -24,25 +19,23 @@ Consequently, users wishing to extend the `Data` class should call the construct
 >   ```coffeescript
 >       ExtendedData = (unitSize, contents) ->
 >           @name = "Extended Data!!!"
->
 >           # Note that if `ExtendedData` doesn't inherit from `Data`, `Data.from` will silently fail to modify `this`:
 >           Data.from.call(this, unitSize, contents)
->
 >       ExtendedData.prototype = Object.create(Data.prototype)
 >   ```
 
 >   **Note :**
-`Data` is thus not extendable through ECMAScript 2015 classes, as `this` would be uninitialized *before* the constructor call, and frozen *after*.
+`Data` is thus not extensible through ECMAScript 2015 classes, as `this` would be uninitialized *before* the constructor call, and frozen *after*.
 
 `Data` objects interpret their values as unsigned integers and internally use `Uint8Array`, `Uint16Array`, and `Uint32Array` to do their work.
 In environments where typed arrays are not supported, `Array` is used instead.
 
-####  Property access  ####
+###  Property access:  ###
 
 `Data` objects function just like typed arrays, and their properties can be accessed using standard bracket notation.
 Unlike with typed arrays, this lookup does check the prototype chain, however as `Data.prototype` is frozen this is unlikely to cause an issue.
 
-###  The `Data` constructor:  ###
+###  The `Data()` constructor:  ###
 
 ####  Syntax  ####
 

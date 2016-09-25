@@ -3,16 +3,12 @@ Keyboard input tracking; mouse and touch support
 
 - - -
 
-##  Introduction  ##
-
-The `Control` module allows for various control schemes: keyboard input tracking, as well as mouse and touchscreen support.
-
-###  Description:  ###
+##  Description  ##
 
 `Control` objects provide a means of detecting keyboard, mouse, and touch input on `window`.
 Mouse and touch inputs are provided using `Poke` objects, whose coordinates are given relative to a specified element.
 
-####  Keyboard input  ####
+###  Keyboard input:  ###
 
 Keyboard input detection does *not* occur automatically; rather, keys must be manually added.
 You can create a new key using `ctrl.add(name)` and add codes to it using `ctrl.addCodes(name[, …])`.
@@ -22,7 +18,7 @@ Codes may be in the format of any one of `KeyboardEvent.code`, `KeyboardEvent.ke
 There is no limit to the number of codes which may be added for a given key; consequently, it might be beneficial to set up keys which map to more than one physical key on the keyboard (for example, allowing users to press either `W` or `Up`).
 You can use `ctrl.isActive(name)` to determine whether a key is currently being pressed.
 
-####  `Poke`s and `PokeList`s  ####
+###  `Poke`s and `PokeList`s:  ###
 
 Mouse clicks and screen touches are stored in `PokeList`s, available through the `ctrl.clicks` and `ctrl.touches` properties, respectively.
 `PokeList` items may be accessed by number using `poke_list.item(n)` or by id using `poke_list[id]`.
@@ -36,7 +32,7 @@ If a left click has not occurred, `ctrl.clicks.item(0)` will return `null`, and 
 
 It is not currently possible to detect the location of the mouse through the `Control` interface when no button has been pressed.
 
-###  The `Control` constructor:  ###
+###  The `Control()` constructor:  ###
 
 ####  Syntax  ####
 
@@ -68,10 +64,10 @@ It is not currently possible to detect the location of the mouse through the `Co
 
 ####  Methods  ####
 
--   **`Control.Poke`**—
+-   **`Control.Poke(elt, e, n, x, y, width, height)`**—
     The `Poke` constructor.
 
--   **`Control.PokeList`**—
+-   **`Control.PokeList(elt, x, y, width, height)`**—
     The `PokeList` constructor.
 
 ###  `Control` instances:  ###
@@ -177,7 +173,7 @@ Unless otherwise specified, `Control` instance methods return the given instance
     If `value` is provided, the key associated with code `code` is instead set to `!!value`.
     This method returns the value which the key was set to if successful, or `undefined` if not.
 
-###  The `Poke` constructor:  ###
+###  The `Poke()` constructor:  ###
 
 ####  Syntax  ####
 
@@ -216,7 +212,7 @@ Unless otherwise specified, `Control` instance methods return the given instance
 
 ####  Methods  ####
 
-The `Poke` constructor does not have any methods.
+The `Poke()` constructor does not have any methods.
 
 ###  `Poke` instances:  ###
 
@@ -247,7 +243,7 @@ All `Poke` properties are **read-only**, with the exception of `x` and `y`.
     >   [Issue #58](https://github.com/marrus-sh/jelli/issues/58) :
         `Poke.prototype.updateWith()` may use different attributes for determining `Poke` location in the future.
 
-###  The `PokeList` constructor:  ###
+###  The `PokeList()` constructor:  ###
 
 ####  Syntax  ####
 
@@ -264,7 +260,7 @@ All `Poke` properties are **read-only**, with the exception of `x` and `y`.
 
 ####  Methods  ####
 
-The `PokeList` constructor does not have any methods.
+The `PokeList()` constructor does not have any methods.
 
 ###  `PokeList` instances:  ###
 

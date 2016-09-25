@@ -3,9 +3,427 @@ Sprite-based text processing and rendering
 
 - - -
 
-##  Introduction  ##
+##  Description  ##
 
->   *To come.*
+The `Letters` module provides a means of constructing a sprite-based alphabet and rendering this onscreen.
+It is on the surface similar to [`Sheet`](Sheet.litcoffee) but markedly more complex.
+
+`Letters` objects are tied to a single sprite-sheet, which should contain all of the letters in a horizontal grid with no padding or extra space.
+The dimensions of each letter in the alphabet must be the same.
+
+>   [Issue #35](https://github.com/literallybenjam/jelli/issues/35)
+    The format of `Letters` source images may later be expanded to allow letters of differing widths or dimensions.
+
+###  Source dimensions:  ###
+
+If the source image for the `Letters` alphabet has a natural width and height, as is the case with `<img>` elements, then this will be used instead of the `width` and `height` attributes—consequently, the letter dimensions you provide should be adjusted accordingly.
+If no natural width is available, as is the case with `<svg>` elements, then the `width` and `height` attributes are used instead.
+
+###  Image loading:  ###
+
+It is possible that the `<img>` element that you pass to the `Letters()` constructor has not finished loading.
+In this case, the internal `<canvas>` will be empty and no letters can be drawn.
+You can reset the internal `<canvas>` using `ltrs.clearColor()`, which will make another attempt to draw the alphabet from source:
+
+>   ```coffeescript
+>       img = new Image(64, 64) # Not yet loaded
+>       img.src = "http://example.com/some_image.png"
+>       ltrs = new Letters(img, 8, 16, document)
+>       img.addEventListener("load", ltrs.clearColor.bind(ltrs), false) # Re-processes `img` after it has loaded
+>       document.appendChild(img) # Begins `img` loading
+>   ```
+
+>   [Issue #68](https://github.com/marrus-sh/jelli/issues/68) :
+    This should be automated in the future.
+
+###  Cross-document processing:  ###
+
+Internally, `Letters` objects store their alphabets on a `<canvas>`.
+Consequently, `Letters` objects associated with one `Document` may not be drawn on another (cross-document canvas drawing is forbidden in JavaScript).
+You will have to create a new `Letters` object associated with the new `Document` instead.
+
+###  The `Letters` object:  ###
+
+`Letters` objects store the actual sprite-sheet from which other letter-related functions draw.
+It uses its own personal `<canvas>` element to do so, which allows for text effects such as changing colour.
+
+####  The constructor  ####
+
+#####  syntax  #####
+
+>   ```coffeescript
+>       new Letters(source, letter_width, letter_height, doc)
+>   ```
+
+-   **`source`**—
+    The `HTMLImageElement`, `SVGImageElement`, `HTMLCanvasElement`, or `ImageBitmap` containing the letter alphabet.
+    If this element does not belong to `doc`, the `Letters()` constructor will import it automatically.
+
+-   **`letter_width`**—
+    The width of each letter in the sprite-sheet.
+
+-   **`letter_height`**—
+    The height of each letter in the sprite-sheet.
+
+-   **`doc`**—
+    The document that the letters will be drawn on.
+    This defaults to `document` if not provided.
+
+#####  properties  #####
+
+-   **`Letters.NO_COLOR`**—
+    A constant value representing no colour.
+
+-   **`Letters.prototype`**—
+    The `Letters` object prototype.
+
+#####  methods  #####
+
+-   **`Letters.Letter(letters, index)`**—
+    The `Letter` constructor.
+
+-   **`Letters.String(letters, data)`**—
+    The `LetterString` constructor.
+
+-   **`Letters.Block(letters, context, x, y[, …])`**—
+    The `LetterBlock` constructor.
+
+####  `Letters` instances  ####
+
+#####  properties  #####
+
+All properties of `Letters` instances are read-only, with the exception of `ltrs.color`.
+
+-   **`ltrs.canvas`**—
+    The internal `<canvas>` element which contains the `Letters` alphabet.
+    If no alphabet was able to be loaded, this is set to `null`.
+
+-   **`ltrs.color`**—
+    On getting, provides the current color of the `Letters` alphabet.
+    On setting, changes the colour of the `Letters` alphabet.
+    This can be reset with `Letters.prototype.clearColor()`, or by setting `ltrs.color` to `Letters.NO_COLOR`.
+
+-   **`ltrs.context`**—
+    The `CanvasRenderingContext2D` for `ltrs.canvas`.
+    If no alphabet was able to be loaded, this is set to `null`.
+
+-   **`ltrs.height`, `ltrs.width`**—
+    The width and height of `ltrs.canvas`.
+
+-   **`ltrs.letter_width`**, `ltrs.letter_height`—
+    The width and height of each letter in the alphabet.
+
+-   **`ltrs.size`**—
+    The total number of letters in the alphabet.
+
+-   **`ltrs.source`**—
+    The source image used for drawing the alphabet.
+
+-   **`ltrs[n]`**—
+    The `Letter` object at index `n`.
+    For efficiency's sake, these `Letter` objects are not created until they are accessed, and this result is stored internally afterwards.
+
+#####  methods  #####
+
+-   **`Letters.prototype.clearColor()`**—
+    This is simply an alias for `ltrs.color = Letters.NO_COLOR`.
+
+-   **`Letters.prototype.createBlock(context, x, y[, …])`**—
+    Creates a `LetterBlock` attached to `context` (a `CanvasRenderingContext2D`) at coordinates `x` and `y`.
+    The arguments which follow these coordinates should be any number of data strings.
+
+-   **`Letters.prototype.createString(data)`**—
+    Creates a `LetterString` using the data string `data`.
+
+-   **`Letters.prototype.item(i)`**—
+    Provides access to individual letters.
+    This is the same as `ltrs[i]` except that the result is guaranteed to be either a `Letter` or `null`.
+
+###  The `Letter` object:  ###
+
+The `Letter` object is a reference to a letter on a `Letters` canvas.
+You shouldn't ever need to call this constructor directly, as `ltrs.item(i)` provides convenient access for all of the available letters in a given `Letters` object.
+
+####  The constructor  ####
+
+#####  syntax  #####
+
+>   ```coffeescript
+>       new Letters.Letter(letters, index)
+>   ```
+
+-   **`letters`**—
+    A `Letters` object.
+
+-   **`index`**—
+    The index of the `Letter` to create.
+
+#####  properties  #####
+
+-   **`Letter.prototype`**—
+    The `Letter` object prototype.
+
+#####  methods  #####
+
+The `Letter()` constructor does not have any methods.
+
+####  `Letter` instances  ####
+
+#####  properties  #####
+
+All `Letter` properties are read-only.
+
+-   **`ltr.canvas`**—
+    An alias for `ltr.letters.canvas`.
+
+-   **`ltr.height`, `ltr.width`**—
+    The width and height of the `Letter` instance.
+
+-   **`ltr.index`**—
+    The index of the `Letter` instance.
+
+-   **`ltr.letters`**—
+    The `Letters` object that the `Letter` instance belongs to.
+
+#####  methods  #####
+
+-   **`Letter.prototype.draw()`**—
+    This function intentionally does nothing.
+    On `Letter` objects, it is overrided by `ltr.draw()`, but is guaranteed to exist on `Letter` subclasses.
+
+-   **`ltr.draw(context, x, y)`**—
+    Draws the `Letter` to the `CanvasRenderingContext2D` specified by `context` at the given coordinates.
+
+###  The `LetterString()` object:  ###
+
+The `LetterString` object defines a single line of text.
+`LetterString`s are generally not needed for external use, but provide the internal storage mechanism for `LetterBlock`s.
+If, for some reason, you *do* need to create a `LetterString` object, the most convenient means of doing this is through `ltrs.createString(data)`.
+
+####  The constructor:  ####
+
+#####  syntax  #####
+
+>   ```coffeescript
+>       new Letters.String(letters, data)
+>   ```
+
+-   **`letters`**—
+    A `Letters` object.
+
+-   **`data`**—
+    A string, interpreted as an array of code points between `0x0` and `0xFFFF` (UTF-16).
+    >   [Issue #55](https://github.com/literallybenjam/jelli/issues/55) :
+        Strings should be interpreted as 32-bit integers (converting UTF-16 to UTF-32).
+    >
+    >   [Issue #69](https://github.com/literallybenjam/jelli/issues/69) :
+        Iterable objects other than strings should be supported in the future.
+
+#####  properties  #####
+
+-   **`LetterString.prototype`**—
+    The `LetterString` object prototype.
+
+#####  methods  #####
+
+The `LetterString()` constructor does not have any methods.
+
+####  `LetterString` instances  ####
+
+#####  properties #####
+
+-   **`ltrstr.data`**—
+    The `data` string.
+    **Read-only.**
+
+-   **`ltrstr.delIndex`**—
+    This keeps track of the furthest back logical position `ltrstr.index` has taken since the last draw.
+    Generally this is not something you need to set yourself.
+
+-   **`ltrstr.drawIndex`**—
+    This keeps track of where `ltrstr.index` was during the last draw.
+    Generally this is not something you need to set yourself.
+
+-   **`ltrstr.index`**—
+    This is the current logical position in the string.
+    All characters up to this position will be drawn during the next draw.
+    Setting `ltrstr.index` directly does not update `ltrstr.delIndex`; `LetterString.prototype.advance(amount)` should be used for this instead.
+
+-   **`ltrstr.length`**–
+    An alias for `ltrstr.data.length`.
+    **Read-only.**
+
+-   **`ltrstr.letters`**—
+    The `Letters` object that the `LetterString` instance is associated with.
+    **Read-only.**
+
+-   **`ltrstr[n]`**—
+    The `Letter` object corresponding to the character at index `n`.
+    **Read-only.**
+
+#####  methods  #####
+
+-   **`LetterString.prototype.advance(amount)`**—
+    Advances `ltrstr.index` by the specified `amount` (can be negative, defaults to `1`).
+    Also updates `ltrstr.delIndex`.
+    This function returns the final index position.
+
+-   **`LetterString.prototype.clear()`**—
+    Sets `ltrstr.index` and `ltrstr.delIndex` both to 0.
+    Note that this is a purely logical function, and does not clear the drawing context until the next draw.
+    This function returns `0`.
+
+-   **`LetterString.prototype.draw(context, x, y)`**—
+    Draws the `LetterString` instance to the `CanvasRenderingContext2D` specified by `context` at the given coordinates.
+    For purposes of efficiency, only those letters from `drawIndex` to `index` are drawn.
+    If `delIndex` is less than `drawIndex`, it clears the canvas for those characters and sets back `drawIndex` first.
+    This function returns the current index position.
+
+-   **`LetterString.prototype.fill()`**—
+    Sets `ltrstr.index` to the length of the `LetterString` instance.
+    Note that this is a purely logical function, and does not render any characters until the next draw.
+    This function returns the current index position, which will always equal `ltrstr.length`.
+
+-   **`LetterString.prototype.item(n)`**—
+    Provides access to individual letters.
+    This is the same as `ltrstr[n]` except that the result is guaranteed to be either a `Letter` or `null`.
+
+###  The `LetterBlock` object:  ###
+
+A `LetterBlock` is the primary means of drawing strings of letters to the canvas.
+It creates and packages together a number of `LetterStrings`, which each contain a line of text.
+
+`LetterBlock`s are the only `Letters` objects which are associated with a canvas for external rendering.
+This reduces the number of arguments required for drawing, but means that each `LetterBlock` can only draw to one canvas at a time.
+A workaround for this is listed in the Examples.
+
+Generally the easiest way to create a new `LetterBlock` is not with the constructor, but using `ltrs.createBlock(context, x, y[, …])`.
+
+####  The constructor:  ####
+
+#####  syntax  #####
+
+>   ```coffeescript
+>       new Letters.Block(letters, context, x, y[, …])
+>   ```
+
+-   **`letters`**—
+    A `Letters` object.
+
+-   **`context`**—
+    A `CanvasRenderingContext2D` on which to draw the `Letter`s.
+
+-   **`x`, `y`**—
+    The position at which the `LetterBlock` instance should be drawn.
+
+-   **`…`**—
+    Any number of strings or `LetterString`s, each containing a single line of character data.
+    Note that `LetterString`s are not duplicated when passed to the constructor directly.
+
+#####  properties  #####
+
+-   **`LetterBlock.prototype`**—
+The `LetterBlock` object prototype.
+
+#####  methods  #####
+
+The `LetterBlock()` constructor does not have any methods.
+
+####  `LetterBlock` instances  ####
+
+#####  properties  #####
+
+-   **`ltrblk.context`**—
+    The `CanvasRenderingContext2D` on which the `LetterBlock` instance should be drawn.
+    **Read-only.**
+
+-   **`ltrblk.delIndex`, `ltrblk.drawIndex`, `ltrblk.index`, `ltrblk.length`**—
+    These have the same meanings as they do for `LetterString` instances, except that they apply for the concatenation of all of the `LetterString`s' data.
+
+-   **`ltrblk.height`**—
+    The number of lines in the `LetterBlock` instance.
+    **Read-only.**
+
+-   **`ltrblk.letters`**—
+    The `Letter`s object that the `LetterBlock` is associated with.
+    **Read-only.**
+
+-   **`ltrblk.x`, `ltrblk.y`**—
+    The coordinates upon which to draw the `LetterBlock`.
+    Changing `ltrblk.x` or `ltrblk.y` also resets `ltrblk.drawIndex` and `ltrblk.delIndex`, but does **not** clear the drawing context in any way.
+    Consequently, if you move the `LetterBlock` instance while `ltrblk.drawIndex` is nonzero, you must arrange for canvas clearing yourself.
+
+-   **`ltrblk[n]`**—
+    The `LetterString` object corresponding to line `n`.
+
+#####  methods  #####
+
+`LetterBlock` inherits from `LetterString`, and has all of the latter's methods, except that `LetterBlock.prototype.draw()` takes zero arguments.
+(Note that `LetterBlock.prototype.item(n)` returns the nth *`Letter`*, not *`LetterString`*, and thus is **not** equivalent to `ltrblk[n]`.)
+In addition, the following methods are defined:
+
+-   **`LetterBlock.prototype.line(n)`**—
+    Provides access to individual lines.
+    This is the same as `ltrblk[n]` except that the result is guaranteed to be either a `LetterString` or `null`.
+
+###  Examples:  ###
+
+####  Advancing a block of text one character at a time  ####
+
+>   ```html
+>       <!DOCTYPE html>
+>       <canvas id="canvas"></canvas>
+>       <img id="src" src="letters.png">
+>       <script src="script.js"></script>
+>   ```
+
+>   ```coffeescript
+>       #  Load images and canvases:
+>       src = document.getElementById("src")
+>       cnvs = document.getElementById("canvas")
+>       ctx = cnvs.getContext("2d")
+>       #  Create Letters and a LetterBlock:
+>       ltrs = new Letters(src, 8, 16)
+>       ltrblk = ltrs.createBlock(ctx, 0, 0, "Line number one", "Line number two", "Line number three")
+>       #  Logic:
+>       logic = ->
+>           ltrblk.advance()
+>           window.setTimeout(logic, 1000/24) #  Constant 24 calls per second
+>       #  Rendering:
+>       render = ->
+>           ltrblk.draw()
+>           window.requestAnimationFrame(render) #  Renders as smoothly as possible
+>   ```
+
+####  Drawing the same block of text to multiple canvases  ####
+
+>   ```html
+>       <!DOCTYPE html>
+>       <canvas id="canvas1"></canvas>
+>       <canvas id="canvas2"></canvas>
+>       <img id="src" src="letters.png">
+>       <script src="script.js"></script>
+>   ```
+
+>   ```coffeescript
+>       #  Load images and canvases:
+>       src = document.getElementById("src")
+>       cnvs1 = document.getElementById("canvas1")
+>       ctx1 = cnvs1.getContext("2d")
+>       cnvs2 = document.getElementById("canvas2")
+>       ctx2 = cnvs2.getContext("2d")
+>       #  Create Letters and Strings:
+>       ltrs = new Letters(src, 8, 16)
+>       strings = [
+>           ltrs.createString("Line one"),
+>           ltrs.createString("Line two")
+>       ]
+>       #  Create multiple blocks using the same strings:
+>       blk1 = ltrs.createBlock.apply(ltrs, [ctx1, 0, 0].concat(strings))
+>       blk2 = ltrs.createBlock.apply(ltrs, [ctx2, 0, 0].concat(strings))
+>       #  Note that the strings are now shared:
+>       blk1.fill()  #  Fills both blocks
+>   ```
 
 ##  Implementation  ##
 
@@ -18,7 +436,7 @@ Sprite-based text processing and rendering
     ###
 
 The `Letters` module is used to construct an alphabet from a sprite sheet, and provides mechanisms for rendering this on a canvas.
-You will note similarities between this and [Sheet](sheet.litcoffee), but `Letters` is markedly more complex.
+You will note similarities between this and [Sheet](Sheet.litcoffee), but `Letters` is markedly more complex.
 
 ###  General functions:  ###
 
@@ -74,10 +492,7 @@ As you can see, `Letter` is a very simple constructor.
         @index = index
         @letters = letters
         @width = if letters then letters.letter_width else 0
-
-`Letter`s are static references, so we can freeze them:
-
-        Object.freeze this
+        return this
 
 ####  The prototype  ####
 
@@ -138,11 +553,10 @@ These are non-enumerable and non-writable.
 
 Finally, we can add the individual `Letter`s to the `LetterString`.
 
-        this[q] = letters?.item(data.charCodeAt(q)) for letter, q in data
+        Object.defineProperty(this, q, {value: letters?.item(data.charCodeAt(q)), enumerable: yes}) for letter, q in data
+        return this
 
-`LetterString`s are immutable, so we can freeze them:
-
-        Object.freeze this
+Note any `Letter`s referenced by `data` which have not yet been created will be when these properties are defined.
 
 ####  The prototype  ####
 
@@ -272,7 +686,7 @@ We first need to make sure that the variables are of the proper type, and if not
 
 We can now go ahead and assign the strings to numeric indices in the `LetterBlock` object:
 
-        this[q] = (if string instanceof LetterString then string else new LetterString(letters, string)) for string, q in strings
+        Object.defineProperty(this, q, {value: (if string instanceof LetterString then string else new LetterString(letters, string)), enumerable: yes}) for string, q in strings
 
 There are several other properties that we also set for convenient access.
 We use `Object.defineProperties` because these values should **not** be enumerable:
@@ -342,7 +756,7 @@ We can now bind these functions to our properties:
                 set: multiSetter.bind(this, "index")
         }
 
-(For definitions of these properties, see the documentation for `LetterString`, below.)
+(For definitions of these properties, see the documentation for `LetterString`, above.)
 
 The `length` property only has a getter; it just adds up all the lengths of each line:
 
@@ -377,11 +791,6 @@ Note that although `x` and `y` reset `drawIndex` and `delIndex`, they do **not**
 As noted below, `draw()` is the only function which is allowed to draw to a context, for purposes of keeping logic and rendering distinct.
 However, because `x` and `y` will have new values the next time `draw()` is called, it will be unable to erase any letters which have already been drawn.
 This means that if you move the `LetterBlock` while `drawIndex` is nonzero, you must arrange for canvas clearing yourself.
-
-That completes our property definitions.
-`LetterBlock`'s getters and setters rely on having its strings remain constant, so we need to freeze the object:
-
-        Object.freeze this
 
 ####  The prototype  ####
 
@@ -460,16 +869,16 @@ However, `HTMLImageElement`s also have `naturalWidth` and `naturalHeight` proper
 
 If for some reason we can't get *either* of these properties, then the `source_width` and `source_height` are set to zero.
 
-        source_width = 0 unless source? and not isNaN(source_width = Number(if source.naturalWidth? then source.naturalWidth else source.width))
-        source_height = 0 unless source? and not isNaN(source_height = Number(if source.naturalHeight? then source.naturalHeight else source.height))
+        source_width = 0 unless source? and not isNaN(source_width = Number(if source.naturalWidth then source.naturalWidth else source.width))
+        source_height = 0 unless source? and not isNaN(source_height = Number(if source.naturalHeight then source.naturalHeight else source.height))
 
 As stated before, the `Letters` sprite-sheet exists on its own special `<canvas>` element.
 Provided that a valid `source` has been provided, we create that `<canvas>` here.
 
         if source?
             canvas = doc.createElement("canvas")
-            canvas.width = source_width
-            canvas.height = source_height
+            canvas.width = Math.floor(source_width / letter_width) * letter_width
+            canvas.height = Math.floor(source_height / letter_height) * letter_height
             context = canvas.getContext("2d")
             context.drawImage(source, 0, 0) unless source instanceof HTMLImageElement and not source.complete
 
@@ -522,7 +931,7 @@ Otherwise, we use a composite operation to change the color of everything in the
 
 Next, we create `Letter` objects for each letter on the canvas.
 For efficiency's sake, these are memorized getters, which don't compute their value until they is needed, but then remember the result afterwards.
-In order to allow object freezing, this memorization takes place in a separate array.
+In order to keep these indices immutable, this memorization takes place in a separate array.
 
         index = this.size
         memory = []
@@ -530,10 +939,7 @@ In order to allow object freezing, this memorization takes place in a separate a
             return if memory[i]? then memory[i] else memory[i] = new Letter(this, i)
 
         Object.defineProperty(this, index, {get: getIndex.bind(this, index)}) while (index-- > 0)
-
-`Letters` objects are immutable, so we can now freeze the object:
-
-        Object.freeze this
+        return this
 
 ####  The prototype  ####
 
