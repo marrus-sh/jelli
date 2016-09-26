@@ -312,7 +312,7 @@ The `PokeList()` constructor does not have any methods.
 ####  Creating a control and tracking the arrow keys  ####
 
 >   ```javascript
->   ctrl = new Control();
+>   var ctrl = new Control();
 >   ctrl.add("down").addCodes("down", 0x28, "ArrowDown", "Down");
 >   ctrl.add("left").addCodes("left", 0x25, "ArrowLeft", "Left");
 >   ctrl.add("right").addCodes("right", 0x27, "ArrowRight", "Right");
@@ -322,7 +322,7 @@ The `PokeList()` constructor does not have any methods.
 ####  Using percentages as control-units  ####
 
 >   ```javascript
->   ctrl = new Control(document.body, 0, 0, 100, 100);
+>   var ctrl = new Control(document.body, 0, 0, 100, 100);
 >   ```
 
 ####  Simulating keyboard input  ####
@@ -331,7 +331,7 @@ The `PokeList()` constructor does not have any methods.
 >   <!DOCTYPE html>
 >   <div id="faux_spacebar"></div>
 >   <script type="text/javascript">
->       ctrl = new Control();
+>       var ctrl = new Control();
 >       ctrl.add("space").addCodes("space", 0x31, "Space");
 >       document.getElementById("faux_spacebar").addEventListener("mousedown", ctrl.toggle.bind(null, "space", true), false);
 >       document.getElementById("faux_spacebar").addEventListener("mouseup", ctrl.toggle.bind(null, "space", false), false);

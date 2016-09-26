@@ -377,19 +377,19 @@ In addition, the following methods are defined:
 >   <img id="src" src="letters.png">
 >   <script type="text/javascript">
 >       //  Load images and canvases:
->       src = document.getElementById("src");
->       cnvs = document.getElementById("canvas");
->       ctx = cnvs.getContext("2d");
+>       var src = document.getElementById("src");
+>       var cnvs = document.getElementById("canvas");
+>       var ctx = cnvs.getContext("2d");
 >       //  Create Letters and a LetterBlock:
->       ltrs = new Letters(src, 8, 16);
->       ltrblk = ltrs.createBlock(ctx, 0, 0, "Line number one", "Line number two", "Line number three");
+>       var ltrs = new Letters(src, 8, 16);
+>       var ltrblk = ltrs.createBlock(ctx, 0, 0, "Line number one", "Line number two", "Line number three");
 >       //  Logic:
->       logic = function () {
+>       function logic () {
 >           ltrblk.advance();
 >           window.setTimeout(logic, 1000/24);  //  Constant 24 calls per second
 >       }
 >       //  Rendering:
->       render = function () {
+>       function render () {
 >           ltrblk.draw();
 >           window.requestAnimationFrame(render);  //  Renders as smoothly as possible
 >       }
@@ -405,20 +405,20 @@ In addition, the following methods are defined:
 >   <img id="src" src="letters.png">
 >   <script type="text/javascript">
 >       //  Load images and canvases:
->       src = document.getElementById("src");
->       cnvs1 = document.getElementById("canvas1");
->       ctx1 = cnvs1.getContext("2d");
->       cnvs2 = document.getElementById("canvas2");
->       ctx2 = cnvs2.getContext("2d");
+>       var src = document.getElementById("src");
+>       var cnvs1 = document.getElementById("canvas1");
+>       var ctx1 = cnvs1.getContext("2d");
+>       var cnvs2 = document.getElementById("canvas2");
+>       var ctx2 = cnvs2.getContext("2d");
 >       //  Create Letters and Strings:
->       ltrs = new Letters(src, 8, 16);
->       strings = [
+>       var ltrs = new Letters(src, 8, 16);
+>       var strings = [
 >           ltrs.createString("Line one"),
 >           ltrs.createString("Line two")
 >       ];
 >       //  Create multiple blocks using the same strings:
->       blk1 = ltrs.createBlock.apply(ltrs, [ctx1, 0, 0].concat(strings));
->       blk2 = ltrs.createBlock.apply(ltrs, [ctx2, 0, 0].concat(strings));
+>       var blk1 = ltrs.createBlock.apply(ltrs, [ctx1, 0, 0].concat(strings));
+>       var blk2 = ltrs.createBlock.apply(ltrs, [ctx2, 0, 0].concat(strings));
 >       //  Note that the strings are now shared:
 >       blk1.fill();  //  Fills both blocks
 >   </script>

@@ -135,13 +135,13 @@ In addition, the following methods (also available with typed arrays) are define
 ####  Creating a 6-bit `Data` array with length `12`  ####
 
 >   ```javascript
->   data_array = new Data(6, 12);
+>   var data_array = new Data(6, 12);
 >   ```
 
 ####  Creating a `Data` array from a character string  ####
 
 >   ```javascript
->   data_array = new Data(8, "hello world!");
+>   var data_array = new Data(8, "hello world!");
 >   ```
 
 ##  Implementation  ##

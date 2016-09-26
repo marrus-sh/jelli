@@ -71,7 +71,8 @@ If no canvas has been defined, all of the following properties return `undefined
 >   <!DOCTYPE html>
 >   <canvas id="canvas"></canvas>
 >   <script type="text/javascript">
->       scrn = new Screen("canvas");  //  The "2d" is optional.
+>       //  Abbreviated form of `new Screen(document.getElementById("canvas"), "2d")`:
+>       var scrn = new Screen("canvas");
 >       scrn.context.fillStyle = "red";
 >       scrn.context.fillRect(0, 0, scrn.width, scrn.height);
 >   </script>
