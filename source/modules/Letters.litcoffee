@@ -641,8 +641,8 @@ You will note from the above that letters are given a 1px padding (on the bottom
 We can now draw the letters from `drawIndex` to `index`:
 
                 while @drawIndex < @length and @drawIndex < @index
-                    continue unless this[@drawIndex] instanceof Letter
-                    this[@drawIndex].draw(context, x + @drawIndex * (width + 1), y)
+                    if this[@drawIndex] instanceof Letter
+                        this[@drawIndex].draw(context, x + @drawIndex * (width + 1), y)
                     @drawIndex++
 
 Finally, we can reset `delIndex` to `drawIndex`:

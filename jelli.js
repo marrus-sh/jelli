@@ -903,10 +903,9 @@
           this.drawIndex = this.delIndex;
         }
         while (this.drawIndex < this.length && this.drawIndex < this.index) {
-          if (!(this[this.drawIndex] instanceof Letter)) {
-            continue;
+          if (this[this.drawIndex] instanceof Letter) {
+            this[this.drawIndex].draw(context, x + this.drawIndex * (width + 1), y);
           }
-          this[this.drawIndex].draw(context, x + this.drawIndex * (width + 1), y);
           this.drawIndex++;
         }
         return this.delIndex = this.drawIndex;
@@ -2350,7 +2349,7 @@
     }
     nameless[nameless.next] = item;
     Object.defineProperty(nameless[nameless.next], "kill", {
-      value: this.kill.bind(nameless)
+      value: this.kill.bind(nameless, nameless.next)
     });
     return nameless[nameless.next++];
   };
@@ -2464,7 +2463,7 @@
           ctor.prototype = func.prototype;
           var child = new ctor, result = func.apply(child, args);
           return Object(result) === result ? result : child;
-        })(this.Type, [this, this.nextIndex].concat(slice.call(args)), function(){}) : null);
+        })(this.Type, [this].concat(slice.call(args)), function(){}) : null);
       }
     }
   });

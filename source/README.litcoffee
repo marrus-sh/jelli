@@ -3,7 +3,7 @@ Programmed by Margaret Russel
 
 - - -
 
-##  Introduction  ##
+##  Description  ##
 
 This folder contains all of the source code for the Jelli Game Engine.
 Jelli is written in Literate CoffeeScript, which means that each source file can be read as Markdown.

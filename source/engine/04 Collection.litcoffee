@@ -37,7 +37,7 @@ We can now add the `item`:
 
 Because `item`s can't actually be accessed, we need to ensure that they have a `kill()` function.
 
-        Object.defineProperty nameless[nameless.next], "kill", {value: this.kill.bind(nameless)}
+        Object.defineProperty nameless[nameless.next], "kill", {value: this.kill.bind(nameless, nameless.next)}
 
 We can now increment `next` and return the new object.
 
@@ -172,7 +172,7 @@ Instances loaded with `loadNameless()` aren't accessible from the outside, so yo
 The code is below:
 
         loadNameless:
-            value: (args...) -> this["\uD83D\uDE36+"](if typeof @Type is "function" or @Type instanceof Function then new @Type(this, @nextIndex, args...) else null)
+            value: (args...) -> this["\uD83D\uDE36+"](if typeof @Type is "function" or @Type instanceof Function then new @Type(this, args...) else null)
 
 We can now freeze the `Collection` prototype:
 
