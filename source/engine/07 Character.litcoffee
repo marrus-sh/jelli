@@ -170,7 +170,7 @@ First we need to make sure that we were passed the arguments that we expect:
 
 If (1) the object doesn't collide with other `Character`s, or (2) the point is outside of the object's bounds, then we return the original coordinate:
 
-                unless not(@collides & Character.collisions.CHARACTER) and Math.round(@edges.left) < x < Math.round(@edges.right) and Math.round(@edges.top) < y < Math.round(@edges.bottom)
+                unless @collides & Character.collisions.CHARACTER and Math.round(@edges.left) < x < Math.round(@edges.right) and Math.round(@edges.top) < y < Math.round(@edges.bottom)
                     switch edge
                         when Tileset.Map.LEFT_EDGE, Tileset.Map.RIGHT_EDGE then return x
                         when Tileset.Map.TOP_EDGE, Tileset.Map.BOTTOM_EDGE then return y
