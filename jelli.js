@@ -3003,7 +3003,7 @@
     },
     getCollisionEdge: {
       value: function(edge, x, y) {
-        if (!((edge === Tileset.Map.BOTTOM_EDGE || edge === Tileset.Map.LEFT_EDGE || edge === Tileset.Map.RIGHT_EDGE || edge === Tileset.Map.TOP_EDGE) && isNaN(x = Number(x)) && isNaN(y = Number(y)))) {
+        if (!((edge === Tileset.Map.BOTTOM_EDGE || edge === Tileset.Map.LEFT_EDGE || edge === Tileset.Map.RIGHT_EDGE || edge === Tileset.Map.TOP_EDGE) && !isNaN(x = Number(x)) && !isNaN(y = Number(y)))) {
           return;
         }
         if (!(!(this.collides & Character.collisions.CHARACTER) && (Math.round(this.edges.left) < x && x < Math.round(this.edges.right)) && (Math.round(this.edges.top) < y && y < Math.round(this.edges.bottom)))) {

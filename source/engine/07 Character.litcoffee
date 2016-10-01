@@ -166,7 +166,7 @@ However, because `Character`s don't have collision zones, the code is much more 
 
 First we need to make sure that we were passed the arguments that we expect:
 
-                return unless (edge is Tileset.Map.BOTTOM_EDGE or edge is Tileset.Map.LEFT_EDGE or edge is Tileset.Map.RIGHT_EDGE or edge is Tileset.Map.TOP_EDGE) and isNaN(x = Number(x)) and isNaN(y = Number(y))
+                return unless (edge is Tileset.Map.BOTTOM_EDGE or edge is Tileset.Map.LEFT_EDGE or edge is Tileset.Map.RIGHT_EDGE or edge is Tileset.Map.TOP_EDGE) and !isNaN(x = Number(x)) and !isNaN(y = Number(y))
 
 If (1) the object doesn't collide with other `Character`s, or (2) the point is outside of the object's bounds, then we return the original coordinate:
 
