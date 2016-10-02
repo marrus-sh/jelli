@@ -3095,7 +3095,7 @@
             ref = this.area.maps;
             for (i = 0, len = ref.length; i < len; i++) {
               map = ref[i];
-              k = Math.floor(this.height / (map.tile_height / 2)) + 1;
+              k = Math.floor(this.height / (map.tile_height / 2)) + 2;
               j = -1;
               while (++j <= k) {
                 t = map.getCollisionEdge(Tileset.Map.LEFT_EDGE, s, this.edges.top + j * this.height / k);
@@ -3112,7 +3112,7 @@
                 if (_this === some || !(some.collides & Character.collisions.CHARACTER)) {
                   return;
                 }
-                k = Math.floor(_this.height / some.height) + 1;
+                k = Math.floor(_this.height / some.height) + 2;
                 j = -1;
                 results = [];
                 while (++j <= k) {

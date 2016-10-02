@@ -251,9 +251,10 @@ Then we check for collisions with the map, if appliciable, by iterating over `ma
 
 `k` tells us how many collision points we need to check in order to ensure we didn't miss any map sectors.
 We take the height of the `Character` and divide it by the height of a map sector.
-This still isn't enough if the `Character` happens to be perfectly aligned (note from [the `Tileset` documentation](tileset.litcoffee) that collisions aren't detected on sector edges), so we need to add `1`.
+This still isn't enough if the `Character` happens to be perfectly aligned (note from [the `Tileset` documentation](tileset.litcoffee) that collisions aren't detected on sector edges), so we need to add `2`.
+(Just `1` is sufficient, `2` ensures there are no rounding errors.)
 
-                            k = Math.floor(@height / (map.tile_height / 2)) + 1
+                            k = Math.floor(@height / (map.tile_height / 2)) + 2
 
 >   [Issue #49](https://github.com/literallybenjam/jelli/issues/49) :
     The `/ 2` in the above code assumes each tile is split up into four sectors, two in each direction.
@@ -278,7 +279,7 @@ We don't need (or *want*) to check if a `Character` collides with itself, and we
 
 Our `k` is similar, only we use the `Character` height as our sector.
 
-                            k = Math.floor(@height / some.height) + 1
+                            k = Math.floor(@height / some.height) + 2
 
 …And then we iterate over our points.
 
