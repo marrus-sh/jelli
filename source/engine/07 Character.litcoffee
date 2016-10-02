@@ -203,7 +203,7 @@ First, we calculate the magnitude of the distance vector:
 
 Next, we ensure that everything is set up properly for us to do our calculations:
 
-                return unless this.area instanceof Area and this.area.characters instanceof Collection and this.area.maps instanceof Object and d
+                return unless this.area instanceof Area and this.area.characters instanceof Collection and this.area.maps instanceof Object
 
 We set `ix` and `iy` to the `Character`'s initial position.
 We will need these later for direction and velocity calculations.

@@ -3037,7 +3037,7 @@
       value: function(dx, dy) {
         var d, i, ix, iy, j, k, l, len, len1, len2, len3, m, map, o, ref, ref1, ref2, ref3, s, t;
         d = Math.sqrt(dx * dx + dy * dy);
-        if (!(this.area instanceof Area && this.area.characters instanceof Collection && this.area.maps instanceof Object && d)) {
+        if (!(this.area instanceof Area && this.area.characters instanceof Collection && this.area.maps instanceof Object)) {
           return;
         }
         ix = this.x;

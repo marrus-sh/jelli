@@ -585,14 +585,12 @@ For `"contextmenu"`, we just want to prevent the default.
 When a key is down, we want to toggle it to `on`…
 
                     when "keydown"
-                        for code in [e.code, e.key, e.keyIdentifier, e.keyCode]
-                            @toggleCode(code, on) if @isCodeDefined(code)
+                        @toggleCode(code, on) for code in [e.code, e.key, e.keyIdentifier, e.keyCode] when @isCodeDefined(code)
 
 …and when a key is up, we want to toggle it to `false`.
 
                     when "keyup"
-                        for code in [e.code, e.key, e.keyIdentifier, e.keyCode]
-                            @toggleCode(code, off) if @isCodeDefined(code)
+                        @toggleCode(code, off) for code in [e.code, e.key, e.keyIdentifier, e.keyCode] when @isCodeDefined(code)
 
 On `"mousedown"`, we generate a new `Poke` if the event was within our `target`'s bounds.
 The index of the `Poke` corresponds to the mouse button that was pressed.
