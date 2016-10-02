@@ -3137,7 +3137,7 @@
             ref1 = this.area.maps;
             for (l = 0, len1 = ref1.length; l < len1; l++) {
               map = ref1[l];
-              k = Math.floor(this.height / (map.tile_height / 2)) + 1;
+              k = Math.floor(this.height / (map.tile_height / 2)) + 2;
               j = -1;
               while (++j <= k) {
                 t = map.getCollisionEdge(Tileset.Map.RIGHT_EDGE, s, this.edges.top + j * this.height / k);
@@ -3154,7 +3154,7 @@
                 if (_this === some || !(some.collides & Character.collisions.CHARACTER)) {
                   return;
                 }
-                k = Math.floor(_this.height / some.height) + 1;
+                k = Math.floor(_this.height / some.height) + 2;
                 j = -1;
                 results = [];
                 while (++j <= k) {
@@ -3179,7 +3179,7 @@
             ref2 = this.area.maps;
             for (m = 0, len2 = ref2.length; m < len2; m++) {
               map = ref2[m];
-              k = Math.floor(this.width / (map.tile_width / 2)) + 1;
+              k = Math.floor(this.width / (map.tile_width / 2)) + 2;
               j = -1;
               while (++j <= k) {
                 t = map.getCollisionEdge(Tileset.Map.TOP_EDGE, this.edges.left + j * this.width / k, s);
@@ -3196,7 +3196,7 @@
                 if (_this === some || !(some.collides & Character.collisions.CHARACTER)) {
                   return;
                 }
-                k = Math.floor(_this.width / some.width) + 1;
+                k = Math.floor(_this.width / some.width) + 2;
                 j = -1;
                 results = [];
                 while (++j <= k) {
@@ -3221,7 +3221,7 @@
             ref3 = this.area.maps;
             for (o = 0, len3 = ref3.length; o < len3; o++) {
               map = ref3[o];
-              k = Math.floor(this.width / (map.tile_width / 2)) + 1;
+              k = Math.floor(this.width / (map.tile_width / 2)) + 2;
               j = -1;
               while (++j <= k) {
                 t = map.getCollisionEdge(Tileset.Map.BOTTOM_EDGE, this.edges.left + j * this.width / k, s);
@@ -3238,7 +3238,7 @@
                 if (_this === some || !(some.collides & Character.collisions.CHARACTER)) {
                   return;
                 }
-                k = Math.floor(_this.width / some.width) + 1;
+                k = Math.floor(_this.width / some.width) + 2;
                 j = -1;
                 results = [];
                 while (++j <= k) {

@@ -298,7 +298,7 @@ If our final `s` is still further right than our original right edge, then we go
                     s = @edges.left + dx
                     if @collides & Character.collisions.MAP
                         for map in @area.maps
-                            k = Math.floor(@height / (map.tile_height / 2)) + 1
+                            k = Math.floor(@height / (map.tile_height / 2)) + 2
                             j = -1
                             while ++j <= k
                                 t = map.getCollisionEdge(Tileset.Map.RIGHT_EDGE, s, @edges.top + j * @height / k)
@@ -306,7 +306,7 @@ If our final `s` is still further right than our original right edge, then we go
                     if @collides & Character.collisions.CHARACTER
                         @area.characters.doForEach (some) =>
                             return if this is some or not (some.collides & Character.collisions.CHARACTER)
-                            k = Math.floor(@height / some.height) + 1
+                            k = Math.floor(@height / some.height) + 2
                             j = -1
                             while ++j <= k
                                 t = some.getCollisionEdge(Tileset.Map.RIGHT_EDGE, s, @edges.top + j * @height / k)
@@ -319,7 +319,7 @@ And then for upward and downward motion, switching our widths and heights:
                     s = @edges.bottom + dy
                     if @collides & Character.collisions.MAP
                         for map in @area.maps
-                            k = Math.floor(@width / (map.tile_width / 2)) + 1
+                            k = Math.floor(@width / (map.tile_width / 2)) + 2
                             j = -1
                             while ++j <= k
                                 t = map.getCollisionEdge(Tileset.Map.TOP_EDGE, @edges.left + j * @width / k, s)
@@ -327,7 +327,7 @@ And then for upward and downward motion, switching our widths and heights:
                     if @collides & Character.collisions.CHARACTER
                         @area.characters.doForEach (some) =>
                             return if this is some or not (some.collides & Character.collisions.CHARACTER)
-                            k = Math.floor(@width / some.width) + 1
+                            k = Math.floor(@width / some.width) + 2
                             j = -1
                             while ++j <= k
                                 t = some.getCollisionEdge(Tileset.Map.TOP_EDGE, @edges.left + j * @width / k, s)
@@ -337,7 +337,7 @@ And then for upward and downward motion, switching our widths and heights:
                     s = @edges.top + dy
                     if @collides & Character.collisions.MAP
                         for map in @area.maps
-                            k = Math.floor(@width / (map.tile_width / 2)) + 1
+                            k = Math.floor(@width / (map.tile_width / 2)) + 2
                             j = -1
                             while ++j <= k
                                 t = map.getCollisionEdge(Tileset.Map.BOTTOM_EDGE, @edges.left + j * @width / k, s)
@@ -345,7 +345,7 @@ And then for upward and downward motion, switching our widths and heights:
                     if @collides & Character.collisions.CHARACTER
                         @area.characters.doForEach (some) =>
                             return if this is some or not (some.collides & Character.collisions.CHARACTER)
-                            k = Math.floor(@width / some.width) + 1
+                            k = Math.floor(@width / some.width) + 2
                             j = -1
                             while ++j <= k
                                 t = some.getCollisionEdge(Tileset.Map.BOTTOM_EDGE, @edges.left + j * @width / k, s)
