@@ -2584,24 +2584,28 @@
           var ref;
           return x - ((ref = this.area) != null ? ref.x : void 0);
         },
-        set: function(n) {
-          var ref;
-          if (!isNaN(n)) {
-            return x = Number(n) + ((ref = this.area) != null ? ref.x : void 0);
-          }
-        }
+        set: (function(_this) {
+          return function(n) {
+            var ref;
+            if (!isNaN(n)) {
+              return x = Number(n) + ((ref = _this.area) != null ? ref.x : void 0);
+            }
+          };
+        })(this)
       },
       screen_y: {
         get: function() {
           var ref;
           return y - ((ref = this.area) != null ? ref.y : void 0);
         },
-        set: function(n) {
-          var ref;
-          if (!isNaN(n)) {
-            return y = Number(n) + ((ref = this.area) != null ? ref.y : void 0);
-          }
-        }
+        set: (function(_this) {
+          return function(n) {
+            var ref;
+            if (!isNaN(n)) {
+              return y = Number(n) + ((ref = _this.area) != null ? ref.y : void 0);
+            }
+          };
+        })(this)
       }
     });
     Object.defineProperty(this, "kill", {
@@ -2657,44 +2661,44 @@
         screen_top: {
           enumerable: true,
           get: function() {
-            return y - origin_y - area.y;
+            return y - origin_y - this.area.y;
           },
           set: function(n) {
             if (!isNaN(n)) {
-              return y = Number(n) + origin_y + area.y;
+              return y = Number(n) + origin_y + this.area.y;
             }
           }
         },
         screen_bottom: {
           enumerable: true,
           get: function() {
-            return y - origin_y + height - area.y;
+            return y - origin_y + height - this.area.y;
           },
           set: function(n) {
             if (!isNaN(n)) {
-              return y = Number(n) - height + origin_y + area.y;
+              return y = Number(n) - height + origin_y + this.area.y;
             }
           }
         },
         screen_left: {
           enumerable: true,
           get: function() {
-            return x - origin_x - area.x;
+            return x - origin_x - this.area.x;
           },
           set: function(n) {
             if (!isNaN(n)) {
-              return x = Number(n) + origin_x + area.x;
+              return x = Number(n) + origin_x + this.area.x;
             }
           }
         },
         screen_right: {
           enumerable: true,
           get: function() {
-            return x - origin_x + width - area.x;
+            return x - origin_x + width - this.area.x;
           },
           set: function(n) {
             if (!isNaN(n)) {
-              return x = Number(n) - width + origin_x + area.x;
+              return x = Number(n) - width + origin_x + this.area.x;
             }
           }
         }
