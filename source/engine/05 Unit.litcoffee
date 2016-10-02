@@ -25,7 +25,7 @@ It is not intended to be used on its own.
 The `Unit` constructor is rather unweildy (ie, it takes a lot of arguments), because it isn't intended for general use.
 Here's a list of the arguments in order:
 
-- `area`: The `Area` that the `Unit` belongs to
+- `game`: The `Game` that the `Unit` belongs to
 - `screen`: The `Screen` on which the `Unit` should be drawing
 - `id`: The `id` of the `Unit`, used by `Character` and `PlacementImage` to identify its source element
 - `x`: The horizontal position of the `Unit`
@@ -38,12 +38,12 @@ Here's a list of the arguments in order:
 You can see these in the constructor below.
 `Unit`s are `Jelli`s, so we're sure to call that constructor as well.
 
-    Unit = (area, screen, id, x, y, width, height, origin_x, origin_y) ->
+    Unit = (game, screen, id, x, y, width, height, origin_x, origin_y) ->
         Jelli.call this
 
 Given all of those arguments, our first task is to make sure they are what we expect:
 
-        area = null unless area instanceof Area
+        game = null unless game instanceof Game
         screen = null unless screen instanceof Screen
         id = String(id)
         width = 0 if isNaN(width = Number(width))
@@ -57,8 +57,8 @@ Now we can define some of those properties.
 `id`, `x`, and `y` are enumerable, and `x` and `y` are modifiable through a getter and a setter.
 
         Object.defineProperties this, {
-            area: {value: area}
-            game: {value: area?.game || null}
+            area: {get: -> return game.area}
+            game: {value: game || null}
             height: {value: height}
             id:
                 value: id

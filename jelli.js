@@ -1954,6 +1954,9 @@
       data.appendChild(item);
     }
     Object.defineProperties(this, {
+      characters: {
+        value: new Collection(this, Character)
+      },
       data: {
         value: data
       },
@@ -1962,6 +1965,9 @@
       },
       functions: {
         value: document.body.functions
+      },
+      images: {
+        value: new Collection(this, PlacementImage)
       },
       letters: {
         value: {}
@@ -2054,7 +2060,7 @@
     },
     draw: {
       value: function() {
-        var i, ref, ref1, ref2, screen, text, view;
+        var i, ref, ref1, ref2, ref3, ref4, screen, text, view;
         if (this.resized) {
           ref = this.views;
           for (i in ref) {
@@ -2083,9 +2089,19 @@
         if (this.area instanceof Area) {
           this.area.draw();
         }
-        ref2 = this.texts;
-        for (i in ref2) {
-          text = ref2[i];
+        if ((ref2 = this.characters) != null) {
+          ref2.doForEach(function(character) {
+            return character.draw();
+          });
+        }
+        if ((ref3 = this.images) != null) {
+          ref3.doForEach(function(image) {
+            return image.draw();
+          });
+        }
+        ref4 = this.texts;
+        for (i in ref4) {
+          text = ref4[i];
           text.draw();
         }
         this.resized = false;
@@ -2484,10 +2500,10 @@
    */
   var Unit;
 
-  Unit = function(area, screen, id, x, y, width, height, origin_x, origin_y) {
+  Unit = function(game, screen, id, x, y, width, height, origin_x, origin_y) {
     Jelli.call(this);
-    if (!(area instanceof Area)) {
-      area = null;
+    if (!(game instanceof Game)) {
+      game = null;
     }
     if (!(screen instanceof Screen)) {
       screen = null;
@@ -2513,10 +2529,12 @@
     }
     Object.defineProperties(this, {
       area: {
-        value: area
+        get: function() {
+          return game.area;
+        }
       },
       game: {
-        value: (area != null ? area.game : void 0) || null
+        value: game || null
       },
       height: {
         value: height
@@ -2715,7 +2733,7 @@
     slice = [].slice;
 
   PlacementImage = function() {
-    var area, collection, elt, game, id, name, optional_args, placed, source_height, source_width, x, y;
+    var collection, elt, game, id, name, optional_args, placed, source_height, source_width, x, y;
     collection = arguments[0], name = arguments[1], optional_args = 3 <= arguments.length ? slice.call(arguments, 2) : [];
     switch (optional_args.length) {
       case 0:
@@ -2779,7 +2797,6 @@
       collection = null;
     }
     game = collection != null ? collection.game : null;
-    area = collection != null ? collection.area : null;
     elt = (game != null ? game.getDataElement("IMAGE", id) : void 0) || null;
     if (!(elt instanceof HTMLImageElement || elt instanceof SVGImageElement || elt instanceof HTMLCanvasElement || (typeof createImageBitmap !== "undefined" && createImageBitmap !== null) && elt instanceof ImageBitmap)) {
       elt = null;
@@ -2790,7 +2807,7 @@
     if (!((elt != null) && !isNaN(source_height = Number(elt.naturalHeight != null ? elt.naturalHeight : source.height)))) {
       source_height = 0;
     }
-    Unit.call(this, area, game.screens[elt.getAttribute("data-screen")], id, x, y, source_width, source_height, elt != null ? elt.getAttribute("data-origin-x") : void 0, elt != null ? elt.getAttribute("data-origin-y") : void 0);
+    Unit.call(this, game, game.screens[elt.getAttribute("data-screen")], id, x, y, source_width, source_height, elt != null ? elt.getAttribute("data-origin-x") : void 0, elt != null ? elt.getAttribute("data-origin-y") : void 0);
     Object.defineProperties(this, {
       placed: {
         get: function() {
@@ -2844,7 +2861,7 @@
     slice = [].slice;
 
   Character = function() {
-    var area, collection, current_sprite, direction, elt, frame, game, i, id, index, len, name, optional_args, ref, ref1, ref2, ref3, ref4, ref5, sprite, sprite_list, sprites, velocity, x, y;
+    var collection, current_sprite, direction, elt, frame, game, i, id, index, len, name, optional_args, ref, ref1, ref2, ref3, ref4, ref5, sprite, sprite_list, sprites, velocity, x, y;
     collection = arguments[0], name = arguments[1], optional_args = 3 <= arguments.length ? slice.call(arguments, 2) : [];
     switch (optional_args.length) {
       case 0:
@@ -2889,7 +2906,6 @@
       collection = null;
     }
     game = collection != null ? collection.game : null;
-    area = collection != null ? collection.area : null;
     elt = (game != null ? game.getDataElement("CHARACTER", id) : void 0) || null;
     sprites = {};
     sprite_list = (game != null ? game.getDataElement("SPRITELIST", elt != null ? elt.getAttribute("data-sprites") : void 0) : void 0) || null;
@@ -2902,7 +2918,7 @@
       }
     }
     Object.freeze(sprites);
-    Unit.call(this, area, game.screens[elt != null ? elt.getAttribute("data-screen") : void 0], id, x, y, (sprite_list != null ? sprite_list.dataset.boxWidth : void 0) || ((ref2 = sprites[0]) != null ? ref2.width : void 0), (sprite_list != null ? sprite_list.dataset.boxHeight : void 0) || ((ref3 = sprites[0]) != null ? ref3.height : void 0), sprite_list != null ? sprite_list.dataset.originX : void 0, sprite_list != null ? sprite_list.dataset.originY : void 0);
+    Unit.call(this, game, game.screens[elt != null ? elt.getAttribute("data-screen") : void 0], id, x, y, (sprite_list != null ? sprite_list.dataset.boxWidth : void 0) || ((ref2 = sprites[0]) != null ? ref2.width : void 0), (sprite_list != null ? sprite_list.dataset.boxHeight : void 0) || ((ref3 = sprites[0]) != null ? ref3.height : void 0), sprite_list != null ? sprite_list.dataset.originX : void 0, sprite_list != null ? sprite_list.dataset.originY : void 0);
     Object.defineProperties(this, {
       box_x: {
         value: isNaN(sprite_list != null ? sprite_list.dataset.boxX : void 0) ? 0 : Number(sprite_list != null ? sprite_list.dataset.boxX : void 0)

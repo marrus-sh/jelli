@@ -80,11 +80,10 @@ We'll go ahead and use a `switch` statement:
                 placed = optional_args[3]
         placed = !!placed
 
-For convenience, we get `game` and `area` from `collection`:
+For convenience, we get `game` from `collection`:
 
         collection = null unless collection instanceof Collection
         game = if collection? then collection.game else null
-        area = if collection? then collection.area else null
 
 We also need to get the `IMAGE` element:
 
@@ -105,7 +104,7 @@ If for some reason we can't get *either* of these properties, then the `source_w
 
 We now have everything we need to initialize `PlacementImage` as a `Unit`:
 
-        Unit.call this, area, game.screens[elt.getAttribute("data-screen")], id, x, y, source_width, source_height, elt?.getAttribute("data-origin-x"), elt?.getAttribute("data-origin-y")
+        Unit.call this, game, game.screens[elt.getAttribute("data-screen")], id, x, y, source_width, source_height, elt?.getAttribute("data-origin-x"), elt?.getAttribute("data-origin-y")
 
 Of course, we also need to define the `source` and `placed` properties on the `PlacementImage`:
 

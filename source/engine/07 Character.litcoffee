@@ -62,11 +62,10 @@ We'll go ahead and use a `switch` statement:
                 current_sprite = optional_args[3]
         current_sprite = 0 unless current_sprite?
 
-For convenience, we get `game` and `area` from `collection`:
+For convenience, we get `game` from `collection`.
 
         collection = null unless collection instanceof Collection
         game = if collection? then collection.game else null
-        area = if collection? then collection.area else null
 
 We also need to get the `CHARACTER` element:
 
@@ -89,7 +88,7 @@ Because neither HTML attributes nor JavaScript object keys distinguish between n
 
 We now have everything we need to initialize `Character` as a `Unit`:
 
-        Unit.call this, area, game.screens[elt?.getAttribute("data-screen")], id, x, y, sprite_list?.dataset.boxWidth || sprites[0]?.width, sprite_list?.dataset.boxHeight || sprites[0]?.height, sprite_list?.dataset.originX, sprite_list?.dataset.originY
+        Unit.call this, game, game.screens[elt?.getAttribute("data-screen")], id, x, y, sprite_list?.dataset.boxWidth || sprites[0]?.width, sprite_list?.dataset.boxHeight || sprites[0]?.height, sprite_list?.dataset.originX, sprite_list?.dataset.originY
 
 We can then define additional properties unique to the `Character` object.
 The following are non-enumerable, so we use `Object.defineProperties`:

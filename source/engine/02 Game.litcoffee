@@ -48,9 +48,11 @@ We can now set up containers for our various `Game` properties.
 We use `Object.defineProperties` because these should not be enumerable.
 
         Object.defineProperties this, {
+            characters: {value: new Collection(this, Character)}
             data: {value: data}
             document: {value: doc}
             functions: {value: document.body.functions}
+            images: {value: new Collection(this, PlacementImage)}
             letters: {value: {}}
             screens: {value: {}}
             sheets: {value: {}}
@@ -166,6 +168,11 @@ Next, we iterate over the screens and clear them if necessary.
 If an area has been loaded, we can draw it:
 
                 @area.draw() if @area instanceof Area
+
+We should also draw our `Game`'s characters and images:
+
+                @characters?.doForEach (character) -> character.draw()
+                @images?.doForEach (image) -> image.draw()
 
 Next, we draw any text that is currently loaded:
 
