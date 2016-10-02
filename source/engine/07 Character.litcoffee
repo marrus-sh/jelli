@@ -104,6 +104,7 @@ The following are non-enumerable, so we use `Object.defineProperties`:
                     when "character" then Character.collisions.CHARACTER
                     else Character.collisions.ALL
             functions: {value: elt?.functions}
+            max_velocity: {value: if isNaN(elt?.dataset.speedcap) then Character.NO_MAX_VELOCITY else Number(elt?.dataset.speedcap)}
             sprite_height: {value: sprites[0]?.height || 0}
             sprite_width: {value: sprites[0]?.width}
             sprites: {value: sprites}
@@ -211,16 +212,13 @@ We will need these later for direction and velocity calculations.
                 ix = @x
                 iy = @y
 
-If `d` is larger than `1`, then we make our velocity a unit vector:
+If `d` is larger than the max_velocity, we cap it:
 
-                if d > 1
-                    dx = dx / d
-                    dy = dy / d
+                if this.max_velocity isnt Character.NO_MAX_VELOCITY and d > this.max_velocity
+                    dx = dx / d * this.max_velocity
+                    dy = dy / d * this.max_velocity
 
-Note, however, that if `d` is smaller than `1`, we don't scale the vector up.
-
->   [Issue #41](https://github.com/literallybenjam/jelli/issues/41) :
-    The upper-bound for `d` may be settable through `data-*` attributes at some point in the future.
+Note, however, that if `d` is smaller than `this.max_velocity`, we don't scale the vector up.
 
 We can now calculate the horizontal movement of the character.
 
@@ -392,6 +390,10 @@ Bitwise operations can be used to check if a `Character` collides with a certain
         CHARACTER: 0x2
         ALL: 0x3
     Object.freeze Character.collisions
+
+The `Character.NO_MAX_VELOCITY` property indicates that a `Character` has no maximum velocity.
+
+    Object.defineProperty Character, "NO_MAX_VELOCITY", {value: if Symbol? then Symbol("Infinity") else Object.freeze(Object.create(null))}
 
 We can now freeze `Character` and make it transparent to the window:
 

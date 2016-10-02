@@ -2927,6 +2927,9 @@
       functions: {
         value: elt != null ? elt.functions : void 0
       },
+      max_velocity: {
+        value: isNaN(elt != null ? elt.dataset.speedcap : void 0) ? Character.NO_MAX_VELOCITY : Number(elt != null ? elt.dataset.speedcap : void 0)
+      },
       sprite_height: {
         value: ((ref4 = sprites[0]) != null ? ref4.height : void 0) || 0
       },
@@ -3042,9 +3045,9 @@
         }
         ix = this.x;
         iy = this.y;
-        if (d > 1) {
-          dx = dx / d;
-          dy = dy / d;
+        if (this.max_velocity !== Character.NO_MAX_VELOCITY && d > this.max_velocity) {
+          dx = dx / d * this.max_velocity;
+          dy = dy / d * this.max_velocity;
         }
         if (dx > 0) {
           s = this.edges.right + dx;
@@ -3232,6 +3235,10 @@
   };
 
   Object.freeze(Character.collisions);
+
+  Object.defineProperty(Character, "NO_MAX_VELOCITY", {
+    value: typeof Symbol !== "undefined" && Symbol !== null ? Symbol("Infinity") : Object.freeze(Object.create(null))
+  });
 
   this.Character = Object.freeze(Character);
 
