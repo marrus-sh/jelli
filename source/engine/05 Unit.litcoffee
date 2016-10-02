@@ -81,10 +81,10 @@ The properties `screen_x` and `screen_y` are convenience properties for getting 
 
         Object.defineProperties this, {
             screen_x:
-                get: -> x - @area?.x
+                get: => x - @area?.x
                 set: (n) => x = Number(n) + @area?.x unless isNaN(n)
             screen_y:
-                get: -> y - @area?.y
+                get: => y - @area?.y
                 set: (n) => y = Number(n) + @area?.y unless isNaN(n)
         }
 
@@ -117,20 +117,20 @@ The `edges` property provides a number of convenient properties for accessing th
                     set: (n) -> x = Number(n) - width + origin_x unless isNaN(n)
                 screen_top:
                     enumerable: yes
-                    get: -> y - origin_y - @area.y
-                    set: (n) -> y = Number(n) + origin_y + @area.y unless isNaN(n)
+                    get: => y - origin_y - @area.y
+                    set: (n) => y = Number(n) + origin_y + @area.y unless isNaN(n)
                 screen_bottom:
                     enumerable: yes
-                    get: -> y - origin_y + height - @area.y
-                    set: (n) -> y = Number(n) - height + origin_y + @area.y unless isNaN(n)
+                    get: => y - origin_y + height - @area.y
+                    set: (n) => y = Number(n) - height + origin_y + @area.y unless isNaN(n)
                 screen_left:
                     enumerable: yes
-                    get: -> x - origin_x - @area.x
-                    set: (n) -> x = Number(n) + origin_x + @area.x unless isNaN(n)
+                    get: => x - origin_x - @area.x
+                    set: (n) => x = Number(n) + origin_x + @area.x unless isNaN(n)
                 screen_right:
                     enumerable: yes
-                    get: -> x - origin_x + width - @area.x
-                    set: (n) -> x = Number(n) - width + origin_x + @area.x unless isNaN(n)
+                    get: => x - origin_x + width - @area.x
+                    set: (n) => x = Number(n) - width + origin_x + @area.x unless isNaN(n)
             })
         }
         Object.freeze @edges
