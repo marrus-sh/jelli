@@ -67,6 +67,8 @@ We can also define getters and setters for the `LetterBlock`'s important attribu
             index:
                 get: -> @block.index
                 set: (n) -> @block.index = n
+            length:
+                value: @block.length
             x:
                 get: -> @block.x
                 set: (n) -> @block.x = n

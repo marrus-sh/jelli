@@ -3358,6 +3358,9 @@
           return this.block.index = n;
         }
       },
+      length: {
+        value: this.block.length
+      },
       x: {
         get: function() {
           return this.block.x;
