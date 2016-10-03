@@ -2160,7 +2160,13 @@
     },
     step: {
       value: function() {
+        var ref;
         this.run("step");
+        if ((ref = this.characters) != null) {
+          ref.doForEach(function(character) {
+            return character.step();
+          });
+        }
         if (this.area instanceof Area) {
           this.area.step();
         }

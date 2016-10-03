@@ -245,6 +245,7 @@ That's all for now – the majority of events are handled by [`Control`](../modu
         step:
             value: ->
                 @run("step")
+                @characters?.doForEach (character) -> character.step()
                 @area.step() if @area instanceof Area
                 @run("then")
                 @window.setTimeout @step.bind(this), 1000/60
