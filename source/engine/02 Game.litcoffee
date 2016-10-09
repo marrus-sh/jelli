@@ -98,7 +98,7 @@ Now, we can freeze both:
 Next, we have the various sprite-sheets.
 First come our [`Letters`](../modules/Letters.litcoffee):
 
-        @letters[item.id] = new Letters(item, item.getAttribute("data-sprite-width"), item.getAttribute("data-sprite-height"), doc) for item in data.getElementsByClassName("LETTERS")
+        @letters[item.id] = new Letters(item, item.getAttribute("data-sprite-width"), item.getAttribute("data-sprite-height"), item.getAttribute("data-letter-spacing"), doc) for item in data.getElementsByClassName("LETTERS")
         Object.freeze @letters
 
 Then our [`Sheet`](../modules/Sheet.litcoffee)s:

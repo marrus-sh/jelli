@@ -265,18 +265,16 @@
         value: y
       }
     });
-    if (this.ownerDocument != null) {
-      this.ownerDocument.defaultView.addEventListener("keydown", this, false);
-      this.ownerDocument.defaultView.addEventListener("keyup", this, false);
-      this.ownerDocument.defaultView.addEventListener("contextmenu", this, false);
-      this.ownerDocument.defaultView.addEventListener("touchstart", this, false);
-      this.ownerDocument.defaultView.addEventListener("touchend", this, false);
-      this.ownerDocument.defaultView.addEventListener("touchmove", this, false);
-      this.ownerDocument.defaultView.addEventListener("touchcancel", this, false);
-      this.ownerDocument.defaultView.addEventListener("mousedown", this, false);
-      this.ownerDocument.defaultView.addEventListener("mouseup", this, false);
-      return this.ownerDocument.defaultView.addEventListener("mousemove", this, false);
-    }
+    window.addEventListener("keydown", this, false);
+    window.addEventListener("keyup", this, false);
+    window.addEventListener("contextmenu", this, false);
+    window.addEventListener("touchstart", this, false);
+    window.addEventListener("touchend", this, false);
+    window.addEventListener("touchmove", this, false);
+    window.addEventListener("touchcancel", this, false);
+    window.addEventListener("mousedown", this, false);
+    window.addEventListener("mouseup", this, false);
+    window.addEventListener("mousemove", this, false);
   };
 
   Control.prototype = Object.create(Object.prototype, {
@@ -339,7 +337,6 @@
           case "mousedown":
             rect = (ref2 = this.target) != null ? ref2.getBoundingClientRect() : void 0;
             if (rect && (rect.left < (ref3 = e.pageX) && ref3 < rect.right) && (rect.top < (ref4 = e.pageY) && ref4 < rect.bottom)) {
-              e.preventDefault();
               this.clicks["new"](e.button, e, e.button);
             }
             break;
@@ -899,12 +896,12 @@
           this.delIndex = 0;
         }
         if (this.drawIndex > this.delIndex) {
-          context.clearRect(x + this.delIndex * (width + 1), y, (this.drawIndex - this.delIndex) * (width + 1), height + 1);
+          context.clearRect(x + this.delIndex * (width + this.letters.letter_spacing), y, (this.drawIndex - this.delIndex) * (width + this.letters.letter_spacing), height + this.letters.letter_spacing);
           this.drawIndex = this.delIndex;
         }
         while (this.drawIndex < this.length && this.drawIndex < this.index) {
           if (this[this.drawIndex] instanceof Letter) {
-            this[this.drawIndex].draw(context, x + this.drawIndex * (width + 1), y);
+            this[this.drawIndex].draw(context, x + this.drawIndex * (width + this.letters.letter_spacing), y);
           }
           this.drawIndex++;
         }
@@ -1058,7 +1055,7 @@
           if (line instanceof LetterString) {
             line.draw(this.context, this.x, iy);
           }
-          iy += this.letters.letter_height + 1;
+          iy += this.letters.letter_height + this.letters.letter_spacing;
         }
       }
     },
@@ -1092,7 +1089,7 @@
 
   Object.freeze(LetterBlock.prototype);
 
-  Letters = function(source, letter_width, letter_height, doc) {
+  Letters = function(source, letter_width, letter_height, letter_spacing, doc) {
     var canvas, color, context, getIndex, index, memory, source_height, source_width;
     if (doc == null) {
       doc = document;
@@ -1105,6 +1102,9 @@
     }
     if (isNaN(letter_height = Number(letter_height))) {
       letter_height = 0;
+    }
+    if (isNaN(letter_spacing = Number(letter_spacing))) {
+      letter_spacing = 1;
     }
     if (!(doc instanceof Document)) {
       doc = document;
@@ -1144,6 +1144,9 @@
       },
       letter_width: {
         value: letter_width
+      },
+      letter_spacing: {
+        value: letter_spacing
       },
       size: {
         value: Math.floor(source_height / letter_height) * Math.floor(source_width / letter_width)
@@ -2030,7 +2033,7 @@
     ref3 = data.getElementsByClassName("LETTERS");
     for (l = 0, len2 = ref3.length; l < len2; l++) {
       item = ref3[l];
-      this.letters[item.id] = new Letters(item, item.getAttribute("data-sprite-width"), item.getAttribute("data-sprite-height"), doc);
+      this.letters[item.id] = new Letters(item, item.getAttribute("data-sprite-width"), item.getAttribute("data-sprite-height"), item.getAttribute("data-letter-spacing"), doc);
     }
     Object.freeze(this.letters);
     ref4 = data.getElementsByClassName("SHEET");

@@ -630,19 +630,19 @@ Additionally, `delIndex` can't exceed `index`.
 If `drawIndex` is bigger than `delIndex`, then we have some letters to delete:
 
                 if @drawIndex > @delIndex
-                    context.clearRect(x + @delIndex * (width + 1), y, (@drawIndex - @delIndex) * (width + 1), height + 1)
+                    context.clearRect(x + @delIndex * (width + @letters.letter_spacing), y, (@drawIndex - @delIndex) * (width + @letters.letter_spacing), height + @letters.letter_spacing)
                     @drawIndex = @delIndex
 
 You will note from the above that letters are given a 1px padding (on the bottom and right side).
 
 >   [Issue #41](https://github.com/literallybenjam/jelli/issues/41) :
-    It would be nice to be able to configure this amount.
+    This is currently controlled by `@letters.letter_spacing`, but this is a temporary fix for now.
 
 We can now draw the letters from `drawIndex` to `index`:
 
                 while @drawIndex < @length and @drawIndex < @index
                     if this[@drawIndex] instanceof Letter
-                        this[@drawIndex].draw(context, x + @drawIndex * (width + 1), y)
+                        this[@drawIndex].draw(context, x + @drawIndex * (width + @letters.letter_spacing), y)
                     @drawIndex++
 
 Finally, we can reset `delIndex` to `drawIndex`:
@@ -808,13 +808,13 @@ The variable `iy` is used to keep track of the current vertical position.
                 iy = @y
                 for index, line of this
                     if line instanceof LetterString then line.draw(@context, @x, iy)
-                    iy += @letters.letter_height + 1
+                    iy += @letters.letter_height + @letters.letter_spacing;
                 return
 
 Note that one pixel space is drawn between lines.
 
 >   [Issue #41](https://github.com/literallybenjam/jelli/issues/41) :
-    It would be nice to be able to configure this amount.
+    This is currently controlled by `@letters.letter_spacing`, but this is a temporary fix for now.
 
 The `item()` function gets a single `Letter` from a `LetterString`.
 It is very similar to our `multiGetter` function above:
@@ -843,20 +843,21 @@ It uses its own personal `<canvas>` element to do this, which allows for things 
 
 ####  The constructor  ####
 
-The arguments of the `Letters` constructor provide the `source` image, the `letter_width` and `letter_height` of the letters, and the `doc` from which to create the `<canvas>`.
+The arguments of the `Letters` constructor provide the `source` image, the `letter_width` and `letter_height` of the letters, the `letter_spacing`, and the `doc` from which to create the `<canvas>`.
 This last argument is optional, and defaults to `document`; **however**, it is very important to set this if the `<canvas>` you are drawing onto exists on a different `Document`, because cross-`Document` `<canvas>` drawing is generally not possible.
 
 Of course, it is equally essential that `source`, if it is an `Element`, also belongs to the same `Document`.
 Fortunately, the `Letters` constructor does this automatically.
 
-    Letters = (source, letter_width, letter_height, doc = document) ->
+    Letters = (source, letter_width, letter_height, letter_spacing, doc = document) ->
 
-As always, we start by checking that the arguments we received are what we expected: a supported image type, a number, another number, and a `Document`.
+As always, we start by checking that the arguments we received are what we expected: a supported image type, a number, another number, another number, and a `Document`.
 (The supported image types are the same as those in [Sheet](sheet.litcoffee).)
 
         source = undefined unless source instanceof HTMLImageElement or source instanceof SVGImageElement or source instanceof HTMLCanvasElement or createImageBitmap? and source instanceof ImageBitmap
         letter_width = 0 if isNaN(letter_width = Number(letter_width))
         letter_height = 0 if isNaN(letter_height = Number(letter_height))
+        letter_spacing = 1 if isNaN(letter_spacing = Number(letter_spacing))
         doc = document unless doc instanceof Document
 
 Here we import the `source` if it doesn't belong to `doc`:
@@ -897,6 +898,7 @@ Note that `height` and `width` refer to how many sprites wide and tall the canva
             height: {value: Math.floor(source_height / letter_height)}
             letter_height: {value: letter_height}
             letter_width: {value: letter_width}
+            letter_spacing: {value: letter_spacing}
             size: {value: Math.floor(source_height / letter_height) * Math.floor(source_width / letter_width)}
             source: {value: source}
             width: {value: Math.floor(source_width / letter_width)}

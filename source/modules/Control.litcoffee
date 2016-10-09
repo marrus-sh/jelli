@@ -519,17 +519,17 @@ We use `Object.defineProperties` because all of these properties are read-only.
 
 We then a number of event listeners to track what's going on:
 
-        if @ownerDocument?
-            @ownerDocument.defaultView.addEventListener "keydown", this, false
-            @ownerDocument.defaultView.addEventListener "keyup", this, false
-            @ownerDocument.defaultView.addEventListener("contextmenu", this, false)
-            @ownerDocument.defaultView.addEventListener("touchstart", this, false)
-            @ownerDocument.defaultView.addEventListener("touchend", this, false)
-            @ownerDocument.defaultView.addEventListener("touchmove", this, false)
-            @ownerDocument.defaultView.addEventListener("touchcancel", this, false)
-            @ownerDocument.defaultView.addEventListener("mousedown", this, false)
-            @ownerDocument.defaultView.addEventListener("mouseup", this, false)
-            @ownerDocument.defaultView.addEventListener("mousemove", this, false)
+        window.addEventListener "keydown", this, false
+        window.addEventListener "keyup", this, false
+        window.addEventListener "contextmenu", this, false
+        window.addEventListener "touchstart", this, false
+        window.addEventListener "touchend", this, false
+        window.addEventListener "touchmove", this, false
+        window.addEventListener "touchcancel", this, false
+        window.addEventListener "mousedown", this, false
+        window.addEventListener "mouseup", this, false
+        window.addEventListener "mousemove", this, false
+        return
 
 …And we are done!
 
@@ -598,7 +598,6 @@ The index of the `Poke` corresponds to the mouse button that was pressed.
                     when "mousedown"
                         rect = @target?.getBoundingClientRect()
                         if rect and rect.left < e.pageX < rect.right and rect.top < e.pageY < rect.bottom
-                            e.preventDefault()
                             @clicks.new(e.button, e, e.button)
 
 On `"mousemove"`, we update the corresponding `Poke` with the mouse's new position.
