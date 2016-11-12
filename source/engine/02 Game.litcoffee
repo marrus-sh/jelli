@@ -195,7 +195,6 @@ It takes two arguments: `class`, which is the class of the desired element, and 
                 return elt if elt?
                 qs = if className then "#" + id + "." + className else "#" + id
                 return if elts instanceof HTMLCollection and (typeof elts.namedItem is "function" or elts.namedItem instanceof Function) then elts.namedItem(id) else @data.querySelector(qs)
-                @window.requestAnimationFrame @draw.bind(this)
 
 ####  getDocElement  ####
 

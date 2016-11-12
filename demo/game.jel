@@ -1,0 +1,224 @@
+manifest : http://marrus.xyz/jelli.elm
+%%
+Class : GAME
+Init : //
+    //  Setting up controls:
+    this.views.scrn_01.control.add("down").addCodes("down", 0x28, "ArrowDown", "Down");
+    this.views.scrn_01.control.add("left").addCodes("left", 0x25, "ArrowLeft", "Left");
+    this.views.scrn_01.control.add("right").addCodes("right", 0x27, "ArrowRight", "Right");
+    this.views.scrn_01.control.add("up").addCodes("up", 0x26, "ArrowUp", "Up");
+    //  Loading the first area:
+    this.area = 0;
+%%
+Class : VIEW
+Id : scrn_01
+Width : 256
+Height : 160
+Screen : background
+Screen : mainground
+Screen : foreground
+Screen : menuground
+Screen : textground
+%%
+Class : SCREEN
+Id : background
+Type : AREA
+%%
+Class : SCREEN
+Id : mainground
+Type : ANIMATION
+%%
+Class : SCREEN
+Id : foreground
+Type : AREA
+%%
+Class : SCREEN
+Id : menuground
+Type : STATIC
+%%
+Class : SCREEN
+Id : textground
+Type : STATIC
+%%
+Class : IMAGE
+Id : ctrlimg
+Source : images/ctrl.png
+%%
+Class : LETTERS
+Id : letters
+Source : letters/letters.png
+Sprite Width : 3
+Sprite Height : 5
+Linefeed : 10
+Palette Color : BLACK #0c0c0c
+Palette Color : RED #e83f2c
+Palette Color : SEA #31b9db
+%%
+Class : TILESET
+Id : tiles
+Source : tilesets/tiles.png
+Sprite Width : 16
+Sprite Height : 16
+Collisions : ///APw==
+%%
+Class : SHEET
+Id : characters
+Source : sheets/characters.png
+Sprite Width : 16
+Sprite Height : 16
+%%
+Class : SPRITELIST
+Id : jelly
+Sheet : characters
+Box Width : 10
+Box Height : 10
+Box X Offset : 3
+Box Y Offset : 3
+X Origin : 5
+Y Origin : 5
+Sprite : lf 0 2
+Sprite : rt 2 2
+%%
+Class : CHARACTER
+Id : pointer
+Spritelist : jelly
+Screen : mainground
+Init : this.timer = 0;
+%%
+Class : CHARACTER
+Id : player
+Spritelist : jelly
+Screen : mainground
+Collides : BOTH
+Init : //
+    this.x = 16;
+    this.y = 80;
+    this.sprite = "rt";
+    this.timer = 0;
+Step : //
+    var game = this.game;
+    var view = game.views.scrn_01;
+    var poke;
+    var dx = 0;
+    var dy = .1;
+    if (poke = view.control.touches.item(0) || view.control.clicks.item(0)) {
+        this.target(poke.x + this.area.x, poke.y + this.area.y);
+        this.timer++;
+    }
+    else {
+        if (view.control.isActive("up")) dy--;
+        if (view.control.isActive("down")) dy++;
+        if (view.control.isActive("left")) dx--;
+        if (view.control.isActive("right")) dx++;
+        this.targetBy(dx, dy);
+        this.timer++;
+    }
+    if (this.direction && Math.abs(this.direction) < Math.PI)
+        this.sprite = this.direction > 0 ? "rt" : "lf";
+    if (!(this.timer %= 15)) this.frame = Number(!this.frame);
+%%
+Class : AREA
+Id : area01
+Map : tiles 16 background 0 0
+    AAEAAQABAAEAAQABAAEAAQIDAgMCAwIDAgMCAwIDAgMAAQABAAEAAQABAAEAAQABAgM
+    CAwIDAgMCAwIDAgMCAwABAAEAAQABAAEAAQABAAECAwIDAgMCAwIDAgMCAwIDAAEAAQ
+    ABAAEAAQABAAEAAQIDAgMCAwIDAgMCAwIDAgMAAQABAAEAAQABAAEAAQABAgMCAwIDA
+    gMCAwIDAgMCAw==
+Init : //
+    var menu1;
+    var menu2;
+    var texts = this.game.texts;
+    var title;
+    this.title_timer = 0;
+    this.images.load("ctrlimg", 80, 32);
+    this.characters.load("pointer", 88, 120, "lf");
+    title = this.game.texts.load("title", "textground", "letters",
+        "Jelli Game Engine -- Demo");
+    title.x = 78;
+    title.y = 60;
+    title.color = "sea";
+    menu1 = this.game.texts.load("menu1", "textground", "letters",
+        "Use arrow keys to move");
+    menu1.x = 96;
+    menu1.y = 120;
+    menu1.color = "red";
+    menu1.fill();
+    menu2 = this.game.texts.load("menu2", "textground", "letters",
+        "Press right, touch, or click to begin");
+    menu2.x = 96;
+    menu2.y = 136;
+    menu2.color = "black";
+    menu2.fill();
+Step : //
+    var game = this.game;
+    var view = game.views.scrn_01;
+    var texts = this.game.texts;
+    if (!this.title_timer) texts.title.advance();
+    this.title_timer++;
+    this.title_timer %= 30;
+    if (view.control.isActive("up")) {
+        this.characters.pointer.y = 120;
+        texts.menu1.clear();
+        texts.menu1.color = "red";
+        texts.menu1.fill();
+        texts.menu2.clear();
+        texts.menu2.color = "black";
+        texts.menu2.fill();
+    }
+    if (view.control.isActive("down")) {
+        this.characters.pointer.y = 136;
+        texts.menu1.clear();
+        texts.menu1.color = "black";
+        texts.menu1.fill();
+        texts.menu2.clear();
+        texts.menu2.color = "red";
+        texts.menu2.fill();
+    }
+    if (
+        view.control.isActive("right") ||
+        view.control.touches.item(0) ||
+        view.control.clicks.item(0)
+    ) {
+        texts.title.kill();
+        texts.menu1.kill();
+        texts.menu2.kill();
+        game.clearScreen("textground");
+        game.area = 1;
+    }
+    if (view.control.clicks.item(2)) this.images.ctrlimg.placed = true;
+    else if (this.images.ctrlimg.placed) {
+        this.images.ctrlimg.placed = false;
+        game.clearScreen("menuground");
+    }
+    this.characters.pointer.timer++;
+    if (!(this.characters.pointer.timer %= 10))
+        this.characters.pointer.frame =
+            Number(!this.characters.pointer.frame);
+%%
+Class : AREA
+Id : area02
+Map : tiles 16 background 0 0
+    BwcHBwcHBwcHBwcHBwcHBwYGBgYGBgYGBgYGBgYGBgYFBQUFBQUFBQUFBQUFBQUFBQU
+    FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQ
+    UFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUBBQUFBQUFBQUFBQUFBQUFBAQEBAQEB
+    AQEBAQEBAQEBA==
+Map : tiles 16 background 256 0
+    BwcHBwcHBwcHBwcHBwcHBwYGBgYGBgYGBgYGBgYGBgYFBQUFBQUFBQUFBQUFBQUFBQU
+    FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQ
+    UFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUBBQUFBQUFBQUFBQUFBQUFBAQEBAQEB
+    AQEBAQEBAQEBA==
+Character : player
+Step : //
+    if (this.characters.player.screen_x < 8) this.x--;
+    if (this.characters.player.screen_x > 248) this.x++;
+    if (this.x < this.maps[0].x) {
+        this.maps[0].x -= 256;
+        this.maps[1].x -= 256;
+        this.clear = true;
+    }
+    if (this.x > this.maps[1].x) {
+        this.maps[0].x += 256;
+        this.maps[1].x += 256;
+        this.clear = true;
+    }
+%%

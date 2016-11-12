@@ -40,6 +40,11 @@ This is supported in all major browsers, but may not work in more antiquated one
 The Jelli Game Engine currently handles canvas upscaling using CSS to create a pixelated appearance.
 This feature is only supported in recent browsers, so older ones may display a blurry image on larger screens.
 
+#####  the `Data` module  #####
+
+The `Data` module is designed to work with JavaScript typed arrays, which have higher requirements than listed above.
+It will, however, fall back to using normal `Array`s, but this will result in a hit to efficiency.
+
 ##### additional notes  #####
 
 Not all browsers will act the same way when multiple elements share the same `id` or `name`.
@@ -61,6 +66,7 @@ The modules at this time are:
 - [`Letters`](modules/Letters.litcoffee)
 - [`Tileset`](modules/Tileset.litcoffee)
 - [`Data`](modules/Tileset.litcoffee)
+- [`Gel`](modules/Gel.litcoffee)
 
 >   [Issue #51](https://github.com/marrus-sh/jelli/issues/51) :
     Support for a `Filter` module is also planned.
@@ -150,11 +156,15 @@ This is a note regarding a known issue.
 
 >   ```html
 >   <!DOCTYPE html>
->   <p>And here is a block of HTML.</p>
+>   <p>Here is a block of HTML.</p>
+>   ```
+
+>   ```gel
+>   %  And here is an exerpt from a JEL.
 >   ```
 
 -   **This is a list of definitions**—
-    The word with imporance is the word being defined.
+    The word with importance is the word being defined.
 
 -   **`Here is some code`**—
     This is a definition item for explaining code.
@@ -189,6 +199,11 @@ With `data-*` attributes, `runningtext` is used for variable names, but these ar
 So you will have `data-bitdepth` but also `data-sprite-width`.
 In JavaScript, these become `dataset.bitdepth` and `dataset.spriteWidth`, respectively.
 
+###  Dependencies  ###
+
+The Jelli Game Engine is designed to interface with Jelli Engine Ledgers, an implementation of the [Generally Easy Ledger syntax](https://raw.githubusercontent.com/marrus-sh/langdev/master/documentation/standards/WD/0003.lsdoc).
+Specifics on the JEL format are available [../JEL/README.md](here), and the format ELM is available [../JEL/JEL.elm](here).
+
 ##  Implementation  ##
 
     "use strict";
@@ -199,7 +214,7 @@ In JavaScript, these become `dataset.bitdepth` and `dataset.spriteWidth`, respec
     -----------------------------
     Implemented through several modules in Literate CoffeeScript.
     Source code and resources are available at https://github.com/marrus-sh/jelli/.
-    Written for the CoffeeScript 1.10.0 compiler.
+    Written for the CoffeeScript 1.11.1 compiler.
     ###
 
 ###  License:  ###

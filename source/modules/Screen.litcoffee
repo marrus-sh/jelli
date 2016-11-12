@@ -76,6 +76,7 @@ If no canvas has been defined, all of the following properties return `undefined
 >       scrn.context.fillStyle = "red";
 >       scrn.context.fillRect(0, 0, scrn.width, scrn.height);
 >   </script>
+>   ```
 
 ##  Implementation  ##
 
