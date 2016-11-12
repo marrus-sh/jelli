@@ -1,5 +1,5 @@
 #  THE JELLI GAME ENGINE  #
-Programmed by Margaret Russel
+Programmed by Go Shoemake <3
 
 - - -
 
@@ -201,7 +201,7 @@ In JavaScript, these become `dataset.bitdepth` and `dataset.spriteWidth`, respec
 
 ###  Dependencies  ###
 
-The Jelli Game Engine is designed to interface with Jelli Engine Ledgers, an implementation of the [Generally Easy Ledger syntax](https://raw.githubusercontent.com/marrus-sh/langdev/master/documentation/standards/WD/0003.lsdoc).
+The Jelli Game Engine is designed to interface with Jelli Engine Ledgers, an implementation of the [Generally Easy Ledger syntax](http://langdev.xyz/documentation/standards/WD/0003.txt).
 Specifics on the JEL format are available [../JEL/README.md](here), and the format ELM is available [../JEL/JEL.elm](here).
 
 ##  Implementation  ##

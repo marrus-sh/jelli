@@ -5,7 +5,35 @@ Generally Easy Ledger parsing.
 
 ##  Description  ##
 
-The `Gel` module provides a CoffeeScript parser for [Generally Easy Ledgers](https://raw.githubusercontent.com/marrus-sh/langdev/master/documentation/standards/WD/0003.lsdoc).
+The `Gel` module provides a CoffeeScript parser for [Generally Easy Ledgers](http://langdev.xyz/documentation/standards/WD/0003.txt).
+
+###  Record format  ###
+
+The `gel.records` property returns an array of all of the records in the GEL source.
+Each record is a frozen object whose own properties are the field names of the record, and whose property values are the field values.
+In the instance that multiple fields with the same name exist in the record, the value of the corresponding property will be an array containing the values in order.
+For example, the following GEL record:
+
+>   ```gel
+>   %%
+>   PropA : 5
+>   PropB : hello
+>   PropC : disco
+>   PropB : world
+>   %%
+>   ```
+
+…will produce the following object:
+
+>   ```javascript
+>   {
+>       "PropA": "5",
+>       "PropB": ["hello", "world"],
+>       "PropC": "disco"
+>   }
+>   ```
+
+The `Gel()` constructor does not validate its input against an ELM or perform any type-checking, and the values of its properties are always strings or arrays thereof.
 
 ###  The `Gel` object:  ###
 
