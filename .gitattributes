@@ -2,4 +2,4 @@
 *.tilemap binary
 *.png binary
 *.gif binary
-/jelli.js -diff
+/dist/* -diff

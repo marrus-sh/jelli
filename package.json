@@ -1,0 +1,32 @@
+{
+  "name": "jelli",
+  "version": "0.2.0",
+  "author": {
+    "name": "Ᵹʼȷɛꞵɛᵹɔ (Kyebego)",
+    "url": "https://go.KIBI.family/"
+  },
+  "license": "GPL-3.0-or-later",
+  "description": "A game engine! Written in Literate CoffeeScript.",
+  "homepage": "https://github.com/marrus-sh/jelli#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marrus-sh/jelli.git"
+  },
+  "bugs": "https://github.com/marrus-sh/jelli/issues",
+  "devDependencies": {
+    "@babel/core": "^7.1.0",
+    "@babel/preset-env": "^7.1.0",
+    "coffeescript": "^2.3.2",
+    "uglify-js": "^3.1.1"
+  },
+  "directories": {
+    "doc": "./Sources",
+    "example": "./Demo",
+    "lib": "./Build"
+  },
+  "browser": "Build/Jelli.js",
+  "scripts": {
+    "prepare": "cake build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+}

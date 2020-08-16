@@ -1,3 +1,13 @@
+<div align="right">
+  <cite>The Jelli Game Engine</cite><br />
+  Source and Documentation<br />
+  <code>Sources/Modules/Data.litcoffee</code>
+  <hr />
+  Copyright © 2016, 2018 Kyebego.<br />
+  Released under GNU GPLv3 or any later version; for more information,
+    see the license notice at the bottom of this document.
+</div>
+
 #  DATA  #
 Typed arrays of varying bit-depths.
 
@@ -489,6 +499,25 @@ However, note that the value of this last property is `NaN`, as the number of by
         "BYTES_PER_ELEMENT": {value: NaN}
     })
 
-We can now freeze `Data` to keep it safe from interlopers, and add it to the window object.
+We can now freeze `Data` to keep it safe from interlopers.
 
-    @Data = Object.freeze(Data)
+    Object.freeze(Data)
+
+___
+
+<details>
+  <summary>License notice</summary>
+  <p>This file is a part of The Jelli Game Engine.</p>
+  <p>The Jelli Game Engine is free software: you can redistribute it
+    and/or modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation, either version 3 of
+    the License, or (at your option) any later version.</p>
+  <p>The Jelli Game Engine is distributed in the hope that it will be
+    useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+    of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+    General Public License for more details.</p>
+  <p>You should have received a copy of the GNU General Public License
+    along with this source. If not, see
+    <a href="https://www.gnu.org/licenses/">
+    https://www.gnu.org/licenses/</a>.</p>
+</details>
